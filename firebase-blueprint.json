@@ -1,0 +1,28 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Accounts",
+      "description": "Registered employee and admin accounts in MELAYU system",
+      "type": "object",
+      "properties": {
+        "employeeId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "role": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["employeeId", "fullName", "username", "role", "status"]
+    },
+    "appSettings": {
+      "title": "Application Settings",
+      "description": "System branding and global config",
+      "type": "object",
+      "properties": {
+        "logoUrl": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    }
+  }
+}
