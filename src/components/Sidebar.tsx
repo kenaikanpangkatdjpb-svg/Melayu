@@ -106,10 +106,8 @@ export default function Sidebar({
       title: 'SUBBAGIAN TURT',
       items: [
         { id: 'peminjaman-ruangan', label: 'Peminjaman Ruangan', icon: Home },
-        { id: 'persetujuan-ruangan', label: 'Persetujuan Peminjaman Ruangan', icon: CalendarCheck },
         { id: 'peminjaman-barang', label: 'Peminjaman Barang Bagian Umum', icon: Package },
         { id: 'peminjaman-kendaraan', label: 'Peminjaman Kendaraan Dinas', icon: Car },
-        { id: 'persetujuan-kendaraan', label: 'Persetujuan Peminjaman Kendaraan', icon: Car },
         { id: 'feedback-sarpras', label: 'Feedback Sarana Prasarana', icon: Layers },
         { id: 'rencana-kebutuhan', label: 'Permintaan Barang Persediaan', icon: CalendarCheck },
       ]

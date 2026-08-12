@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Plus, Calendar, Trash2, Check, X, ShieldAlert, Shield, ShieldCheck,
   HelpCircle, Sparkles, Star, ClipboardList, PenTool, Pencil,
-  CheckCircle2, Clock, Filter, AlertCircle, FileCheck, FileText
+  CheckCircle2, Clock, Filter, AlertCircle, FileCheck, FileText, Car
 } from 'lucide-react';
 import { 
   RoomBooking, ItemBooking, VehicleBooking, 
@@ -1166,25 +1166,21 @@ export default function TurtSection({
                 </div>
                 <div>
                   <h3 className="text-xs sm:text-sm font-display font-bold text-slate-800 flex items-center space-x-2">
-                    <span>Fitur Persetujuan Admin (Peminjaman Ruang Rapat & Aula)</span>
+                    <span>Menu Persetujuan Admin Peminjaman Ruangan</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                      Akses Administrator
+                    </span>
                   </h3>
-                  <p className="text-[11px] text-slate-600">
-                    Terdapat <strong className="text-amber-800">{roomBookings.filter(b => b.status === 'Pending').length} permohonan</strong> yang memerlukan persetujuan administrator saat ini.
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Terdapat <strong className="text-amber-800 font-bold">{roomBookings.filter(b => b.status === 'Pending').length} permohonan</strong> yang memerlukan persetujuan. Anda dapat langsung menyetujui atau menolak permohonan pada kolom <strong>Aksi</strong> tabel di bawah.
                   </p>
                 </div>
               </div>
-              <button
-                id="btn-goto-persetujuan-ruangan"
-                onClick={() => {
-                  if (onNavigateToTab) {
-                    onNavigateToTab('persetujuan-ruangan');
-                  }
-                }}
-                className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center justify-center space-x-1.5 shrink-0"
-              >
-                <ShieldCheck className="w-4 h-4" />
-                <span>Buka Menu Persetujuan Ruangan</span>
-              </button>
+              <div className="flex items-center space-x-2 shrink-0">
+                <span className="px-3 py-1.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300">
+                  {roomBookings.filter(b => b.status === 'Pending').length} Pending
+                </span>
+              </div>
             </div>
           )}
 
@@ -1644,6 +1640,33 @@ export default function TurtSection({
               <span>Peminjaman Kendaraan</span>
             </button>
           </div>
+
+          {/* Admin Vehicle Approval Banner */}
+          {isAdmin && (
+            <div className="bg-gradient-to-r from-amber-50 via-slate-50 to-blue-50 border border-amber-200/80 rounded-xl p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="admin-vehicle-banner">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-amber-500 text-white rounded-lg shadow-xs">
+                  <Car className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-display font-bold text-slate-800 flex items-center space-x-2">
+                    <span>Menu Persetujuan Admin Peminjaman Kendaraan</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                      Akses Administrator
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    Terdapat <strong className="text-amber-800 font-bold">{vehicleBookings.filter(v => v.status === 'Pending').length} permohonan</strong> yang memerlukan persetujuan. Anda dapat langsung menyetujui atau menolak permohonan pada kolom <strong>Aksi</strong> tabel di bawah.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2 shrink-0">
+                <span className="px-3 py-1.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300">
+                  {vehicleBookings.filter(v => v.status === 'Pending').length} Pending
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Table Container */}
           <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
