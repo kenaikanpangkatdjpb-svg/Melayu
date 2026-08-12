@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Search, Plus, UserPlus, Edit3, X, Check, ShieldAlert, UserCheck, Key, Shield, Trash2, Lock, Upload, Image as ImageIcon, RotateCcw, CheckCircle2, Building, Sparkles, FileImage } from 'lucide-react';
+import { Search, Plus, UserPlus, Edit3, X, Check, ShieldAlert, UserCheck, Key, Shield, Trash2, Lock, Upload, Image as ImageIcon, RotateCcw, CheckCircle2, Building, Sparkles, FileImage, Camera, Crown } from 'lucide-react';
 import { UserAccount, CurrentUser } from '../types';
 import KemenkeuLogo from './KemenkeuLogo';
 import { saveUserToFirestore, deleteUserFromFirestore } from '../lib/firebase';
+
+const DEFAULT_KANWIL_IMAGE = 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1600&q=80';
 
 interface UserManagementSectionProps {
   users: UserAccount[];
@@ -17,7 +19,7 @@ export default function UserManagementSection({
   isEditMode,
   currentUser
 }: UserManagementSectionProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'logo'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'logo' | 'banner'>('users');
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('Semua Role');
   const [statusFilter, setStatusFilter] = useState<string>('Semua Status');
@@ -25,6 +27,13 @@ export default function UserManagementSection({
   // Logo Upload State
   const [previewLogo, setPreviewLogo] = useState<string | null>(() => localStorage.getItem('app_custom_logo'));
   const [logoSaveStatus, setLogoSaveStatus] = useState<string | null>(null);
+
+  // Banner Upload State
+  const [previewBanner, setPreviewBanner] = useState<string>(
+    () => localStorage.getItem('melayu_hero_bg_image') || DEFAULT_KANWIL_IMAGE
+  );
+  const [bannerSaveStatus, setBannerSaveStatus] = useState<string | null>(null);
+  const [bannerUrlInput, setBannerUrlInput] = useState<string>('');
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -74,6 +83,48 @@ export default function UserManagementSection({
     window.dispatchEvent(new Event('app_logo_updated'));
     setLogoSaveStatus('Logo berhasil dikembalikan ke standar Logo Kementerian Keuangan RI.');
     setTimeout(() => setLogoSaveStatus(null), 4500);
+  };
+
+  // Handle Banner Upload File Selection
+  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 8 * 1024 * 1024) {
+        alert('Ukuran file banner terlalu besar. Maksimal 8MB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        if (reader.result) {
+          setPreviewBanner(reader.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleApplyBannerUrl = () => {
+    if (bannerUrlInput.trim()) {
+      setPreviewBanner(bannerUrlInput.trim());
+      setBannerUrlInput('');
+    }
+  };
+
+  const handleSaveBanner = () => {
+    if (previewBanner) {
+      localStorage.setItem('melayu_hero_bg_image', previewBanner);
+      window.dispatchEvent(new Event('app_banner_updated'));
+      setBannerSaveStatus('Gambar banner header berhasil disimpan & diterapkan ke seluruh sistem!');
+      setTimeout(() => setBannerSaveStatus(null), 4500);
+    }
+  };
+
+  const handleResetBanner = () => {
+    setPreviewBanner(DEFAULT_KANWIL_IMAGE);
+    localStorage.removeItem('melayu_hero_bg_image');
+    window.dispatchEvent(new Event('app_banner_updated'));
+    setBannerSaveStatus('Gambar banner berhasil dikembalikan ke tampilan default Kanwil DJPb Riau.');
+    setTimeout(() => setBannerSaveStatus(null), 4500);
   };
 
   // Filter users based on search, role, status
@@ -177,7 +228,7 @@ export default function UserManagementSection({
                 Pengelolaan Akses Admin & Branding
               </h1>
               <p className="text-xs text-slate-500">
-                Pengelolaan kredensial akun user, peranan (Administrator, Pegawai), serta upload logo resmi instansi.
+                Pengelolaan kredensial akun user, peranan (Administrator, Pegawai), upload logo resmi instansi, serta kustomisasi banner header.
               </p>
             </div>
           </div>
@@ -196,7 +247,7 @@ export default function UserManagementSection({
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className="flex items-center space-x-2 bg-slate-200/60 p-1.5 rounded-2xl border border-slate-200/80 w-fit">
+      <div className="flex flex-wrap items-center gap-2 bg-slate-200/60 p-1.5 rounded-2xl border border-slate-200/80 w-fit">
         <button
           onClick={() => setActiveTab('users')}
           className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -224,6 +275,21 @@ export default function UserManagementSection({
           <span>Upload Logo Instansi</span>
           {previewLogo && (
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('banner')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === 'banner'
+              ? 'bg-white text-djpb-blue shadow-xs'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+          }`}
+        >
+          <Camera className="w-4 h-4 text-amber-600" />
+          <span>Upload Banner Header (Admin)</span>
+          {previewBanner && previewBanner !== DEFAULT_KANWIL_IMAGE && (
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
           )}
         </button>
       </div>
@@ -572,6 +638,193 @@ export default function UserManagementSection({
                     <p className="text-[10px] text-slate-500">KANTOR WILAYAH PROVINSI RIAU</p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: UPLOAD BANNER HEADER (ADMIN) */}
+      {activeTab === 'banner' && (
+        <div className="space-y-6 animate-in fade-in duration-200">
+          {/* Notification Alert */}
+          {bannerSaveStatus && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl flex items-center justify-between shadow-xs animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center space-x-2.5">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span className="text-xs font-bold">{bannerSaveStatus}</span>
+              </div>
+              <button
+                onClick={() => setBannerSaveStatus(null)}
+                className="text-emerald-500 hover:text-emerald-700 p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Form Column */}
+            <div className="lg:col-span-5 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+              <div>
+                <div className="flex items-center space-x-2 text-djpb-blue mb-1">
+                  <Camera className="w-5 h-5 text-amber-600" />
+                  <h2 className="font-display font-bold text-base text-slate-800">
+                    Upload Gambar Banner Header (Admin)
+                  </h2>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Kelola dan perbarui foto / gambar background header Media Layanan Umum (MELAYU) Kanwil DJPb Provinsi Riau.
+                </p>
+              </div>
+
+              {/* Option 1: File Upload */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                  <Upload className="w-4 h-4 text-djpb-blue" />
+                  <span>Opsi 1: Upload File Gambar Dari Perangkat</span>
+                </label>
+                <div className="relative border-2 border-dashed border-slate-300 hover:border-amber-500 rounded-2xl p-5 bg-slate-50 hover:bg-amber-50/20 transition-all text-center flex flex-col items-center justify-center space-y-2 cursor-pointer group">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBannerFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  />
+
+                  <div className="w-12 h-12 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-xs">
+                    <ImageIcon className="w-6 h-6" />
+                  </div>
+
+                  <div>
+                    <p className="text-xs font-bold text-slate-700">
+                      Klik atau Seret Gambar Banner ke Sini
+                    </p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      JPG, PNG, WEBP (Maksimal 8MB)
+                    </p>
+                  </div>
+
+                  <div className="px-3 py-1 bg-white border border-slate-200 rounded-lg text-[11px] font-bold text-amber-800 shadow-2xs">
+                    Pilih File Gambar
+                  </div>
+                </div>
+              </div>
+
+              {/* Option 2: URL Image */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <label className="text-xs font-bold text-slate-700 flex items-center space-x-1.5">
+                  <FileImage className="w-4 h-4 text-djpb-blue" />
+                  <span>Opsi 2: Tempelkan Link / URL Gambar Online</span>
+                </label>
+                <div className="flex space-x-2">
+                  <input
+                    type="url"
+                    value={bannerUrlInput}
+                    onChange={(e) => setBannerUrlInput(e.target.value)}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="flex-1 px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-djpb-blue bg-slate-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyBannerUrl}
+                    disabled={!bannerUrlInput.trim()}
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl disabled:opacity-40 transition-colors cursor-pointer"
+                  >
+                    Gunakan
+                  </button>
+                </div>
+              </div>
+
+              {/* Specifications Info Box */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2 text-xs">
+                <div className="font-bold text-slate-700 flex items-center space-x-1.5">
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <span>Spesifikasi Banner Ideal:</span>
+                </div>
+                <ul className="list-disc list-inside text-slate-500 space-y-1 text-[11px]">
+                  <li>Rasio landscape disarankan (16:9 atau panorama)</li>
+                  <li>Resolusi disarankan min. 1600 x 600 piksel</li>
+                  <li>Foto gedung kantor, lanskap instansi, atau visual dinas</li>
+                </ul>
+              </div>
+
+              {/* Save & Reset Action Buttons */}
+              <div className="flex items-center space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleSaveBanner}
+                  className="flex-1 flex items-center justify-center space-x-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Simpan & Terapkan Banner</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleResetBanner}
+                  title="Kembalikan ke Gambar Default"
+                  className="flex items-center justify-center space-x-1 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span className="hidden sm:inline">Reset</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right Live Preview Box */}
+            <div className="lg:col-span-7 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-5">
+              <div>
+                <div className="flex items-center space-x-2 text-djpb-blue mb-1">
+                  <Sparkles className="w-5 h-5 text-amber-500" />
+                  <h2 className="font-display font-bold text-base text-slate-800">
+                    Live Preview Header Dashboard (MELAYU)
+                  </h2>
+                </div>
+                <p className="text-xs text-slate-500">
+                  Pratinjau tampilan banner header utama yang akan terlihat oleh seluruh pegawai pada Halaman Utama / Beranda:
+                </p>
+              </div>
+
+              {/* Banner Preview Card mimicking WelcomeView Hero Header */}
+              <div className="relative h-64 sm:h-72 rounded-2xl overflow-hidden border border-slate-300 bg-slate-950 shadow-lg flex flex-col justify-between p-5">
+                <img
+                  src={previewBanner}
+                  alt="Live Preview Banner Header"
+                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#030d22] via-[#08182d]/90 to-[#08182d]/35"></div>
+
+                {/* Top Badge */}
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="bg-amber-400 text-slate-950 font-black px-3 py-1 rounded-full text-[10px] flex items-center space-x-1 shadow-md">
+                    <Crown className="w-3 h-3 text-slate-950" />
+                    <span>Media Layanan Umum • Kanwil DJPb Prov. Riau</span>
+                  </span>
+                  <span className="bg-emerald-950/80 border border-emerald-500/80 text-emerald-300 font-mono text-[10px] font-bold px-2.5 py-0.5 rounded-full backdrop-blur-md">
+                    LIVE SYSTEM
+                  </span>
+                </div>
+
+                {/* Bottom Title Content */}
+                <div className="relative z-10 space-y-2">
+                  <h3 className="text-white font-black text-lg sm:text-xl uppercase tracking-tight leading-tight">
+                    SELAMAT DATANG DI MEDIA LAYANAN UMUM (MELAYU)
+                  </h3>
+                  <p className="text-slate-300 text-xs line-clamp-2 max-w-xl">
+                    Portal Layanan Terpadu Bagian Umum Kanwil Ditjen Perbendaharaan Provinsi Riau.
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-amber-50/80 border border-amber-200/90 p-4 rounded-xl text-xs text-amber-900 space-y-1">
+                <p className="font-bold flex items-center space-x-1.5">
+                  <span>💡 Informasi Penerapan Banner:</span>
+                </p>
+                <p className="text-[11px] text-amber-800/90 leading-relaxed">
+                  Setelah menekan tombol <strong>"Simpan & Terapkan Banner"</strong>, banner header ini akan langsung aktif di layar Beranda / Selamat Datang untuk seluruh pengguna sistem MELAYU.
+                </p>
               </div>
             </div>
           </div>
