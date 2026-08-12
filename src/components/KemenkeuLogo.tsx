@@ -36,7 +36,7 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
       <img
         src={logoUrl}
         alt="Logo Instansi / Kementerian Keuangan"
-        className={`object-contain ${className}`}
+        className={`object-contain shrink-0 ${className}`}
         style={sizeStyle}
       />
     );
@@ -45,7 +45,7 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
   return (
     <svg
       viewBox="0 0 500 500"
-      className={className}
+      className={`shrink-0 ${className}`}
       style={sizeStyle}
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

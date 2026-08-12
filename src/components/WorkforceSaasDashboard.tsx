@@ -33,10 +33,36 @@ export default function WorkforceSaasDashboard({
   const [overtimeApproved, setOvertimeApproved] = useState<boolean | null>(null);
   const [reminderSent, setReminderSent] = useState(false);
 
-  // Active bookings for today
-  const approvedRooms = roomBookings.filter(b => b.status === 'Disetujui');
-  const approvedVehicles = vehicleBookings.filter(v => v.status === 'Disetujui');
-  const approvedItems = itemBookings.filter(i => i.status === 'Dipinjam' || (i.status as string) === 'Disetujui');
+  // Active bookings for TODAY only (excluding previous days)
+  const getTodayStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const todayStr = getTodayStr();
+
+  const isTodayBooking = (dateStr: string, durationDays: number = 1) => {
+    if (!dateStr) return false;
+    if (dateStr === todayStr) return true;
+    if (dateStr < todayStr && durationDays > 1) {
+      try {
+        const start = new Date(dateStr);
+        const end = new Date(start);
+        end.setDate(start.getDate() + (durationDays - 1));
+        const endStr = end.toISOString().split('T')[0];
+        return todayStr >= dateStr && todayStr <= endStr;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  };
+
+  const approvedRooms = roomBookings.filter(b => b.status === 'Disetujui' && isTodayBooking(b.date));
+  const approvedVehicles = vehicleBookings.filter(v => v.status === 'Disetujui' && isTodayBooking(v.date, v.durationDays));
+  const approvedItems = itemBookings.filter(i => (i.status === 'Dipinjam' || (i.status as string) === 'Disetujui') && isTodayBooking(i.date));
   const totalTodayAgendas = approvedRooms.length + approvedVehicles.length + approvedItems.length;
 
   // Weekly attendance data
@@ -218,7 +244,7 @@ export default function WorkforceSaasDashboard({
                         <span>{vehicle.vehicleName}</span>
                       </span>
                       <span className="font-mono text-[10px] bg-white px-2 py-0.5 rounded border border-amber-100 text-slate-700 font-bold">
-                        Driver: {vehicle.driverName}
+                        {vehicle.driverOption || (vehicle.driverName?.includes('Tanpa') ? 'Tanpa Supir' : 'Dengan Supir')}
                       </span>
                     </div>
                     <p className="text-xs font-bold text-slate-800 line-clamp-1">Tujuan: {vehicle.destination}</p>

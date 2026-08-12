@@ -280,10 +280,36 @@ export default function WelcomeView({ roomBookings, vehicleBookings, itemBooking
     setTimeout(() => setUploadSuccess(false), 3000);
   };
 
-  // Active bookings for today
-  const approvedRooms = roomBookings.filter(b => b.status === 'Disetujui');
-  const approvedVehicles = vehicleBookings.filter(v => v.status === 'Disetujui');
-  const approvedItems = itemBookings.filter(i => i.status === 'Dipinjam' || (i.status as string) === 'Disetujui');
+  // Active bookings for TODAY only (excluding previous days)
+  const getTodayStr = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const todayStr = getTodayStr();
+
+  const isTodayBooking = (dateStr: string, durationDays: number = 1) => {
+    if (!dateStr) return false;
+    if (dateStr === todayStr) return true;
+    if (dateStr < todayStr && durationDays > 1) {
+      try {
+        const start = new Date(dateStr);
+        const end = new Date(start);
+        end.setDate(start.getDate() + (durationDays - 1));
+        const endStr = end.toISOString().split('T')[0];
+        return todayStr >= dateStr && todayStr <= endStr;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  };
+
+  const approvedRooms = roomBookings.filter(b => b.status === 'Disetujui' && isTodayBooking(b.date));
+  const approvedVehicles = vehicleBookings.filter(v => v.status === 'Disetujui' && isTodayBooking(v.date, v.durationDays));
+  const approvedItems = itemBookings.filter(i => (i.status === 'Dipinjam' || (i.status as string) === 'Disetujui') && isTodayBooking(i.date));
 
   const totalTodayAgendas = approvedRooms.length + approvedVehicles.length + approvedItems.length;
 
@@ -608,8 +634,8 @@ export default function WelcomeView({ roomBookings, vehicleBookings, itemBooking
                     subTitle: vehicle.destination,
                     booker: vehicle.bookerName,
                     division: 'Penugasan Perjalanan Dinas',
-                    time: `Supir: ${vehicle.driverName}`,
-                    details: `Peminjaman kendaraan dinas ${vehicle.vehicleName} (${vehicle.plateNumber}) dengan pengemudi ${vehicle.driverName}. Tujuan perjalanan: ${vehicle.destination}.`
+                    time: `Layanan: ${vehicle.driverOption || (vehicle.driverName?.includes('Tanpa') ? 'Tanpa Supir' : 'Dengan Supir')}`,
+                    details: `Peminjaman kendaraan dinas ${vehicle.vehicleName} (${vehicle.plateNumber}) [${vehicle.driverOption || (vehicle.driverName?.includes('Tanpa') ? 'Tanpa Supir' : 'Dengan Supir')}]. Tujuan perjalanan: ${vehicle.destination}.`
                   })}
                   className="p-4 bg-gradient-to-br from-amber-50/80 to-orange-50/30 hover:from-amber-100/80 hover:to-orange-100/40 border border-amber-200/80 rounded-2xl space-y-3 transition-all cursor-pointer group hover:shadow-md relative overflow-hidden"
                 >
@@ -621,7 +647,7 @@ export default function WelcomeView({ roomBookings, vehicleBookings, itemBooking
                       <span>{vehicle.vehicleName}</span>
                     </span>
                     <span className="font-mono text-slate-700 bg-white px-2.5 py-0.5 rounded-lg border border-amber-100 text-[10px] font-bold">
-                      Driver: {vehicle.driverName}
+                      {vehicle.driverOption || (vehicle.driverName?.includes('Tanpa') ? 'Tanpa Supir' : 'Dengan Supir')}
                     </span>
                   </div>
 

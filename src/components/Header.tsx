@@ -50,29 +50,29 @@ export default function Header({
   };
 
   return (
-    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-40 shadow-xs" id="app-header">
+    <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-40 shadow-xs" id="app-header">
       {/* Left side: Sidebar Toggle, Logo & Title */}
-      <div className="flex items-center space-x-2 md:space-x-3">
+      <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1 mr-2">
         {onToggleSidebar && (
           <button
             id="btn-sidebar-toggle-header"
             onClick={onToggleSidebar}
-            className="p-1.5 text-slate-600 hover:text-djpb-blue hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-600 hover:text-djpb-blue hover:bg-slate-100 rounded-lg transition-colors cursor-pointer shrink-0"
             title={isSidebarCollapsed ? "Tampilkan Sidebar" : "Sembunyikan Sidebar"}
           >
             <PanelLeft className="w-5 h-5" />
           </button>
         )}
         <div className="flex items-center space-x-2 shrink-0" id="header-logo-container">
-          <KemenkeuLogo className="w-8 h-8 drop-shadow-xs" />
+          <KemenkeuLogo className="w-7 h-7 sm:w-8 sm:h-8 drop-shadow-xs shrink-0" />
         </div>
-        <h1 className="font-display font-semibold text-sm md:text-base tracking-tight text-slate-800" id="header-title">
+        <h1 className="font-display font-semibold text-xs sm:text-sm md:text-base tracking-tight text-slate-800 truncate" id="header-title">
           DASHBOARD MEDIA LAYANAN UMUM (MELAYU)
         </h1>
       </div>
 
       {/* Right side Actions */}
-      <div className="flex items-center space-x-2" id="header-actions">
+      <div className="flex items-center space-x-1 sm:space-x-2 shrink-0" id="header-actions">
         {/* Notifications Bell */}
         <div className="relative">
           <button

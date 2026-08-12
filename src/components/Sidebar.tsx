@@ -7,6 +7,7 @@ import {
   MoreVertical, CalendarCheck, UserPlus, Home, PanelLeftClose, PanelLeftOpen, PhoneCall, UserCheck, FileText, LogOut
 } from 'lucide-react';
 import { CurrentUser } from '../types';
+import KemenkeuLogo from './KemenkeuLogo';
 
 interface SidebarProps {
   activeTab: string;
@@ -202,9 +203,9 @@ export default function Sidebar({
         {/* Mobile Drawer Header */}
         {isMobileDrawer && (
           <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
-            <div className="flex items-center space-x-2">
-              <LayoutDashboard className="w-5 h-5 text-djpb-blue" />
-              <span className="font-display font-bold text-slate-800 text-sm">Navigasi MELAYU</span>
+            <div className="flex items-center space-x-2.5">
+              <KemenkeuLogo className="w-6 h-6 shrink-0" />
+              <span className="font-display font-bold text-slate-800 text-xs sm:text-sm">Navigasi MELAYU</span>
             </div>
             <button
               id="btn-close-mobile-drawer"

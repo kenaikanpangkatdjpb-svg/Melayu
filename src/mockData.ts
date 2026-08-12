@@ -15,13 +15,34 @@ import {
   UserAccount
 } from './types';
 
+const getTodayStr = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getRelativeDateStr = (offsetDays: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const TODAY_STR = getTodayStr();
+const YESTERDAY_STR = getRelativeDateStr(-1);
+const TOMORROW_STR = getRelativeDateStr(1);
+
 export const INITIAL_ROOM_BOOKINGS: RoomBooking[] = [
   {
     id: 'room-1',
     roomName: 'Aula Lancang Kuning',
     bookerName: 'Andi Wijaya',
     division: 'Bagian Umum',
-    date: '2026-07-15',
+    date: TODAY_STR,
     startTime: '08:30',
     endTime: '12:00',
     purpose: 'Rapat Koordinasi Wilayah Pelaksanaan Anggaran',
@@ -33,7 +54,7 @@ export const INITIAL_ROOM_BOOKINGS: RoomBooking[] = [
     roomName: 'Aula Zapin',
     bookerName: 'Siti Rahma',
     division: 'Bidang PPA I',
-    date: '2026-07-15',
+    date: TODAY_STR,
     startTime: '13:30',
     endTime: '15:30',
     purpose: 'Asistensi Penyusunan LKPD Pemerintah Daerah',
@@ -45,7 +66,7 @@ export const INITIAL_ROOM_BOOKINGS: RoomBooking[] = [
     roomName: 'Soleram',
     bookerName: 'Rudi Hartono',
     division: 'Bidang SKKI',
-    date: '2026-07-16',
+    date: TOMORROW_STR,
     startTime: '09:00',
     endTime: '11:00',
     purpose: 'Review Internal Penilaian Kinerja Triwulan II',
@@ -57,10 +78,10 @@ export const INITIAL_ROOM_BOOKINGS: RoomBooking[] = [
     roomName: 'Gurindam',
     bookerName: 'Eka Lestari',
     division: 'Bidang PAPK',
-    date: '2026-07-15',
+    date: YESTERDAY_STR,
     startTime: '10:00',
     endTime: '11:30',
-    purpose: 'Sharing Session Penggunaan Aplikasi SAKTI',
+    purpose: 'Sharing Session Penggunaan Aplikasi SAKTI (Kemarin)',
     equipmentNeeded: 'Proyektor & Pointer Laser',
     status: 'Disetujui'
   }
@@ -72,7 +93,7 @@ export const INITIAL_ITEM_BOOKINGS: ItemBooking[] = [
     itemName: 'Proyektor Epson 4K',
     bookerName: 'Andi Wijaya',
     division: 'Bagian Umum',
-    date: '2026-07-15',
+    date: TODAY_STR,
     quantity: 1,
     status: 'Dipinjam',
     statusNote: 'Sudah diambil di Subbag Rumah Tangga'
@@ -82,7 +103,7 @@ export const INITIAL_ITEM_BOOKINGS: ItemBooking[] = [
     itemName: 'Sound System Portable 100W',
     bookerName: 'Dewi Lestari',
     division: 'Bidang PAPK',
-    date: '2026-07-15',
+    date: TODAY_STR,
     quantity: 1,
     status: 'Dipinjam',
     statusNote: 'Dipinjam untuk acara sosialisasi di Aula Zapin'
@@ -92,17 +113,17 @@ export const INITIAL_ITEM_BOOKINGS: ItemBooking[] = [
     itemName: 'Pointer Presentasi Logitech',
     bookerName: 'Siti Rahma',
     division: 'Bidang PPA I',
-    date: '2026-07-15',
+    date: YESTERDAY_STR,
     quantity: 1,
     status: 'Dipinjam',
-    statusNote: 'Siap dikembalikan sore hari'
+    statusNote: 'Sudah dikembalikan (Kemarin)'
   },
   {
     id: 'item-4',
     itemName: 'Laptop Dinas Dell Latitude',
     bookerName: 'Hendra Saputra',
     division: 'Bidang PAPK',
-    date: '2026-07-17',
+    date: TOMORROW_STR,
     quantity: 2,
     status: 'Pending',
     statusNote: 'Menunggu persetujuan Bagian Umum'
@@ -114,11 +135,11 @@ export const INITIAL_VEHICLE_BOOKINGS: VehicleBooking[] = [
     id: 'v-1',
     vehicleName: 'Toyota Kijang Innova BM 1679 T',
     plateNumber: 'BM 1679 T',
-    driverName: 'Pak Budi',
+    driverName: 'Dengan Supir',
     driverOption: 'Dengan Supir',
     bookerName: 'Kepala Kanwil',
     destination: 'Kantor Gubernur Riau, Pekanbaru',
-    date: '2026-07-15',
+    date: TODAY_STR,
     durationDays: 1,
     status: 'Disetujui'
   },
@@ -126,11 +147,11 @@ export const INITIAL_VEHICLE_BOOKINGS: VehicleBooking[] = [
     id: 'v-2',
     vehicleName: 'Toyota Kijang Innova Reborn B 1932 PQS',
     plateNumber: 'B 1932 PQS',
-    driverName: 'Pak Agus',
+    driverName: 'Dengan Supir',
     driverOption: 'Dengan Supir',
     bookerName: 'Tim PPA II',
     destination: 'KPPN Pekanbaru',
-    date: '2026-07-15',
+    date: TODAY_STR,
     durationDays: 1,
     status: 'Disetujui'
   },
@@ -138,11 +159,11 @@ export const INITIAL_VEHICLE_BOOKINGS: VehicleBooking[] = [
     id: 'v-3',
     vehicleName: 'Wuling Cortez BM 1888 T',
     plateNumber: 'BM 1888 T',
-    driverName: 'Pak Hendra',
+    driverName: 'Dengan Supir',
     driverOption: 'Dengan Supir',
     bookerName: 'Kabid PAPK',
     destination: 'Dinas Pengelola Keuangan Kabupaten Kampar',
-    date: '2026-07-16',
+    date: TOMORROW_STR,
     durationDays: 2,
     status: 'Pending'
   }

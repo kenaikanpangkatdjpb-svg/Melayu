@@ -120,10 +120,10 @@ export default function TurtSection({
   const [vehicleForm, setVehicleForm] = useState({
     vehicleName: 'Toyota Kijang Innova BM 1679 T',
     driverOption: 'Dengan Supir' as 'Dengan Supir' | 'Tanpa Supir',
-    driverName: 'Pak Budi',
+    driverName: 'Dengan Supir',
     bookerName: '',
     destination: '',
-    date: '2026-07-15',
+    date: new Date().toISOString().split('T')[0],
     durationDays: 1
   });
 
@@ -329,15 +329,7 @@ export default function TurtSection({
     e.preventDefault();
     if (!vehicleForm.bookerName || !vehicleForm.destination) return;
     
-    let driver = 'Tanpa Supir (Lepas Kunci)';
-    if (vehicleForm.driverOption === 'Dengan Supir') {
-      driver = 'Pak Budi';
-      if (vehicleForm.vehicleName.includes('Reborn') || vehicleForm.vehicleName.includes('Fortuner')) {
-        driver = 'Pak Agus';
-      } else if (vehicleForm.vehicleName.includes('Cortez') || vehicleForm.vehicleName.includes('Expander')) {
-        driver = 'Pak Hendra';
-      }
-    }
+    const driver = vehicleForm.driverOption === 'Dengan Supir' ? 'Dengan Supir' : 'Tanpa Supir';
 
     const words = vehicleForm.vehicleName.split(' ');
     const plateNumber = words.length >= 3 ? words.slice(-3).join(' ') : 'BM 0000 XX';
@@ -986,8 +978,8 @@ export default function TurtSection({
 
                       <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs space-y-1">
                         <div className="flex justify-between text-slate-700">
-                          <span className="text-slate-500">Plat / Supir:</span>
-                          <span className="font-semibold text-slate-800">{pending.plateNumber} ({pending.driverName})</span>
+                          <span className="text-slate-500">Plat / Layanan:</span>
+                          <span className="font-semibold text-slate-800">{pending.plateNumber} ({pending.driverOption || (pending.driverName?.includes('Tanpa') ? 'Tanpa Supir' : 'Dengan Supir')})</span>
                         </div>
                         <div className="flex justify-between text-slate-700">
                           <span className="text-slate-500">Pemohon:</span>
@@ -1007,12 +999,12 @@ export default function TurtSection({
                     {/* Catatan Admin Input */}
                     <div className="space-y-2 pt-2 border-t border-slate-100">
                       <label className="block text-[10px] font-bold text-slate-500 uppercase">
-                        Catatan Persetujuan Admin / Lokasi Driver:
+                        Catatan Persetujuan Admin:
                       </label>
                       <input 
                         type="text"
                         className="w-full p-2 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-djpb-blue"
-                        placeholder="Contoh: Disetujui. Driver Pak Budi siap di lobi depan..."
+                        placeholder="Contoh: Disetujui. Kendaraan dan supir dinas siap di lobi depan..."
                         value={vehicleApprovalNotes[pending.id] || ''}
                         onChange={(e) => setVehicleApprovalNotes({ ...vehicleApprovalNotes, [pending.id]: e.target.value })}
                       />
@@ -1144,7 +1136,7 @@ export default function TurtSection({
                         <td className="py-3.5 px-4 font-bold text-slate-800">{booking.vehicleName}</td>
                         <td className="py-3.5 px-4">
                           <div className="font-semibold text-slate-800">{booking.plateNumber}</div>
-                          <div className="text-[10px] text-amber-700 font-medium">Supir: {booking.driverName}</div>
+                          <div className="text-[10px] text-amber-700 font-medium">{booking.driverOption || (booking.driverName?.includes('Tanpa') ? 'Tanpa Supir' : 'Dengan Supir')}</div>
                         </td>
                         <td className="py-3.5 px-4 font-medium">{booking.bookerName}</td>
                         <td className="py-3.5 px-4">
@@ -1198,14 +1190,16 @@ export default function TurtSection({
                                 Selesai
                               </button>
                             )}
-                            <button
-                              id={`btn-delete-vehicle-persetujuan-${booking.id}`}
-                              onClick={() => handleDeleteVehicle(booking.id)}
-                              className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
-                              title="Hapus"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {isAdmin && (
+                              <button
+                                id={`btn-delete-vehicle-persetujuan-${booking.id}`}
+                                onClick={() => handleDeleteVehicle(booking.id)}
+                                className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                                title="Hapus"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -1862,15 +1856,12 @@ export default function TurtSection({
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-800">{vehicle.plateNumber}</div>
                         <div className="flex items-center space-x-1.5 mt-0.5">
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                            vehicle.driverOption === 'Tanpa Supir' || vehicle.driverName.includes('Tanpa Supir')
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            vehicle.driverOption === 'Tanpa Supir' || vehicle.driverName?.includes('Tanpa')
                               ? 'bg-amber-100 text-amber-800 border border-amber-300'
                               : 'bg-blue-100 text-blue-800 border border-blue-300'
                           }`}>
-                            {vehicle.driverOption || (vehicle.driverName.includes('Tanpa Supir') ? 'Tanpa Supir' : 'Dengan Supir')}
-                          </span>
-                          <span className="text-[10px] text-slate-600 font-medium">
-                            {vehicle.driverName}
+                            {vehicle.driverOption || (vehicle.driverName?.includes('Tanpa') ? 'Tanpa Supir' : 'Dengan Supir')}
                           </span>
                         </div>
                       </td>
@@ -1926,14 +1917,16 @@ export default function TurtSection({
                               Selesai
                             </button>
                           )}
-                          <button
-                            id={`btn-delete-vehicle-${vehicle.id}`}
-                            onClick={() => handleDeleteVehicle(vehicle.id)}
-                            className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
-                            title="Hapus"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              id={`btn-delete-vehicle-${vehicle.id}`}
+                              onClick={() => handleDeleteVehicle(vehicle.id)}
+                              className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
