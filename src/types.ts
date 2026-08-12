@@ -28,6 +28,7 @@ export interface VehicleBooking {
   vehicleName: string;
   plateNumber: string;
   driverName: string;
+  driverOption?: 'Dengan Supir' | 'Tanpa Supir';
   bookerName: string;
   destination: string;
   date: string;

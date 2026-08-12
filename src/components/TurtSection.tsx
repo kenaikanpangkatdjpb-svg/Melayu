@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, Calendar, Trash2, Check, X, ShieldAlert, Shield, ShieldCheck,
   HelpCircle, Sparkles, Star, ClipboardList, PenTool, Pencil,
-  CheckCircle2, Clock, Filter, AlertCircle, FileCheck, FileText, Car
+  CheckCircle2, Clock, Filter, AlertCircle, FileCheck, FileText, Car, UserCheck, Home
 } from 'lucide-react';
 import { 
   RoomBooking, ItemBooking, VehicleBooking, 
@@ -47,6 +47,24 @@ export default function TurtSection({
   onNavigateToTab
 }: TurtSectionProps) {
   const isAdmin = currentUser ? currentUser.role === 'admin' : isEditMode;
+  // Inner active sub-tab for room and vehicle
+  const [roomActiveTab, setRoomActiveTab] = useState<'daftar' | 'persetujuan'>('daftar');
+  const [vehicleActiveTab, setVehicleActiveTab] = useState<'daftar' | 'persetujuan'>('daftar');
+
+  useEffect(() => {
+    if (subTab === 'persetujuan-ruangan') {
+      setRoomActiveTab('persetujuan');
+    } else if (subTab === 'peminjaman-ruangan') {
+      setRoomActiveTab('daftar');
+    }
+
+    if (subTab === 'persetujuan-kendaraan') {
+      setVehicleActiveTab('persetujuan');
+    } else if (subTab === 'peminjaman-kendaraan') {
+      setVehicleActiveTab('daftar');
+    }
+  }, [subTab]);
+
   // Needs View Mode ('spbp' for Surat Permintaan Official, 'rekap' for Table)
   const [needsViewMode, setNeedsViewMode] = useState<'spbp' | 'rekap'>('spbp');
 
@@ -101,6 +119,7 @@ export default function TurtSection({
   // Form states - Vehicle
   const [vehicleForm, setVehicleForm] = useState({
     vehicleName: 'Toyota Kijang Innova BM 1679 T',
+    driverOption: 'Dengan Supir' as 'Dengan Supir' | 'Tanpa Supir',
     driverName: 'Pak Budi',
     bookerName: '',
     destination: '',
@@ -309,12 +328,15 @@ export default function TurtSection({
   const handleAddVehicleBooking = (e: React.FormEvent) => {
     e.preventDefault();
     if (!vehicleForm.bookerName || !vehicleForm.destination) return;
-    // Map drivers to cars
-    let driver = 'Pak Budi';
-    if (vehicleForm.vehicleName.includes('Reborn') || vehicleForm.vehicleName.includes('Fortuner')) {
-      driver = 'Pak Agus';
-    } else if (vehicleForm.vehicleName.includes('Cortez') || vehicleForm.vehicleName.includes('Expander')) {
-      driver = 'Pak Hendra';
+    
+    let driver = 'Tanpa Supir (Lepas Kunci)';
+    if (vehicleForm.driverOption === 'Dengan Supir') {
+      driver = 'Pak Budi';
+      if (vehicleForm.vehicleName.includes('Reborn') || vehicleForm.vehicleName.includes('Fortuner')) {
+        driver = 'Pak Agus';
+      } else if (vehicleForm.vehicleName.includes('Cortez') || vehicleForm.vehicleName.includes('Expander')) {
+        driver = 'Pak Hendra';
+      }
     }
 
     const words = vehicleForm.vehicleName.split(' ');
@@ -325,6 +347,7 @@ export default function TurtSection({
       vehicleName: vehicleForm.vehicleName,
       plateNumber: plateNumber,
       driverName: driver,
+      driverOption: vehicleForm.driverOption,
       bookerName: vehicleForm.bookerName,
       destination: vehicleForm.destination,
       date: vehicleForm.date,
@@ -333,7 +356,7 @@ export default function TurtSection({
     };
     setVehicleBookings([newBooking, ...vehicleBookings]);
     setShowVehicleModal(false);
-    setVehicleForm({ ...vehicleForm, bookerName: '', destination: '' });
+    setVehicleForm({ ...vehicleForm, bookerName: '', destination: '', driverOption: 'Dengan Supir' });
   };
 
   const handleApproveVehicle = (id: string, approve: boolean, customNote?: string) => {
@@ -427,8 +450,42 @@ export default function TurtSection({
   return (
     <div className="p-6 space-y-6" id="turt-section-root">
       {/* ----------------- SUB-TAB: PERSETUJUAN PEMINJAMAN RUANGAN (ADMIN) ----------------- */}
-      {subTab === 'persetujuan-ruangan' && (
+      {(subTab === 'persetujuan-ruangan' || (subTab === 'peminjaman-ruangan' && roomActiveTab === 'persetujuan')) && (
         <div className="space-y-6" id="persetujuan-ruangan-subtab">
+          {/* Admin Inner Navigation Tabs */}
+          {isAdmin && (
+            <div className="flex items-center space-x-2 border-b border-slate-200 pb-3" id="admin-room-persetujuan-tab-switcher">
+              <button
+                type="button"
+                onClick={() => setRoomActiveTab('daftar')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                  roomActiveTab === 'daftar'
+                    ? 'bg-djpb-blue text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                <Home className="w-4 h-4" />
+                <span>Daftar Peminjaman Ruangan</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRoomActiveTab('persetujuan')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                  roomActiveTab === 'persetujuan'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
+                }`}
+              >
+                <FileCheck className="w-4 h-4" />
+                <span>Menu Persetujuan Peminjaman Ruangan</span>
+                {roomBookings.filter(b => b.status === 'Pending').length > 0 && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-extrabold rounded-full bg-red-600 text-white animate-pulse">
+                    {roomBookings.filter(b => b.status === 'Pending').length} Pending
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs">
             <div className="flex items-center space-x-3">
@@ -772,8 +829,42 @@ export default function TurtSection({
       )}
 
       {/* ----------------- SUB-TAB: PERSETUJUAN PEMINJAMAN KENDARAAN (ADMIN) ----------------- */}
-      {subTab === 'persetujuan-kendaraan' && (
+      {(subTab === 'persetujuan-kendaraan' || (subTab === 'peminjaman-kendaraan' && vehicleActiveTab === 'persetujuan')) && (
         <div className="space-y-6" id="persetujuan-kendaraan-subtab">
+          {/* Admin Inner Navigation Tabs */}
+          {isAdmin && (
+            <div className="flex items-center space-x-2 border-b border-slate-200 pb-3" id="admin-vehicle-persetujuan-tab-switcher">
+              <button
+                type="button"
+                onClick={() => setVehicleActiveTab('daftar')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                  vehicleActiveTab === 'daftar'
+                    ? 'bg-djpb-blue text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                <Car className="w-4 h-4" />
+                <span>Daftar Peminjaman Kendaraan</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setVehicleActiveTab('persetujuan')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                  vehicleActiveTab === 'persetujuan'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
+                }`}
+              >
+                <FileCheck className="w-4 h-4" />
+                <span>Menu Persetujuan Peminjaman Kendaraan</span>
+                {vehicleBookings.filter(v => v.status === 'Pending').length > 0 && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-extrabold rounded-full bg-red-600 text-white animate-pulse">
+                    {vehicleBookings.filter(v => v.status === 'Pending').length} Pending
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
           {/* Header Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-xs">
             <div className="flex items-center space-x-3">
@@ -1140,8 +1231,43 @@ export default function TurtSection({
       )}
 
       {/* ----------------- SUB-TAB: PEMINJAMAN RUANGAN ----------------- */}
-      {subTab === 'peminjaman-ruangan' && (
+      {(subTab === 'peminjaman-ruangan' && roomActiveTab === 'daftar') && (
         <div className="space-y-4" id="room-subtab">
+          {/* Admin Inner Navigation Tabs */}
+          {isAdmin && (
+            <div className="flex items-center space-x-2 border-b border-slate-200 pb-3" id="admin-room-tab-switcher">
+              <button
+                type="button"
+                onClick={() => setRoomActiveTab('daftar')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                  roomActiveTab === 'daftar'
+                    ? 'bg-djpb-blue text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                <Home className="w-4 h-4" />
+                <span>Daftar Peminjaman Ruangan</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRoomActiveTab('persetujuan')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                  roomActiveTab === 'persetujuan'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
+                }`}
+              >
+                <FileCheck className="w-4 h-4 text-amber-700" />
+                <span>Menu Persetujuan Peminjaman Ruangan</span>
+                {roomBookings.filter(b => b.status === 'Pending').length > 0 && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-extrabold rounded-full bg-red-500 text-white animate-pulse">
+                    {roomBookings.filter(b => b.status === 'Pending').length} Pending
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base md:text-lg font-display font-bold text-slate-800">Peminjaman Ruang Rapat & Aula</h2>
@@ -1172,14 +1298,20 @@ export default function TurtSection({
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-600 mt-0.5">
-                    Terdapat <strong className="text-amber-800 font-bold">{roomBookings.filter(b => b.status === 'Pending').length} permohonan</strong> yang memerlukan persetujuan. Anda dapat langsung menyetujui atau menolak permohonan pada kolom <strong>Aksi</strong> tabel di bawah.
+                    Terdapat <strong className="text-amber-800 font-bold">{roomBookings.filter(b => b.status === 'Pending').length} permohonan</strong> yang memerlukan persetujuan administrator.
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-2 shrink-0">
-                <span className="px-3 py-1.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300">
-                  {roomBookings.filter(b => b.status === 'Pending').length} Pending
-                </span>
+                <button
+                  type="button"
+                  id="btn-open-persetujuan-ruangan-page"
+                  onClick={() => setRoomActiveTab('persetujuan')}
+                  className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center space-x-1.5"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Buka Halaman Persetujuan Ruangan</span>
+                </button>
               </div>
             </div>
           )}
@@ -1624,8 +1756,43 @@ export default function TurtSection({
       )}
 
       {/* ----------------- SUB-TAB: PEMINJAMAN KENDARAAN ----------------- */}
-      {subTab === 'peminjaman-kendaraan' && (
+      {(subTab === 'peminjaman-kendaraan' && vehicleActiveTab === 'daftar') && (
         <div className="space-y-4" id="vehicle-subtab">
+          {/* Admin Inner Navigation Tabs */}
+          {isAdmin && (
+            <div className="flex items-center space-x-2 border-b border-slate-200 pb-3" id="admin-vehicle-tab-switcher">
+              <button
+                type="button"
+                onClick={() => setVehicleActiveTab('daftar')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                  vehicleActiveTab === 'daftar'
+                    ? 'bg-djpb-blue text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                <Car className="w-4 h-4" />
+                <span>Daftar Peminjaman Kendaraan</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setVehicleActiveTab('persetujuan')}
+                className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
+                  vehicleActiveTab === 'persetujuan'
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
+                }`}
+              >
+                <FileCheck className="w-4 h-4 text-amber-700" />
+                <span>Menu Persetujuan Peminjaman Kendaraan</span>
+                {vehicleBookings.filter(v => v.status === 'Pending').length > 0 && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-extrabold rounded-full bg-red-500 text-white animate-pulse">
+                    {vehicleBookings.filter(v => v.status === 'Pending').length} Pending
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base md:text-lg font-display font-bold text-slate-800">Peminjaman Kendaraan Dinas & Supir</h2>
@@ -1656,14 +1823,20 @@ export default function TurtSection({
                     </span>
                   </h3>
                   <p className="text-[11px] text-slate-600 mt-0.5">
-                    Terdapat <strong className="text-amber-800 font-bold">{vehicleBookings.filter(v => v.status === 'Pending').length} permohonan</strong> yang memerlukan persetujuan. Anda dapat langsung menyetujui atau menolak permohonan pada kolom <strong>Aksi</strong> tabel di bawah.
+                    Terdapat <strong className="text-amber-800 font-bold">{vehicleBookings.filter(v => v.status === 'Pending').length} permohonan</strong> yang memerlukan persetujuan administrator.
                   </p>
                 </div>
               </div>
               <div className="flex items-center space-x-2 shrink-0">
-                <span className="px-3 py-1.5 bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-300">
-                  {vehicleBookings.filter(v => v.status === 'Pending').length} Pending
-                </span>
+                <button
+                  type="button"
+                  id="btn-open-persetujuan-kendaraan-page"
+                  onClick={() => setVehicleActiveTab('persetujuan')}
+                  className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow-2xs transition-colors cursor-pointer flex items-center space-x-1.5"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>Buka Halaman Persetujuan Kendaraan</span>
+                </button>
               </div>
             </div>
           )}
@@ -1688,7 +1861,18 @@ export default function TurtSection({
                       <td className="py-3.5 px-4 font-bold text-slate-800">{vehicle.vehicleName}</td>
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-800">{vehicle.plateNumber}</div>
-                        <div className="text-[10px] text-amber-700 font-medium">Supir: {vehicle.driverName}</div>
+                        <div className="flex items-center space-x-1.5 mt-0.5">
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                            vehicle.driverOption === 'Tanpa Supir' || vehicle.driverName.includes('Tanpa Supir')
+                              ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                              : 'bg-blue-100 text-blue-800 border border-blue-300'
+                          }`}>
+                            {vehicle.driverOption || (vehicle.driverName.includes('Tanpa Supir') ? 'Tanpa Supir' : 'Dengan Supir')}
+                          </span>
+                          <span className="text-[10px] text-slate-600 font-medium">
+                            {vehicle.driverName}
+                          </span>
+                        </div>
                       </td>
                       <td className="py-3.5 px-4 font-medium">{vehicle.bookerName}</td>
                       <td className="py-3.5 px-4">
@@ -2294,6 +2478,43 @@ export default function TurtSection({
                   <option>Toyota Fortuner BM 1987 T</option>
                   <option>Mitsubishi Expander BM 1737 T</option>
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Pilihan Layanan Supir</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setVehicleForm({ ...vehicleForm, driverOption: 'Dengan Supir' })}
+                    className={`p-2.5 rounded-lg border text-left flex items-center space-x-2 transition-all cursor-pointer ${
+                      vehicleForm.driverOption === 'Dengan Supir'
+                        ? 'bg-blue-50/80 border-djpb-blue text-djpb-blue font-bold shadow-2xs ring-1 ring-djpb-blue/20'
+                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
+                    }`}
+                  >
+                    <UserCheck className={`w-4 h-4 shrink-0 ${vehicleForm.driverOption === 'Dengan Supir' ? 'text-djpb-blue' : 'text-slate-400'}`} />
+                    <div>
+                      <div className="text-xs">Dengan Supir</div>
+                      <div className="text-[9px] text-slate-400 font-normal">Disiapkan pengemudi</div>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setVehicleForm({ ...vehicleForm, driverOption: 'Tanpa Supir' })}
+                    className={`p-2.5 rounded-lg border text-left flex items-center space-x-2 transition-all cursor-pointer ${
+                      vehicleForm.driverOption === 'Tanpa Supir'
+                        ? 'bg-amber-50/80 border-amber-500 text-amber-900 font-bold shadow-2xs ring-1 ring-amber-500/20'
+                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-600'
+                    }`}
+                  >
+                    <Car className={`w-4 h-4 shrink-0 ${vehicleForm.driverOption === 'Tanpa Supir' ? 'text-amber-600' : 'text-slate-400'}`} />
+                    <div>
+                      <div className="text-xs">Tanpa Supir</div>
+                      <div className="text-[9px] text-slate-400 font-normal">Lepas kunci</div>
+                    </div>
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
