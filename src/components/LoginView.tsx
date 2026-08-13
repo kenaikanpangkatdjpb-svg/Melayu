@@ -66,36 +66,36 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col justify-center items-center p-3.5 sm:p-6 relative" id="login-view-container">
+    <div className="min-h-screen bg-slate-100 flex flex-col justify-center items-center p-4 relative" id="login-view-container">
       {/* Absolute Decorative Blue/Gold Top Line */}
       <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-djpb-blue via-djpb-blue-light to-djpb-gold"></div>
 
-      <div className="w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden" id="login-card">
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden" id="login-card">
         
         {/* Header section with brand and crest */}
-        <div className="p-5 sm:p-6 bg-slate-50 border-b border-slate-100 text-center flex flex-col items-center">
+        <div className="p-6 bg-slate-50 border-b border-slate-100 text-center flex flex-col items-center">
           
           {/* Logo Kementerian Keuangan */}
-          <div className="mb-3 sm:mb-4 flex items-center justify-center">
-            <KemenkeuLogo className="w-20 h-20 sm:w-24 sm:h-24 filter drop-shadow-sm shrink-0" />
+          <div className="mb-4 flex items-center justify-center">
+            <KemenkeuLogo className="w-24 h-24 filter drop-shadow-sm shrink-0" />
           </div>
 
-          <h2 className="text-xs sm:text-sm font-bold tracking-wider text-slate-700 font-sans leading-none">
+          <h2 className="text-sm font-bold tracking-wider text-slate-700 font-sans leading-none">
             KEMENKEU RI
           </h2>
-          <p className="text-[9px] sm:text-[10px] font-medium text-slate-500 uppercase tracking-wide mt-1">
+          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mt-1">
             DITJEN PERBENDAHARAAN
           </p>
-          <h1 className="text-sm sm:text-base font-black tracking-tight text-slate-900 uppercase mt-1.5 font-sans">
+          <h1 className="text-base font-black tracking-tight text-slate-900 uppercase mt-1.5 font-sans">
             KANWIL DJPb PROV. RIAU
           </h1>
-          <div className="mt-2.5 sm:mt-3 px-3 py-1 bg-djpb-blue/10 rounded-full text-[10px] sm:text-[11px] font-bold text-djpb-blue tracking-wider font-mono">
+          <div className="mt-3 px-3.5 py-1 bg-djpb-blue/10 rounded-full text-xs font-bold text-djpb-blue tracking-wider font-mono">
             MEDIA LAYANAN UMUM (MELAYU)
           </div>
         </div>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="p-5 sm:p-6 space-y-4" id="login-form-element">
+        <form onSubmit={handleLogin} className="p-6 space-y-4" id="login-form-element">
           {error && (
             <div className="flex items-center space-x-2 bg-red-50 text-red-600 text-xs p-3 rounded-lg border border-red-200 animate-in fade-in duration-200" id="login-error-alert">
               <AlertCircle className="w-4 h-4 shrink-0" />

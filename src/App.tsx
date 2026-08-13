@@ -81,8 +81,16 @@ export default function App() {
     }
   }, [currentUser]);
 
+  const handleLoginSuccess = (user: CurrentUser) => {
+    setCurrentUser(user);
+    setActiveTab('selamat-datang');
+    localStorage.setItem('melayu_active_tab', 'selamat-datang');
+  };
+
   const handleLogout = () => {
     setCurrentUser(null);
+    setActiveTab('selamat-datang');
+    localStorage.setItem('melayu_active_tab', 'selamat-datang');
   };
 
   // Core Persistent States (with LocalStorage backing)
@@ -378,7 +386,7 @@ export default function App() {
   };
 
   if (!currentUser) {
-    return <LoginView onLoginSuccess={setCurrentUser} />;
+    return <LoginView onLoginSuccess={handleLoginSuccess} />;
   }
 
   return (
