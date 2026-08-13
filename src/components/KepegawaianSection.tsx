@@ -9,6 +9,7 @@ import {
 import * as XLSX from 'xlsx';
 import { GKMAgreement, ScholarshipInfo, CurrentUser } from '../types';
 import TLegoView from './TLegoView';
+import CekSeribuMatrixTable from './CekSeribuMatrixTable';
 import { saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
 
 interface KepegawaianSectionProps {
@@ -131,7 +132,7 @@ export default function KepegawaianSection({
     ];
   });
 
-  const [cekSeribuViewMode, setCekSeribuViewMode] = useState<'table' | 'card'>('table');
+  const [cekSeribuViewMode, setCekSeribuViewMode] = useState<'matrix' | 'table' | 'card'>('matrix');
   const [selectedImageModal, setSelectedImageModal] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [searchCekSeribu, setSearchCekSeribu] = useState('');
@@ -1309,7 +1310,7 @@ export default function KepegawaianSection({
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto shrink-0">
-                  {canManageAdmin && uploadedCertificates.length > 0 && (
+                  {canManageAdmin && (
                     <button
                       type="button"
                       onClick={() => setShowDeleteAllModal(true)}
@@ -1365,6 +1366,18 @@ export default function KepegawaianSection({
                 <div className="flex items-center bg-slate-200/80 p-1 rounded-xl border border-slate-300/80 text-xs shrink-0">
                   <button
                     type="button"
+                    onClick={() => setCekSeribuViewMode('matrix')}
+                    className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
+                      cekSeribuViewMode === 'matrix'
+                        ? 'bg-emerald-700 text-white shadow-xs'
+                        : 'text-slate-700 hover:text-slate-900'
+                    }`}
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>Tampilan Matrix Excel</span>
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setCekSeribuViewMode('table')}
                     className={`px-3 py-1.5 rounded-lg font-bold transition-all flex items-center space-x-1.5 cursor-pointer ${
                       cekSeribuViewMode === 'table'
@@ -1373,7 +1386,7 @@ export default function KepegawaianSection({
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    <span>Tabel Ringkas</span>
+                    <span>Tabel Ringkas List</span>
                   </button>
                   <button
                     type="button"
@@ -1390,58 +1403,64 @@ export default function KepegawaianSection({
                 </div>
               </div>
 
-              {/* Menu Search & Filter Tanggal Presensi */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-2xs items-center">
-                {/* Search Bar */}
-                <div className="md:col-span-7 relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={searchCekSeribu}
-                    onChange={(e) => setSearchCekSeribu(e.target.value)}
-                    placeholder="Cari nama pegawai, file berkas Cek Seribu..."
-                    className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-djpb-blue focus:bg-white transition-all"
-                  />
-                  {searchCekSeribu && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchCekSeribu('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
+              {/* Display Mode Render */}
+              {cekSeribuViewMode === 'matrix' ? (
+                /* Full Matrix Table matching screenshot */
+                <CekSeribuMatrixTable canManageAdmin={canManageAdmin} />
+              ) : (
+                <>
+                  {/* Menu Search & Filter Tanggal Presensi */}
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-2xs items-center">
+                    {/* Search Bar */}
+                    <div className="md:col-span-7 relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={searchCekSeribu}
+                        onChange={(e) => setSearchCekSeribu(e.target.value)}
+                        placeholder="Cari nama pegawai, file berkas Cek Seribu..."
+                        className="w-full pl-9 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-djpb-blue focus:bg-white transition-all"
+                      />
+                      {searchCekSeribu && (
+                        <button
+                          type="button"
+                          onClick={() => setSearchCekSeribu('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
 
-                {/* Filter Tanggal */}
-                <div className="md:col-span-5 flex items-center space-x-2">
-                  <div className="relative w-full">
-                    <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="date"
-                      value={dateFilterCekSeribu}
-                      onChange={(e) => setDateFilterCekSeribu(e.target.value)}
-                      title="Pilih tanggal presensi"
-                      className="w-full pl-9 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800 focus:outline-none focus:border-djpb-blue focus:bg-white transition-all"
-                    />
+                    {/* Filter Tanggal */}
+                    <div className="md:col-span-5 flex items-center space-x-2">
+                      <div className="relative w-full">
+                        <Calendar className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="date"
+                          value={dateFilterCekSeribu}
+                          onChange={(e) => setDateFilterCekSeribu(e.target.value)}
+                          title="Pilih tanggal presensi"
+                          className="w-full pl-9 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono font-bold text-slate-800 focus:outline-none focus:border-djpb-blue focus:bg-white transition-all"
+                        />
+                      </div>
+
+                      {(searchCekSeribu || dateFilterCekSeribu) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSearchCekSeribu('');
+                            setDateFilterCekSeribu('');
+                          }}
+                          className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-colors shrink-0 flex items-center space-x-1 cursor-pointer"
+                          title="Reset Filter"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Reset</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
-
-                  {(searchCekSeribu || dateFilterCekSeribu) && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchCekSeribu('');
-                        setDateFilterCekSeribu('');
-                      }}
-                      className="px-2.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold transition-colors shrink-0 flex items-center space-x-1 cursor-pointer"
-                      title="Reset Filter"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Reset</span>
-                    </button>
-                  )}
-                </div>
-              </div>
 
               {/* Display Mode Switch: TABLE VIEW vs CARD VIEW */}
               {cekSeribuViewMode === 'table' ? (
@@ -1563,6 +1582,8 @@ export default function KepegawaianSection({
                   )}
                 </div>
               )}
+            </>
+          )}
             </div>
           </div>
         </div>
