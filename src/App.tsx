@@ -40,7 +40,7 @@ import {
   INITIAL_SECURITY_ROSTER,
   INITIAL_USERS
 } from './mockData';
-import { getUsersFromFirestore } from './lib/firebase';
+import { getUsersFromFirestore, subscribeFirestoreCollection, saveFirestoreCollection } from './lib/firebase';
 
 export default function App() {
   // User Session State
@@ -170,70 +170,101 @@ export default function App() {
   const performanceMetrics: PerformanceMetric[] = INITIAL_PERFORMANCE_METRICS;
   const workloadMetrics: WorkloadMetric[] = INITIAL_WORKLOAD_METRICS;
 
-  // Sync state to local storage
+  // Real-time sync with Firebase Firestore on mount across all devices (Handphone <-> PC)
+  useEffect(() => {
+    const unsubRooms = subscribeFirestoreCollection<RoomBooking>('rooms', INITIAL_ROOM_BOOKINGS, setRoomBookings);
+    const unsubItems = subscribeFirestoreCollection<ItemBooking>('items', INITIAL_ITEM_BOOKINGS, setItemBookings);
+    const unsubVehicles = subscribeFirestoreCollection<VehicleBooking>('vehicles', INITIAL_VEHICLE_BOOKINGS, setVehicleBookings);
+    const unsubFeedbacks = subscribeFirestoreCollection<FacilityFeedback>('feedbacks', INITIAL_FACILITY_FEEDBACK, setFeedbacks);
+    const unsubNeeds = subscribeFirestoreCollection<MonthlyNeed>('needs', INITIAL_MONTHLY_NEEDS, setNeeds);
+    const unsubGkm = subscribeFirestoreCollection<GKMAgreement>('gkm', INITIAL_GKM_AGREEMENTS, setGkmList);
+    const unsubRealizations = subscribeFirestoreCollection<RealizationProgress>('realizations', INITIAL_REALIZATION_PROGRESS, setRealizations);
+    const unsubVisitors = subscribeFirestoreCollection<VisitorLog>('visitors', INITIAL_VISITOR_LOGS, setVisitorLogs);
+    const unsubShifts = subscribeFirestoreCollection<SecurityShift>('security_shifts', INITIAL_SECURITY_SHIFTS, setSecurityShifts);
+    const unsubRoster = subscribeFirestoreCollection<SecurityRosterItem>('security_roster', INITIAL_SECURITY_ROSTER, setSecurityRoster);
+    const unsubUsers = subscribeFirestoreCollection<UserAccount>('users', INITIAL_USERS, setUsersList);
+    const unsubScholarships = subscribeFirestoreCollection<ScholarshipInfo>('scholarships', INITIAL_SCHOLARSHIPS, setScholarships);
+
+    return () => {
+      unsubRooms();
+      unsubItems();
+      unsubVehicles();
+      unsubFeedbacks();
+      unsubNeeds();
+      unsubGkm();
+      unsubRealizations();
+      unsubVisitors();
+      unsubShifts();
+      unsubRoster();
+      unsubUsers();
+      unsubScholarships();
+    };
+  }, []);
+
+  // Sync state to local storage and Firestore
   useEffect(() => {
     localStorage.setItem('melayu_scholarships', JSON.stringify(scholarships));
+    saveFirestoreCollection('scholarships', scholarships);
   }, [scholarships]);
 
-  // Sync state to local storage
   useEffect(() => {
     localStorage.setItem('melayu_active_tab', activeTab);
   }, [activeTab]);
 
   useEffect(() => {
     localStorage.setItem('melayu_rooms', JSON.stringify(roomBookings));
+    saveFirestoreCollection('rooms', roomBookings);
   }, [roomBookings]);
 
   useEffect(() => {
     localStorage.setItem('melayu_items', JSON.stringify(itemBookings));
+    saveFirestoreCollection('items', itemBookings);
   }, [itemBookings]);
 
   useEffect(() => {
     localStorage.setItem('melayu_vehicles', JSON.stringify(vehicleBookings));
+    saveFirestoreCollection('vehicles', vehicleBookings);
   }, [vehicleBookings]);
 
   useEffect(() => {
     localStorage.setItem('melayu_feedbacks', JSON.stringify(feedbacks));
+    saveFirestoreCollection('feedbacks', feedbacks);
   }, [feedbacks]);
 
   useEffect(() => {
     localStorage.setItem('melayu_needs', JSON.stringify(needs));
+    saveFirestoreCollection('needs', needs);
   }, [needs]);
 
   useEffect(() => {
     localStorage.setItem('melayu_gkm', JSON.stringify(gkmList));
+    saveFirestoreCollection('gkm', gkmList);
   }, [gkmList]);
 
   useEffect(() => {
     localStorage.setItem('melayu_realizations', JSON.stringify(realizations));
+    saveFirestoreCollection('realizations', realizations);
   }, [realizations]);
 
   useEffect(() => {
     localStorage.setItem('melayu_visitors', JSON.stringify(visitorLogs));
+    saveFirestoreCollection('visitors', visitorLogs);
   }, [visitorLogs]);
 
   useEffect(() => {
     localStorage.setItem('melayu_security_shifts', JSON.stringify(securityShifts));
+    saveFirestoreCollection('security_shifts', securityShifts);
   }, [securityShifts]);
 
   useEffect(() => {
     localStorage.setItem('melayu_security_roster', JSON.stringify(securityRoster));
+    saveFirestoreCollection('security_roster', securityRoster);
   }, [securityRoster]);
 
   useEffect(() => {
     localStorage.setItem('melayu_users', JSON.stringify(usersList));
+    saveFirestoreCollection('users', usersList);
   }, [usersList]);
-
-  // Load users from Firebase Firestore on app load
-  useEffect(() => {
-    getUsersFromFirestore()
-      .then((fsUsers) => {
-        if (fsUsers && fsUsers.length > 0) {
-          setUsersList(fsUsers);
-        }
-      })
-      .catch((err) => console.error('Failed fetching users from Firestore on app mount:', err));
-  }, []);
 
   // Reset Handler
   const handleResetData = () => {

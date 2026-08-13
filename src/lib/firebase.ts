@@ -1,5 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc, query, where } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc, query, where, onSnapshot } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import firebaseConfig from '../../firebase-applet-config.json';
 import { INITIAL_USERS } from '../mockData';
@@ -102,3 +102,92 @@ export async function authenticateUserReal(usernameInput: string, passwordInput:
     return null;
   }
 }
+
+// Generic subscribe with onSnapshot & auto-seed if empty
+export function subscribeFirestoreCollection<T extends { id: string }>(
+  collectionName: string,
+  initialData: T[],
+  onUpdate: (data: T[]) => void
+): () => void {
+  try {
+    const colRef = collection(db, collectionName);
+    const unsubscribe = onSnapshot(
+      colRef,
+      async (snapshot) => {
+        if (snapshot.empty) {
+          console.log(`Seeding initial ${collectionName} to Firestore...`);
+          for (const item of initialData) {
+            await setDoc(doc(db, collectionName, item.id), item);
+          }
+          onUpdate(initialData);
+        } else {
+          const items: T[] = [];
+          snapshot.forEach((docSnap) => {
+            items.push(docSnap.data() as T);
+          });
+          onUpdate(items);
+        }
+      },
+      (error) => {
+        console.warn(`Firestore subscription error for ${collectionName}:`, error);
+        const local = localStorage.getItem(`melayu_${collectionName}`);
+        if (local) {
+          try {
+            onUpdate(JSON.parse(local));
+          } catch (e) {
+            onUpdate(initialData);
+          }
+        } else {
+          onUpdate(initialData);
+        }
+      }
+    );
+    return unsubscribe;
+  } catch (err) {
+    console.error(`Failed to subscribe to ${collectionName}:`, err);
+    return () => {};
+  }
+}
+
+// Generic save single item to Firestore
+export async function saveFirestoreDoc<T extends { id: string }>(
+  collectionName: string,
+  item: T
+): Promise<void> {
+  try {
+    const itemRef = doc(db, collectionName, item.id);
+    await setDoc(itemRef, item, { merge: true });
+  } catch (error) {
+    console.error(`Error saving doc to ${collectionName}:`, error);
+  }
+}
+
+// Generic delete single doc from Firestore
+export async function deleteFirestoreDoc(
+  collectionName: string,
+  id: string
+): Promise<void> {
+  try {
+    const itemRef = doc(db, collectionName, id);
+    await deleteDoc(itemRef);
+  } catch (error) {
+    console.error(`Error deleting doc from ${collectionName}:`, error);
+  }
+}
+
+// Generic save entire collection (bulk sync on change)
+export async function saveFirestoreCollection<T extends { id: string }>(
+  collectionName: string,
+  items: T[]
+): Promise<void> {
+  try {
+    for (const item of items) {
+      if (item.id) {
+        await setDoc(doc(db, collectionName, item.id), item, { merge: true });
+      }
+    }
+  } catch (error) {
+    console.error(`Error saving collection ${collectionName}:`, error);
+  }
+}
+
