@@ -128,11 +128,16 @@ export default function UserManagementSection({
   };
 
   // Filter users based on search, role, status
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = (users || []).filter(user => {
+    if (!user) return false;
+    const fullName = user.fullName || '';
+    const username = user.username || '';
+    const employeeId = user.employeeId || '';
+    
     const matchesSearch = 
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
+      fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employeeId.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesRole = roleFilter === 'Semua Role' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'Semua Status' || user.status === statusFilter;

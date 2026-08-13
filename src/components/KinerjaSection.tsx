@@ -103,10 +103,13 @@ export default function KinerjaSection({
     { no: 12, kode: '7b-N', nama: 'Nilai Kinerja TIK Kanwil DJPb', targetQ1: 83, realisasiQ1: 100, indeksQ1: 120, targetQ2: 83, realisasiQ2: null, indeksQ2: null, targetQ3: 83, realisasiQ3: null, indeksQ3: null, targetQ4: 83, realisasiQ4: null, indeksQ4: null, keterangan: 'Tercapai Maksimal (120%)' }
   ];
 
-  const filteredIkuList = ikuDataList.filter(item =>
-    item.kode.toLowerCase().includes(ikuSearch.toLowerCase()) ||
-    item.nama.toLowerCase().includes(ikuSearch.toLowerCase())
-  );
+  const filteredIkuList = (ikuDataList || []).filter(item => {
+    if (!item) return false;
+    const kode = item.kode || '';
+    const nama = item.nama || '';
+    return kode.toLowerCase().includes(ikuSearch.toLowerCase()) ||
+           nama.toLowerCase().includes(ikuSearch.toLowerCase());
+  });
 
   // Monitoring ABK State & Data
   const [abkSearch, setAbkSearch] = useState('');
@@ -135,10 +138,13 @@ export default function KinerjaSection({
     keterangan: 'Kekurangan 2 Pejabat Pengawas dan 11 Pegawai Pelaksana'
   };
 
-  const filteredAbkList = abkDataList.filter(item =>
-    item.unit.toLowerCase().includes(abkSearch.toLowerCase()) ||
-    item.keterangan.toLowerCase().includes(abkSearch.toLowerCase())
-  );
+  const filteredAbkList = (abkDataList || []).filter(item => {
+    if (!item) return false;
+    const unit = item.unit || '';
+    const ket = item.keterangan || '';
+    return unit.toLowerCase().includes(abkSearch.toLowerCase()) ||
+           ket.toLowerCase().includes(abkSearch.toLowerCase());
+  });
 
   const directoryContacts = [
     { name: 'Andi Wijaya, S.E.', role: 'Kepala Subbagian TURT', ext: '101', email: 'andi.wijaya@kemenkeu.go.id', wa: '0812-3456-7890' },
@@ -149,20 +155,30 @@ export default function KinerjaSection({
     { name: 'Wulan Ningrum, S.H.', role: 'Analis Hukum Kepatuhan Internal', ext: '135', email: 'wulan.ningrum@kemenkeu.go.id', wa: '0852-5555-4444' }
   ];
 
-  const filteredContacts = directoryContacts.filter(c => 
-    c.name.toLowerCase().includes(hktSearch.toLowerCase()) || 
-    c.role.toLowerCase().includes(hktSearch.toLowerCase()) ||
-    c.ext.includes(hktSearch)
-  );
+  const filteredContacts = (directoryContacts || []).filter(c => {
+    if (!c) return false;
+    const name = c.name || '';
+    const role = c.role || '';
+    const ext = c.ext || '';
+    return name.toLowerCase().includes(hktSearch.toLowerCase()) || 
+           role.toLowerCase().includes(hktSearch.toLowerCase()) ||
+           ext.includes(hktSearch);
+  });
 
   // Filter DAMS MTL
-  const filteredDamsMtl = damsMtlList.filter(item => {
+  const filteredDamsMtl = (damsMtlList || []).filter(item => {
+    if (!item) return false;
+    const perihal = item.perihal || '';
+    const uraian = item.uraian || '';
+    const pj = item.pj || '';
+    const output = item.output || '';
+    const deadline = item.deadline || '';
     const matchesSearch = 
-      item.perihal.toLowerCase().includes(damsSearch.toLowerCase()) ||
-      item.uraian.toLowerCase().includes(damsSearch.toLowerCase()) ||
-      item.pj.toLowerCase().includes(damsSearch.toLowerCase()) ||
-      item.output.toLowerCase().includes(damsSearch.toLowerCase()) ||
-      item.deadline.toLowerCase().includes(damsSearch.toLowerCase());
+      perihal.toLowerCase().includes(damsSearch.toLowerCase()) ||
+      uraian.toLowerCase().includes(damsSearch.toLowerCase()) ||
+      pj.toLowerCase().includes(damsSearch.toLowerCase()) ||
+      output.toLowerCase().includes(damsSearch.toLowerCase()) ||
+      deadline.toLowerCase().includes(damsSearch.toLowerCase());
     const matchesStatus = damsStatusFilter === 'all' || item.status === damsStatusFilter;
     return matchesSearch && matchesStatus;
   });

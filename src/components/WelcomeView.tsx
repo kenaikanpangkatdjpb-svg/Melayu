@@ -267,9 +267,9 @@ export default function WelcomeView({ roomBookings, vehicleBookings, itemBooking
     return false;
   };
 
-  const approvedRooms = roomBookings.filter(b => b.status === 'Disetujui' && isTodayBooking(b.date));
-  const approvedVehicles = vehicleBookings.filter(v => v.status === 'Disetujui' && isTodayBooking(v.date, v.durationDays));
-  const approvedItems = itemBookings.filter(i => (i.status === 'Dipinjam' || (i.status as string) === 'Disetujui') && isTodayBooking(i.date));
+  const approvedRooms = (roomBookings || []).filter(b => b && b.status === 'Disetujui' && isTodayBooking(b.date));
+  const approvedVehicles = (vehicleBookings || []).filter(v => v && v.status === 'Disetujui' && isTodayBooking(v.date, v.durationDays));
+  const approvedItems = (itemBookings || []).filter(i => i && (i.status === 'Dipinjam' || (i.status as string) === 'Disetujui') && isTodayBooking(i.date));
 
   const totalTodayAgendas = approvedRooms.length + approvedVehicles.length + approvedItems.length;
 

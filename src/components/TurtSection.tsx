@@ -10,6 +10,7 @@ import {
 } from '../types';
 import { formatIDR } from '../mockData';
 import SuratPermintaanBarangPersediaan from './SuratPermintaanBarangPersediaan';
+import { saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
 
 interface TurtSectionProps {
   subTab: string;
@@ -185,20 +186,20 @@ export default function TurtSection({
     if (!roomForm.bookerName || !roomForm.purpose) return;
 
     if (editingRoomBooking) {
-      setRoomBookings(roomBookings.map(b => 
-        b.id === editingRoomBooking.id ? {
-          ...b,
-          roomName: roomForm.roomName,
-          bookerName: roomForm.bookerName,
-          division: roomForm.division,
-          date: roomForm.date,
-          startTime: roomForm.startTime,
-          endTime: roomForm.endTime,
-          purpose: roomForm.purpose,
-          equipmentNeeded: roomForm.equipmentNeeded,
-          status: roomForm.status
-        } : b
-      ));
+      const updatedBooking: RoomBooking = {
+        ...editingRoomBooking,
+        roomName: roomForm.roomName,
+        bookerName: roomForm.bookerName,
+        division: roomForm.division,
+        date: roomForm.date,
+        startTime: roomForm.startTime,
+        endTime: roomForm.endTime,
+        purpose: roomForm.purpose,
+        equipmentNeeded: roomForm.equipmentNeeded,
+        status: roomForm.status
+      };
+      setRoomBookings(roomBookings.map(b => b.id === editingRoomBooking.id ? updatedBooking : b));
+      saveFirestoreDoc('rooms', updatedBooking);
     } else {
       const newBooking: RoomBooking = {
         id: `room-${Date.now()}`,
@@ -213,6 +214,7 @@ export default function TurtSection({
         status: roomForm.status
       };
       setRoomBookings([newBooking, ...roomBookings]);
+      saveFirestoreDoc('rooms', newBooking);
     }
     setShowRoomModal(false);
     setEditingRoomBooking(null);
@@ -225,13 +227,17 @@ export default function TurtSection({
       : 'Permohonan peminjaman ruangan ditolak oleh Admin';
     const finalNote = enteredNote && enteredNote.trim() !== '' ? enteredNote.trim() : defaultNote;
 
-    setRoomBookings(roomBookings.map(b => 
-      b.id === id ? { ...b, status: approve ? 'Disetujui' : 'Ditolak', statusNote: finalNote } : b
-    ));
+    const target = roomBookings.find(b => b.id === id);
+    if (target) {
+      const updated: RoomBooking = { ...target, status: approve ? 'Disetujui' : 'Ditolak', statusNote: finalNote };
+      setRoomBookings(roomBookings.map(b => b.id === id ? updated : b));
+      saveFirestoreDoc('rooms', updated);
+    }
   };
 
   const handleDeleteRoom = (id: string) => {
     setRoomBookings(roomBookings.filter(b => b.id !== id));
+    deleteFirestoreDoc('rooms', id);
   };
 
   // Open Item Modals
@@ -269,18 +275,18 @@ export default function TurtSection({
     if (!itemForm.bookerName || !itemForm.itemName) return;
 
     if (editingItemBooking) {
-      setItemBookings(itemBookings.map(item => 
-        item.id === editingItemBooking.id ? {
-          ...item,
-          itemName: itemForm.itemName,
-          bookerName: itemForm.bookerName,
-          division: itemForm.division,
-          date: itemForm.date,
-          quantity: itemForm.quantity,
-          status: itemForm.status,
-          statusNote: itemForm.statusNote
-        } : item
-      ));
+      const updatedItem: ItemBooking = {
+        ...editingItemBooking,
+        itemName: itemForm.itemName,
+        bookerName: itemForm.bookerName,
+        division: itemForm.division,
+        date: itemForm.date,
+        quantity: itemForm.quantity,
+        status: itemForm.status,
+        statusNote: itemForm.statusNote
+      };
+      setItemBookings(itemBookings.map(item => item.id === editingItemBooking.id ? updatedItem : item));
+      saveFirestoreDoc('items', updatedItem);
     } else {
       const newBooking: ItemBooking = {
         id: `item-${Date.now()}`,
@@ -293,15 +299,19 @@ export default function TurtSection({
         statusNote: itemForm.statusNote || 'Menunggu persetujuan'
       };
       setItemBookings([newBooking, ...itemBookings]);
+      saveFirestoreDoc('items', newBooking);
     }
     setShowItemModal(false);
     setEditingItemBooking(null);
   };
 
   const handleUpdateItemStatus = (id: string, status: 'Dipinjam' | 'Kembali') => {
-    setItemBookings(itemBookings.map(item => 
-      item.id === id ? { ...item, status } : item
-    ));
+    const target = itemBookings.find(item => item.id === id);
+    if (target) {
+      const updated: ItemBooking = { ...target, status };
+      setItemBookings(itemBookings.map(item => item.id === id ? updated : item));
+      saveFirestoreDoc('items', updated);
+    }
   };
 
   const handleApproveItem = (id: string, approve: boolean, customNote?: string) => {
@@ -311,17 +321,21 @@ export default function TurtSection({
       : 'Permohonan peminjaman barang ditolak oleh Admin';
     const finalNote = enteredNote && enteredNote.trim() !== '' ? enteredNote.trim() : defaultNote;
 
-    setItemBookings(itemBookings.map(item => 
-      item.id === id ? { 
-        ...item, 
+    const target = itemBookings.find(item => item.id === id);
+    if (target) {
+      const updated: ItemBooking = { 
+        ...target, 
         status: approve ? 'Dipinjam' : 'Ditolak',
         statusNote: finalNote
-      } : item
-    ));
+      };
+      setItemBookings(itemBookings.map(item => item.id === id ? updated : item));
+      saveFirestoreDoc('items', updated);
+    }
   };
 
   const handleDeleteItem = (id: string) => {
     setItemBookings(itemBookings.filter(b => b.id !== id));
+    deleteFirestoreDoc('items', id);
   };
 
   // Actions Vehicle
@@ -347,6 +361,7 @@ export default function TurtSection({
       status: 'Pending'
     };
     setVehicleBookings([newBooking, ...vehicleBookings]);
+    saveFirestoreDoc('vehicles', newBooking);
     setShowVehicleModal(false);
     setVehicleForm({ ...vehicleForm, bookerName: '', destination: '', driverOption: 'Dengan Supir' });
   };
@@ -358,19 +373,26 @@ export default function TurtSection({
       : 'Permohonan peminjaman kendaraan ditolak oleh Admin';
     const finalNote = enteredNote && enteredNote.trim() !== '' ? enteredNote.trim() : defaultNote;
 
-    setVehicleBookings(vehicleBookings.map(v => 
-      v.id === id ? { ...v, status: approve ? 'Disetujui' : 'Ditolak', statusNote: finalNote } : v
-    ));
+    const target = vehicleBookings.find(v => v.id === id);
+    if (target) {
+      const updated: VehicleBooking = { ...target, status: approve ? 'Disetujui' : 'Ditolak', statusNote: finalNote };
+      setVehicleBookings(vehicleBookings.map(v => v.id === id ? updated : v));
+      saveFirestoreDoc('vehicles', updated);
+    }
   };
 
   const handleCompleteVehicle = (id: string) => {
-    setVehicleBookings(vehicleBookings.map(v => 
-      v.id === id ? { ...v, status: 'Selesai' } : v
-    ));
+    const target = vehicleBookings.find(v => v.id === id);
+    if (target) {
+      const updated: VehicleBooking = { ...target, status: 'Selesai' };
+      setVehicleBookings(vehicleBookings.map(v => v.id === id ? updated : v));
+      saveFirestoreDoc('vehicles', updated);
+    }
   };
 
   const handleDeleteVehicle = (id: string) => {
     setVehicleBookings(vehicleBookings.filter(b => b.id !== id));
+    deleteFirestoreDoc('vehicles', id);
   };
 
   // Actions Feedback
@@ -388,18 +410,23 @@ export default function TurtSection({
       status: 'Open'
     };
     setFeedbacks([newFeedback, ...feedbacks]);
+    saveFirestoreDoc('feedbacks', newFeedback);
     setShowFeedbackModal(false);
     setFeedbackForm({ ...feedbackForm, reporterName: '', description: '', rating: 5 });
   };
 
   const handleUpdateFeedbackStatus = (id: string, status: 'In Progress' | 'Resolved') => {
-    setFeedbacks(feedbacks.map(f => 
-      f.id === id ? { ...f, status } : f
-    ));
+    const target = feedbacks.find(f => f.id === id);
+    if (target) {
+      const updated: FacilityFeedback = { ...target, status };
+      setFeedbacks(feedbacks.map(f => f.id === id ? updated : f));
+      saveFirestoreDoc('feedbacks', updated);
+    }
   };
 
   const handleDeleteFeedback = (id: string) => {
     setFeedbacks(feedbacks.filter(f => f.id !== id));
+    deleteFirestoreDoc('feedbacks', id);
   };
 
   // Actions Monthly Need
@@ -417,6 +444,7 @@ export default function TurtSection({
       status: 'Diusulkan'
     };
     setNeeds([newNeed, ...needs]);
+    saveFirestoreDoc('needs', newNeed);
     setShowNeedModal(false);
     setNeedForm({
       itemName: '',
@@ -429,13 +457,17 @@ export default function TurtSection({
   };
 
   const handleApproveNeed = (id: string, status: 'Disetujui' | 'Dibatalkan') => {
-    setNeeds(needs.map(n => 
-      n.id === id ? { ...n, status } : n
-    ));
+    const target = needs.find(n => n.id === id);
+    if (target) {
+      const updated: MonthlyNeed = { ...target, status };
+      setNeeds(needs.map(n => n.id === id ? updated : n));
+      saveFirestoreDoc('needs', updated);
+    }
   };
 
   const handleDeleteNeed = (id: string) => {
     setNeeds(needs.filter(n => n.id !== id));
+    deleteFirestoreDoc('needs', id);
   };
 
 

@@ -98,6 +98,7 @@ export interface WorkloadMetric {
 }
 
 export interface RealizationProgress {
+  id?: string;
   category: string;
   allocated: number;
   realized: number;
@@ -115,6 +116,7 @@ export interface VisitorLog {
 }
 
 export interface SecurityShift {
+  id?: string;
   day: string;
   shiftMorning: string;
   shiftEvening: string;

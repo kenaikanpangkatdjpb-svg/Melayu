@@ -104,7 +104,7 @@ export async function authenticateUserReal(usernameInput: string, passwordInput:
 }
 
 // Generic subscribe with onSnapshot & auto-seed if empty
-export function subscribeFirestoreCollection<T extends { id: string }>(
+export function subscribeFirestoreCollection<T extends { id?: string }>(
   collectionName: string,
   initialData: T[],
   onUpdate: (data: T[]) => void
@@ -116,14 +116,19 @@ export function subscribeFirestoreCollection<T extends { id: string }>(
       async (snapshot) => {
         if (snapshot.empty) {
           console.log(`Seeding initial ${collectionName} to Firestore...`);
-          for (const item of initialData) {
-            await setDoc(doc(db, collectionName, item.id), item);
+          for (let i = 0; i < initialData.length; i++) {
+            const item = initialData[i];
+            const docId = item.id || `doc_${i}`;
+            await setDoc(doc(db, collectionName, docId), item);
           }
           onUpdate(initialData);
         } else {
           const items: T[] = [];
           snapshot.forEach((docSnap) => {
-            items.push(docSnap.data() as T);
+            const data = docSnap.data();
+            if (data) {
+              items.push({ id: docSnap.id, ...data } as T);
+            }
           });
           onUpdate(items);
         }
@@ -150,12 +155,13 @@ export function subscribeFirestoreCollection<T extends { id: string }>(
 }
 
 // Generic save single item to Firestore
-export async function saveFirestoreDoc<T extends { id: string }>(
+export async function saveFirestoreDoc<T extends { id?: string }>(
   collectionName: string,
   item: T
 ): Promise<void> {
   try {
-    const itemRef = doc(db, collectionName, item.id);
+    const docId = item.id || `doc_${Date.now()}`;
+    const itemRef = doc(db, collectionName, docId);
     await setDoc(itemRef, item, { merge: true });
   } catch (error) {
     console.error(`Error saving doc to ${collectionName}:`, error);
@@ -176,15 +182,15 @@ export async function deleteFirestoreDoc(
 }
 
 // Generic save entire collection (bulk sync on change)
-export async function saveFirestoreCollection<T extends { id: string }>(
+export async function saveFirestoreCollection<T extends { id?: string }>(
   collectionName: string,
   items: T[]
 ): Promise<void> {
   try {
-    for (const item of items) {
-      if (item.id) {
-        await setDoc(doc(db, collectionName, item.id), item, { merge: true });
-      }
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const docId = item.id || `doc_${i}`;
+      await setDoc(doc(db, collectionName, docId), item, { merge: true });
     }
   } catch (error) {
     console.error(`Error saving collection ${collectionName}:`, error);

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import KemenkeuLogo from './KemenkeuLogo';
+import { subscribeFirestoreCollection, saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
 
 export interface PermintaanItem {
   no: number;
@@ -120,21 +121,25 @@ export default function SuratPermintaanBarangPersediaan({
     createdDate: '2026-05-15'
   };
 
-  const [requestsList, setRequestsList] = useState<SuratPermintaan[]>(() => {
-    try {
-      const saved = localStorage.getItem('melayu_spbp_requests');
-      if (saved) {
-        return JSON.parse(saved);
+  const [requestsList, setRequestsList] = useState<SuratPermintaan[]>(() => [
+    sampleRequest1,
+    sampleRequest2,
+    sampleRequest3
+  ]);
+
+  // Real-time Firestore sync
+  useEffect(() => {
+    const unsub = subscribeFirestoreCollection<SuratPermintaan>(
+      'spbp_requests',
+      [sampleRequest1, sampleRequest2, sampleRequest3],
+      (data) => {
+        if (data && data.length > 0) {
+          setRequestsList(data);
+        }
       }
-    } catch (e) {
-      console.error(e);
-    }
-    return [
-      sampleRequest1,
-      sampleRequest2,
-      sampleRequest3
-    ];
-  });
+    );
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     try {
@@ -234,6 +239,7 @@ export default function SuratPermintaanBarangPersediaan({
     };
 
     setRequestsList([newRequest, ...requestsList]);
+    saveFirestoreDoc('spbp_requests', newRequest);
     setActiveDocument(newRequest);
     if (isAdmin) {
       setActiveTab('spbp');
@@ -257,27 +263,21 @@ export default function SuratPermintaanBarangPersediaan({
   const handleApproveRequest = (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     
-    setRequestsList(prev => prev.map(req => {
-      if (req.id === id) {
-        return {
-          ...req,
-          status: 'Disetujui' as const,
-          approvedByTitle: 'Kepala Subbagian TURT',
-          approvedByName: 'Ahmad Nauval',
-          approvedByNip: '198210042002121003'
-        };
-      }
-      return req;
-    }));
-
-    if (activeDocument.id === id) {
-      setActiveDocument(prev => ({
-        ...prev,
-        status: 'Disetujui',
+    const target = requestsList.find(req => req.id === id);
+    if (target) {
+      const updated: SuratPermintaan = {
+        ...target,
+        status: 'Disetujui' as const,
         approvedByTitle: 'Kepala Subbagian TURT',
         approvedByName: 'Ahmad Nauval',
         approvedByNip: '198210042002121003'
-      }));
+      };
+      setRequestsList(prev => prev.map(req => req.id === id ? updated : req));
+      saveFirestoreDoc('spbp_requests', updated);
+
+      if (activeDocument.id === id) {
+        setActiveDocument(updated);
+      }
     }
 
     showToast(`Dokumen No. ${id} berhasil DISETUJUI (Approved)!`, 'success');
@@ -287,15 +287,15 @@ export default function SuratPermintaanBarangPersediaan({
   const handleChangeStatus = (id: string, newStatus: SuratPermintaan['status'], e?: React.ChangeEvent<HTMLSelectElement>) => {
     if (e) e.stopPropagation();
 
-    setRequestsList(prev => prev.map(req => {
-      if (req.id === id) {
-        return { ...req, status: newStatus };
-      }
-      return req;
-    }));
+    const target = requestsList.find(req => req.id === id);
+    if (target) {
+      const updated: SuratPermintaan = { ...target, status: newStatus };
+      setRequestsList(prev => prev.map(req => req.id === id ? updated : req));
+      saveFirestoreDoc('spbp_requests', updated);
 
-    if (activeDocument.id === id) {
-      setActiveDocument(prev => ({ ...prev, status: newStatus }));
+      if (activeDocument.id === id) {
+        setActiveDocument(updated);
+      }
     }
 
     showToast(`Status dokumen berhasil diubah menjadi: ${newStatus}`, 'info');
@@ -313,6 +313,8 @@ export default function SuratPermintaanBarangPersediaan({
     if (!editingDocument) return;
 
     setRequestsList(prev => prev.map(req => req.id === editingDocument.id ? editingDocument : req));
+    saveFirestoreDoc('spbp_requests', editingDocument);
+
     if (activeDocument.id === editingDocument.id) {
       setActiveDocument(editingDocument);
     }
@@ -333,6 +335,7 @@ export default function SuratPermintaanBarangPersediaan({
 
     const remaining = requestsList.filter(r => r.id !== deletingDocumentId);
     setRequestsList(remaining);
+    deleteFirestoreDoc('spbp_requests', deletingDocumentId);
 
     if (activeDocument.id === deletingDocumentId && remaining.length > 0) {
       setActiveDocument(remaining[0]);
@@ -384,17 +387,26 @@ export default function SuratPermintaanBarangPersediaan({
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Permintaan Persediaan');
-    XLSX.writeFile(wb, `Surat_Permintaan_Barang_Persediaan_${doc.division.replace(/\s+/g, '_')}_${doc.date.replace(/\s+/g, '_')}.xlsx`);
+    const divStr = (doc.division || '').replace(/\s+/g, '_');
+    const dateStr = (doc.date || '').replace(/\s+/g, '_');
+    XLSX.writeFile(wb, `Surat_Permintaan_Barang_Persediaan_${divStr}_${dateStr}.xlsx`);
   };
 
-  const filteredRequests = requestsList.filter(req => {
+  const filteredRequests = (requestsList || []).filter(req => {
+    if (!req) return false;
+    const documentNo = req.documentNo || '';
+    const division = req.division || '';
+    const proposedByName = req.proposedByName || '';
+    const reqItems = req.items || [];
+    const status = req.status || '';
+
     const matchesSearch = 
-      req.documentNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.division.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.proposedByName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      req.items.some(i => i.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
+      documentNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      division.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      proposedByName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      reqItems.some(i => (i.itemName || '').toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesStatus = statusFilter === 'semua' || req.status.toLowerCase() === statusFilter.toLowerCase();
+    const matchesStatus = statusFilter === 'semua' || status.toLowerCase() === statusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
   });

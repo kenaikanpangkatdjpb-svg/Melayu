@@ -73,17 +73,22 @@ export default function SecurityGuardSection({
   });
 
   // Filtered Roster Data
-  const filteredRoster = securityRoster.filter(item => {
-    const matchName = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      item.dateStr.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchLoc = selectedLocation === 'ALL' || item.location.toUpperCase() === selectedLocation.toUpperCase();
-    const matchDate = selectedDate === 'ALL' || item.dateStr.toUpperCase().includes(selectedDate.toUpperCase());
+  const safeRoster = securityRoster || [];
+  const filteredRoster = safeRoster.filter(item => {
+    if (!item) return false;
+    const name = item.name || '';
+    const dateStr = item.dateStr || '';
+    const location = item.location || '';
+    const matchName = name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      dateStr.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchLoc = selectedLocation === 'ALL' || location.toUpperCase() === selectedLocation.toUpperCase();
+    const matchDate = selectedDate === 'ALL' || dateStr.toUpperCase().includes(selectedDate.toUpperCase());
     return matchName && matchLoc && matchDate;
   });
 
   // Unique list of dates for filter
-  const uniqueDates = Array.from(new Set(securityRoster.map(r => r.dateStr)));
-  const uniqueNames = Array.from(new Set(securityRoster.map(r => r.name)));
+  const uniqueDates = Array.from(new Set(safeRoster.map(r => r?.dateStr || '').filter(Boolean)));
+  const uniqueNames = Array.from(new Set(safeRoster.map(r => r?.name || '').filter(Boolean)));
 
   // KPI Calculations
   const totalGuards = uniqueNames.length || 6;

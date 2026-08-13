@@ -9,6 +9,7 @@ import {
 import * as XLSX from 'xlsx';
 import { GKMAgreement, ScholarshipInfo, CurrentUser } from '../types';
 import TLegoView from './TLegoView';
+import { saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
 
 interface KepegawaianSectionProps {
   subTab: string;
@@ -639,12 +640,16 @@ export default function KepegawaianSection({
     if (selectedImageModal) setSelectedImageModal(null);
   };
 
-  const filteredCertificates = uploadedCertificates.filter((cert) => {
+  const filteredCertificates = (uploadedCertificates || []).filter((cert) => {
+    if (!cert) return false;
+    const employeeName = cert.employeeName || '';
+    const fileName = cert.fileName || '';
+    const createdBy = cert.createdBy || '';
     const matchesSearch =
       !searchCekSeribu ||
-      cert.employeeName.toLowerCase().includes(searchCekSeribu.toLowerCase()) ||
-      cert.fileName.toLowerCase().includes(searchCekSeribu.toLowerCase()) ||
-      cert.createdBy.toLowerCase().includes(searchCekSeribu.toLowerCase());
+      employeeName.toLowerCase().includes(searchCekSeribu.toLowerCase()) ||
+      fileName.toLowerCase().includes(searchCekSeribu.toLowerCase()) ||
+      createdBy.toLowerCase().includes(searchCekSeribu.toLowerCase());
 
     const formattedCertDate = formatDateDisplay(cert.uploadDate);
     const formattedFilterDate = formatDateDisplay(dateFilterCekSeribu);
@@ -823,8 +828,8 @@ export default function KepegawaianSection({
     const formattedDate = formatIndonesianDate(gkmForm.date) || '31 Juli 2026';
 
     if (editingGkmId) {
-      setGkmList(gkmList.map(g => g.id === editingGkmId ? {
-        ...g,
+      const updatedGkm: GKMAgreement = {
+        id: editingGkmId,
         roomAndMedia: gkmForm.roomAndMedia || 'LESTARI (Learning Station)',
         topic: gkmForm.topic,
         presenter: gkmForm.presenter,
@@ -834,7 +839,9 @@ export default function KepegawaianSection({
         pic: gkmForm.pic || 'Bidang PAPK',
         participantsCount: gkmForm.participantsCount,
         summary: gkmForm.summary
-      } : g));
+      };
+      setGkmList(gkmList.map(g => g.id === editingGkmId ? updatedGkm : g));
+      saveFirestoreDoc('gkm', updatedGkm);
     } else {
       const newGkm: GKMAgreement = {
         id: `gkm-${Date.now()}`,
@@ -849,6 +856,7 @@ export default function KepegawaianSection({
         summary: gkmForm.summary
       };
       setGkmList([newGkm, ...gkmList]);
+      saveFirestoreDoc('gkm', newGkm);
     }
 
     setShowGkmModal(false);
@@ -869,6 +877,7 @@ export default function KepegawaianSection({
   const handleDeleteGkm = (id: string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus data GKM ini?')) {
       setGkmList(gkmList.filter(g => g.id !== id));
+      deleteFirestoreDoc('gkm', id);
     }
   };
 
@@ -886,10 +895,13 @@ export default function KepegawaianSection({
       setSearchResult(null);
       return;
     }
-    const filtered = employeesMock.filter(emp => 
-      emp.name.toLowerCase().includes(searchEmployee.toLowerCase()) || 
-      emp.nip.includes(searchEmployee)
-    );
+    const filtered = (employeesMock || []).filter(emp => {
+      if (!emp) return false;
+      const empName = emp.name || '';
+      const empNip = emp.nip || '';
+      return empName.toLowerCase().includes(searchEmployee.toLowerCase()) || 
+             empNip.includes(searchEmployee);
+    });
     setSearchResult(filtered);
   };
 
@@ -1080,19 +1092,25 @@ export default function KepegawaianSection({
                   </tr>
                 </thead>
                 <tbody>
-                  {gkmList
+                  {(gkmList || [])
                     .filter((g) => {
+                      if (!g) return false;
+                      const topic = g.topic || '';
+                      const presenter = g.presenter || '';
+                      const roomAndMedia = g.roomAndMedia || '';
                       const matchesSearch =
                         !gkmSearch ||
-                        g.topic.toLowerCase().includes(gkmSearch.toLowerCase()) ||
-                        g.presenter.toLowerCase().includes(gkmSearch.toLowerCase()) ||
-                        (g.roomAndMedia && g.roomAndMedia.toLowerCase().includes(gkmSearch.toLowerCase()));
+                        topic.toLowerCase().includes(gkmSearch.toLowerCase()) ||
+                        presenter.toLowerCase().includes(gkmSearch.toLowerCase()) ||
+                        roomAndMedia.toLowerCase().includes(gkmSearch.toLowerCase());
                       const matchesPic = !gkmPicFilter || g.pic === gkmPicFilter;
                       return matchesSearch && matchesPic;
                     })
                     .sort((a, b) => {
-                      if (gkmSortAsc) return a.presenter.localeCompare(b.presenter);
-                      return b.presenter.localeCompare(a.presenter);
+                      const pA = a.presenter || '';
+                      const pB = b.presenter || '';
+                      if (gkmSortAsc) return pA.localeCompare(pB);
+                      return pB.localeCompare(pA);
                     })
                     .map((g, index) => {
                       // Alternate styling matching screenshot:

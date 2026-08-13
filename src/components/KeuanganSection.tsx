@@ -26,19 +26,20 @@ export default function KeuanganSection({
   // Budget calculator state
   const [absorbTarget, setAbsorbTarget] = useState(75); // Target absorb percentage
 
-  const totalAllocated = realizations.reduce((acc, curr) => acc + curr.allocated, 0);
-  const totalRealized = realizations.reduce((acc, curr) => acc + curr.realized, 0);
+  const safeRealizations = realizations || [];
+  const totalAllocated = safeRealizations.reduce((acc, curr) => acc + (curr.allocated || 0), 0);
+  const totalRealized = safeRealizations.reduce((acc, curr) => acc + (curr.realized || 0), 0);
   const totalPercentage = totalAllocated > 0 ? (totalRealized / totalAllocated) * 100 : 0;
 
   // Calculated stats based on target slider
   const targetAbsorbAmount = (absorbTarget / 100) * totalAllocated;
   const gapToTarget = targetAbsorbAmount - totalRealized;
 
-  const chartData = realizations.map(r => ({
-    name: r.category.replace('Belanja ', ''),
-    Pagu: r.allocated,
-    Realisasi: r.realized,
-    Sisa: r.allocated - r.realized
+  const chartData = safeRealizations.map(r => ({
+    name: (r.category || '').replace('Belanja ', ''),
+    Pagu: r.allocated || 0,
+    Realisasi: r.realized || 0,
+    Sisa: (r.allocated || 0) - (r.realized || 0)
   }));
 
   return (

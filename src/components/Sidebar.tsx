@@ -58,7 +58,7 @@ export default function Sidebar({
   };
 
   // Dynamic menu sections based on role
-  const sections: MenuSection[] = currentUser.role === 'user' ? [
+  const sections: MenuSection[] = currentUser?.role === 'user' ? [
     {
       title: 'SUBBAGIAN TURT',
       items: [
