@@ -18,363 +18,363 @@ export interface MatrixRowData {
 export const INITIAL_CEK_SERIBU_MATRIX: MatrixRowData[] = [
   {
     id: 'csr-1', nama: 'Abil Fikri Audia', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-2', nama: 'Achmad Djunaidi', isYellow: true,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-3', nama: 'Ade Wahyu Susanto', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-4', nama: 'Ahmad Nauval', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-5', nama: 'Ahmad Widyarma', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' } }
   },
   {
     id: 'csr-6', nama: 'Ahmad Yusuf', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' } }
   },
   {
     id: 'csr-7', nama: 'Aldi Putra Hernandes', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-8', nama: 'Alni Agustin', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-9', nama: 'Alviza Fadiya Putri', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-10', nama: 'Amylia Febriyanti', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-11', nama: 'Anang Surya Widayanto', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-12', nama: 'Andi Mulyadi', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-13', nama: 'Angga Firmansyah', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-14', nama: 'Aprina Elisabeth Br Manik', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-15', nama: 'Asep Rudi', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-16', nama: 'Atalia Manurung', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-17', nama: 'Audy Morenta Tatyana Girsang', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' } }
   },
   {
     id: 'csr-18', nama: 'Ayu Pramita', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-19', nama: 'Betrice Mega Maria Br Pakpahan', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' } }
   },
   {
     id: 'csr-20', nama: 'Bulan Indah Purnama Siregar', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-21', nama: 'Charis Danindra Charya Nadiaskara', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-22', nama: 'Dea Ivana Christi Br. Ginting', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-23', nama: 'Denny Aulia', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-24', nama: 'Devina Rosa Sitepu', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-25', nama: 'Dicky Priatama', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-26', nama: 'Dirga Paul Samuelson Situmorang', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-27', nama: 'Ditta Arbilla Pratiwi', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-28', nama: 'Donny Sulastiawan', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-29', nama: 'Dwi Prioatmaji', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' } }
   },
   {
     id: 'csr-30', nama: 'Eko Sambas Priyatna', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-31', nama: 'Eko Supriyanto', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-32', nama: 'Elisa', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-33', nama: 'Elsa Natalia Situmorang', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-34', nama: 'Elyas Setyantoro', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-35', nama: 'Ernita', isYellow: true,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-36', nama: 'Fani Nurfadila Nastitie Ariawan', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-37', nama: 'Farhan Ikram Rahimy', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-38', nama: 'Febri Anastasia Simanjuntak', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-39', nama: 'Fewia Zikri Ramadhani', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-40', nama: 'Firza Yulianti', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-41', nama: 'Franklin Sipayung', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-42', nama: 'Frans Matthew Manurung', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' } }
   },
   {
     id: 'csr-43', nama: 'Frans Ricky Haholongan Butar Butar', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-44', nama: 'Frediek Mulawan', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-45', nama: 'Gandis Nareswari', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-46', nama: 'Gatut Priyo Sembodo', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-47', nama: 'Halim', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-48', nama: 'Hermawan Saptono', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-49', nama: 'Indra Faizal', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-50', nama: 'Irene Aritonang', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-51', nama: 'Judhistira Adi Noegraha', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-52', nama: 'Kamelia Ulfa', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-53', nama: 'Karno Pandu Wibowo', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-54', nama: 'Kartika Chandra', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-55', nama: 'Kurnia Fitri Anidya', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-56', nama: 'Lina Armila', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-57', nama: 'Mahbub Ulhaq', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-58', nama: 'Maria Siska Tinambunan', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-59', nama: 'Maulana Gilang Firdaus', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' } }
   },
   {
     id: 'csr-60', nama: 'Meda Febriana Aquares', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-61', nama: 'Michael Amstrong Sidabutar', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-62', nama: 'Mirza Rahmat Suharta', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-63', nama: 'Mohammad Firdaus', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-64', nama: 'Muhammad Ali Mutohar', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-65', nama: 'Nanang Heru Setyo Purdianto', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-66', nama: 'Nila Anggraini', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-67', nama: 'Nindia Dita Putri', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-68', nama: 'Novrenti Yosephine Br. Perangin-Angin', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-69', nama: 'Nur Asri', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-70', nama: 'Ot Hendri Fitrahadi', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-71', nama: 'Puji Hartanto', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-72', nama: 'Rangga Wingit', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-73', nama: 'Resa Kusumasari Saputro', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-74', nama: 'Rose Aprinia Sibuea', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-75', nama: 'Rusdi Z.', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-76', nama: 'Said Sjafrizal', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-77', nama: 'Saifan Abdulloh Muqimuddin', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-78', nama: 'Saor Silitonga', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-79', nama: 'Sari Fadillah', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-80', nama: 'Setia Lassunardo Sitanggang', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-81', nama: 'Shania Carissa', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-82', nama: 'Siti Aminah', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-83', nama: 'Tri Utomo', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' } }
   },
   {
     id: 'csr-84', nama: 'Tri Widiyono', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-85', nama: 'Winarni Rahayu', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-86', nama: 'Yasmi', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-87', nama: 'Yayat Nurhayat', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-88', nama: 'Yoel Parlaungan Simamora', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Tidak', pulang: 'Tidak' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Tidak', pulang: 'Tidak' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-89', nama: 'Yohana Miranda Manik', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   },
   {
     id: 'csr-90', nama: 'Yolanda Catherina Sirait', isYellow: false,
-    records: { '10-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '11-Aug-26': { hadir: 'Ada', pulang: 'Ada' }, '12-Aug-26': { hadir: 'Ada', pulang: 'Ada' } }
+    records: { '22-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '23-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '24-Jul-26': { hadir: 'Ada', pulang: 'Ada' }, '27-Jul-26': { hadir: 'Ada', pulang: 'Ada' } }
   }
 ];
 
@@ -382,22 +382,24 @@ interface Props {
   data?: MatrixRowData[];
   onDataChange?: (newData: MatrixRowData[]) => void;
   canManageAdmin?: boolean;
+  selectedMonth?: string;
+  selectedYear?: string;
 }
 
 export const CekSeribuMatrixTable: React.FC<Props> = ({
-  data = INITIAL_CEK_SERIBU_MATRIX,
+  data = [],
   onDataChange,
   canManageAdmin = true,
+  selectedMonth,
+  selectedYear,
 }) => {
-  const [matrixData, setMatrixData] = useState<MatrixRowData[]>(data);
+  const [matrixData, setMatrixData] = useState<MatrixRowData[]>(data || []);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'ALL' | 'ANOMALI' | 'TIDAK_HADIR'>('ALL');
 
   // Sync external props if updated
   React.useEffect(() => {
-    if (data && data.length > 0) {
-      setMatrixData(data);
-    }
+    setMatrixData(data || []);
   }, [data]);
 
   const updateMatrix = (updated: MatrixRowData[]) => {
@@ -407,7 +409,7 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
     }
   };
 
-  // Extract all unique dates dynamically
+  // Extract all unique dates dynamically & sort chronologically
   const dates = useMemo(() => {
     const setOfDates = new Set<string>();
     matrixData.forEach((row) => {
@@ -416,16 +418,59 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
       }
     });
     const list = Array.from(setOfDates);
-    return list.length > 0 ? list : ['10-Aug-26', '11-Aug-26', '12-Aug-26'];
+
+    list.sort((a, b) => {
+      const parseD = (str: string) => {
+        const parts = str.split(/[\/\.\-]/);
+        if (parts.length === 3) {
+          const p1 = parseInt(parts[0], 10);
+          const p2 = parseInt(parts[1], 10);
+          const y = parseInt(parts[2].length === 2 ? `20${parts[2]}` : parts[2], 10);
+          let d = p1;
+          let m = p2;
+          if (p1 > 12 && p2 <= 12) {
+            d = p1;
+            m = p2;
+          } else if (p2 > 12 && p1 <= 12) {
+            d = p2;
+            m = p1;
+          }
+          if (!isNaN(d) && !isNaN(m) && !isNaN(y)) {
+            return new Date(y, m - 1, d).getTime();
+          }
+        }
+        return 0;
+      };
+      return parseD(a) - parseD(b);
+    });
+
+    return list;
   }, [matrixData]);
+
+  const isAbsent = (val: string) => {
+    if (!val) return true;
+    const s = String(val).toLowerCase().trim();
+    return (
+      s === 'tidak' ||
+      s === 'tidak ada' ||
+      s === 'absen' ||
+      s === '-' ||
+      s === 'x' ||
+      s === 'a' ||
+      s === 'tap' ||
+      s === 'tk' ||
+      s === 'tidak hadir' ||
+      s === 'tidak pulang'
+    );
+  };
 
   // Check if row has an anomaly (e.g. Hadir Ada & Pulang Tidak, or vice-versa)
   const hasAnomaly = (row: MatrixRowData) => {
     if (!row.records) return false;
     return Object.values(row.records).some(
       (rec) =>
-        (rec.hadir === 'Ada' && rec.pulang === 'Tidak') ||
-        (rec.hadir === 'Tidak' && rec.pulang === 'Ada')
+        (!isAbsent(rec.hadir) && isAbsent(rec.pulang)) ||
+        (isAbsent(rec.hadir) && !isAbsent(rec.pulang))
     );
   };
 
@@ -433,8 +478,149 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
   const hasTidakHadir = (row: MatrixRowData) => {
     if (!row.records) return false;
     return Object.values(row.records).some(
-      (rec) => rec.hadir === 'Tidak' || rec.pulang === 'Tidak'
+      (rec) => isAbsent(rec.hadir) || isAbsent(rec.pulang)
     );
+  };
+
+  // Dynamic Month & Year detection from dates in matrixData
+  const monthMap: Record<string, string> = useMemo(() => ({
+    '01': 'Januari', '1': 'Januari', 'jan': 'Januari', 'januari': 'Januari',
+    '02': 'Februari', '2': 'Februari', 'feb': 'Februari', 'februari': 'Februari',
+    '03': 'Maret', '3': 'Maret', 'mar': 'Maret', 'maret': 'Maret',
+    '04': 'April', '4': 'April', 'apr': 'April', 'april': 'April',
+    '05': 'Mei', '5': 'Mei', 'mei': 'Mei', 'may': 'Mei',
+    '06': 'Juni', '6': 'Juni', 'jun': 'Juni', 'juni': 'Juni',
+    '07': 'Juli', '7': 'Juli', 'jul': 'Juli', 'juli': 'Juli',
+    '08': 'Agustus', '8': 'Agustus', 'agu': 'Agustus', 'ags': 'Agustus', 'agustus': 'Agustus', 'aug': 'Agustus',
+    '09': 'September', '9': 'September', 'sep': 'September', 'september': 'September',
+    '10': 'Oktober', 'okt': 'Oktober', 'oktober': 'Oktober', 'oct': 'Oktober',
+    '11': 'November', 'nov': 'November', 'november': 'November',
+    '12': 'Desember', 'des': 'Desember', 'desember': 'Desember', 'dec': 'Desember'
+  }), []);
+
+  const detectedMonthYear = useMemo(() => {
+    let foundMonth = 'Agustus';
+    let foundYear = '2026';
+
+    if (selectedMonth) {
+      const mStr = String(selectedMonth).trim().toLowerCase();
+      if (monthMap[mStr]) {
+        foundMonth = monthMap[mStr];
+      } else {
+        foundMonth = selectedMonth;
+      }
+    }
+
+    if (selectedYear) {
+      foundYear = String(selectedYear).trim();
+    }
+
+    if (selectedMonth && selectedYear) {
+      return `${foundMonth} ${foundYear}`;
+    }
+
+    for (const row of matrixData) {
+      if (!row.records) continue;
+      for (const dKey of Object.keys(row.records)) {
+        const str = String(dKey).trim().toLowerCase();
+        
+        const wordMatch = str.match(/(\d{1,2})[\s\/\.\-]([a-z]{3,9})[\s\/\.\-](\d{2,4})/);
+        if (wordMatch) {
+          const mKey = wordMatch[2];
+          const yKey = wordMatch[3];
+          if (monthMap[mKey]) {
+            foundMonth = monthMap[mKey];
+            foundYear = yKey.length === 2 ? `20${yKey}` : yKey;
+            return `${foundMonth} ${foundYear}`;
+          }
+        }
+
+        const numMatch = str.match(/(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})/);
+        if (numMatch) {
+          let mNum = numMatch[2].padStart(2, '0');
+          let yStr = numMatch[3];
+          const g1 = parseInt(numMatch[1], 10);
+          const g2 = parseInt(numMatch[2], 10);
+          if (g1 > 12 && g2 <= 12) {
+            mNum = String(g2).padStart(2, '0');
+          } else if (g2 > 12 && g1 <= 12) {
+            mNum = String(g1).padStart(2, '0');
+          }
+
+          if (monthMap[mNum]) {
+            foundMonth = monthMap[mNum];
+            foundYear = yStr;
+            return `${foundMonth} ${foundYear}`;
+          }
+        }
+
+        const isoMatch = str.match(/(\d{4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})/);
+        if (isoMatch) {
+          const yStr = isoMatch[1];
+          const mNum = isoMatch[2].padStart(2, '0');
+          if (monthMap[mNum]) {
+            foundMonth = monthMap[mNum];
+            foundYear = yStr;
+            return `${foundMonth} ${foundYear}`;
+          }
+        }
+      }
+    }
+
+    return `${foundMonth} ${foundYear}`;
+  }, [matrixData, monthMap, selectedMonth, selectedYear]);
+
+  const formatDateForHeader = (dateStr: string): string => {
+    if (!dateStr) return dateStr;
+    const str = String(dateStr).trim();
+
+    const shortMonthMap: Record<string, string> = {
+      '01': 'Jan', '1': 'Jan', 'jan': 'Jan', 'januari': 'Jan',
+      '02': 'Feb', '2': 'Feb', 'feb': 'Feb', 'februari': 'Feb',
+      '03': 'Mar', '3': 'Mar', 'mar': 'Mar', 'maret': 'Mar',
+      '04': 'Apr', '4': 'Apr', 'apr': 'Apr', 'april': 'Apr',
+      '05': 'May', '5': 'May', 'mei': 'May', 'may': 'May',
+      '06': 'Jun', '6': 'Jun', 'jun': 'Jun', 'juni': 'Jun',
+      '07': 'Jul', '7': 'Jul', 'jul': 'Jul', 'juli': 'Jul',
+      '08': 'Aug', '8': 'Aug', 'agu': 'Aug', 'ags': 'Aug', 'agustus': 'Aug', 'aug': 'Aug',
+      '09': 'Sep', '9': 'Sep', 'sep': 'Sep', 'september': 'Sep',
+      '10': 'Oct', 'okt': 'Oct', 'oktober': 'Oct', 'oct': 'Oct',
+      '11': 'Nov', 'nov': 'Nov', 'november': 'Nov',
+      '12': 'Dec', 'des': 'Dec', 'desember': 'Dec', 'dec': 'Dec'
+    };
+
+    const numMatch = str.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})$/);
+    if (numMatch) {
+      const g1 = parseInt(numMatch[1], 10);
+      const g2 = parseInt(numMatch[2], 10);
+      let day = numMatch[1].padStart(2, '0');
+      let mNum = numMatch[2].padStart(2, '0');
+
+      if (g1 > 12 && g2 <= 12) {
+        day = String(g1).padStart(2, '0');
+        mNum = String(g2).padStart(2, '0');
+      } else if (g2 > 12 && g1 <= 12) {
+        day = String(g2).padStart(2, '0');
+        mNum = String(g1).padStart(2, '0');
+      }
+
+      const mStr = shortMonthMap[mNum] || 'Jul';
+      let yr = numMatch[3];
+      if (yr.length === 4) yr = yr.substring(2);
+      return `${day}-${mStr}-${yr}`;
+    }
+
+    const wordMatch = str.match(/^(\d{1,2})[\s\/\.\-]([a-zA-Z]{3,9})[\s\/\.\-](\d{2,4})$/);
+    if (wordMatch) {
+      const day = wordMatch[1].padStart(2, '0');
+      const mKey = wordMatch[2].toLowerCase();
+      const mStr = shortMonthMap[mKey] || wordMatch[2].substring(0, 3);
+      let yr = wordMatch[3];
+      if (yr.length === 4) yr = yr.substring(2);
+      return `${day}-${mStr.charAt(0).toUpperCase() + mStr.slice(1).toLowerCase()}-${yr}`;
+    }
+
+    return str;
   };
 
   const filteredData = useMemo(() => {
@@ -461,24 +647,49 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
     updateMatrix(updated);
   };
 
-  // Handle Export to Excel Matrix
+  // Handle Export to Excel Matrix (Matching 2-row header with merged date cells)
   const handleExportMatrixExcel = () => {
-    const rowsForExport: any[] = [];
+    const row1: any[] = ['Nama'];
+    const row2: any[] = [''];
 
-    matrixData.forEach((row) => {
-      const rowObj: any = { 'Nama Pegawai': row.nama };
-      dates.forEach((d) => {
-        const rec = row.records[d] || { hadir: 'Tidak', pulang: 'Tidak' };
-        rowObj[`${d} (Hadir)`] = rec.hadir;
-        rowObj[`${d} (Pulang)`] = rec.pulang;
-      });
-      rowsForExport.push(rowObj);
+    dates.forEach((d) => {
+      const headerDateStr = formatDateForHeader(d);
+      row1.push(headerDateStr, '');
+      row2.push('Hadir', 'Pulang');
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(rowsForExport);
+    const aoaData: any[][] = [row1, row2];
+
+    matrixData.forEach((row) => {
+      const rowVals: any[] = [row.nama];
+      dates.forEach((d) => {
+        const rec = row.records[d] || { hadir: 'Tidak', pulang: 'Tidak' };
+        const hVal = !isAbsent(rec.hadir) ? 'Ada' : 'Tidak';
+        const pVal = !isAbsent(rec.pulang) ? 'Ada' : 'Tidak';
+        rowVals.push(hVal, pVal);
+      });
+      aoaData.push(rowVals);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
+
+    const merges: XLSX.Range[] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }
+    ];
+
+    dates.forEach((_, idx) => {
+      const colStart = 1 + idx * 2;
+      merges.push({
+        s: { r: 0, c: colStart },
+        e: { r: 0, c: colStart + 1 }
+      });
+    });
+
+    worksheet['!merges'] = merges;
+
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Presensi_CekSeribu');
-    XLSX.writeFile(workbook, 'Konversi_Matrix_Presensi_CekSeribu.xlsx');
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Rekap_Presensi');
+    XLSX.writeFile(workbook, 'Rekapitulasi_Presensi_CekSeribu.xlsx');
   };
 
   // Selection State for Bulk Delete
@@ -486,6 +697,216 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
   const [rowToDelete, setRowToDelete] = useState<MatrixRowData | null>(null);
   const [showConfirmDeleteSelected, setShowConfirmDeleteSelected] = useState(false);
   const [showConfirmDeleteAll, setShowConfirmDeleteAll] = useState(false);
+
+  // Excel Import Preview Modal State (identical to Security Guard)
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [excelFileName, setExcelFileName] = useState('');
+  const [previewDocTitle, setPreviewDocTitle] = useState('REKAPITULASI PRESENSI CEK SERIBU');
+  const [previewMatrixData, setPreviewMatrixData] = useState<MatrixRowData[]>([]);
+  const [previewDates, setPreviewDates] = useState<string[]>([]);
+  const [successNotice, setSuccessNotice] = useState('');
+
+  // Handle Excel File Upload & Parse
+  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+
+        const rowsFormatted = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1, raw: false, defval: '' });
+        const rowsRaw = XLSX.utils.sheet_to_json<any[]>(worksheet, { header: 1, raw: true, defval: '' });
+
+        if (!rowsFormatted || rowsFormatted.length === 0) {
+          alert('File Excel kosong atau format tidak dapat dibaca.');
+          return;
+        }
+
+        let detectedTitle = 'REKAPITULASI PRESENSI CEK SERIBU';
+        for (let r = 0; r < Math.min(rowsFormatted.length, 5); r++) {
+          const rowText = (rowsFormatted[r] || []).join(' ').trim();
+          if (rowText.toLowerCase().includes('rekap') || rowText.toLowerCase().includes('presensi') || rowText.toLowerCase().includes('cek seribu')) {
+            detectedTitle = rowText;
+            break;
+          }
+        }
+
+        // Try to parse matrix layout (dates on column headers)
+        let matrixHeaderIdx = -1;
+        let matrixNameColIdx = -1;
+        const dateColMap: Record<string, { hadirCol: number; pulangCol: number }> = {};
+
+        for (let r = 0; r < Math.min(rowsFormatted.length, 12); r++) {
+          const row = rowsFormatted[r] || [];
+          const nextRow = rowsFormatted[r + 1] || [];
+
+          let foundNameIdx = -1;
+          row.forEach((cellVal: any, cIdx: number) => {
+            const str = String(cellVal || '').toLowerCase().trim();
+            if (str.includes('nama') || str.includes('pegawai') || str.includes('employee')) {
+              if (foundNameIdx === -1) foundNameIdx = cIdx;
+            }
+          });
+
+          if (foundNameIdx !== -1) {
+            // Check if single row has Date (Hadir) / Date (Pulang)
+            row.forEach((cellVal: any, cIdx: number) => {
+              const str = String(cellVal || '').trim();
+              if (!str || cIdx === foundNameIdx) return;
+
+              const matchCol = str.match(/(.*?)\s*[\(\_]?\s*(hadir|datang|pulang|masuk|keluar|check\s*in|check\s*out)[\)]?/i);
+              if (matchCol) {
+                const rawDate = matchCol[1].trim();
+                const typeStr = matchCol[2].toLowerCase();
+                const parsedDate = formatDateForHeader(rawDate) || rawDate;
+
+                if (!dateColMap[parsedDate]) {
+                  dateColMap[parsedDate] = { hadirCol: -1, pulangCol: -1 };
+                }
+
+                if (typeStr.includes('hadir') || typeStr.includes('datang') || typeStr.includes('masuk') || typeStr.includes('in')) {
+                  dateColMap[parsedDate].hadirCol = cIdx;
+                } else if (typeStr.includes('pulang') || typeStr.includes('keluar') || typeStr.includes('out')) {
+                  dateColMap[parsedDate].pulangCol = cIdx;
+                }
+              }
+            });
+
+            // Check if 2-row header: Row r = Dates, Row r+1 = Hadir/Pulang
+            if (Object.keys(dateColMap).length === 0 && nextRow.length > 0) {
+              let currDateStr: string | null = null;
+              const maxCols = Math.max(row.length, nextRow.length);
+              for (let cIdx = 0; cIdx < maxCols; cIdx++) {
+                if (cIdx === foundNameIdx) continue;
+                const topVal = String(row[cIdx] || '').trim();
+                const subVal = String(nextRow[cIdx] || '').toLowerCase().trim();
+
+                if (topVal) {
+                  currDateStr = formatDateForHeader(topVal) || topVal;
+                }
+
+                if (currDateStr) {
+                  if (!dateColMap[currDateStr]) {
+                    dateColMap[currDateStr] = { hadirCol: -1, pulangCol: -1 };
+                  }
+
+                  if (subVal.includes('hadir') || subVal.includes('datang') || subVal.includes('masuk') || subVal.includes('in')) {
+                    dateColMap[currDateStr].hadirCol = cIdx;
+                  } else if (subVal.includes('pulang') || subVal.includes('keluar') || subVal.includes('out')) {
+                    dateColMap[currDateStr].pulangCol = cIdx;
+                  } else if (dateColMap[currDateStr].hadirCol === -1) {
+                    dateColMap[currDateStr].hadirCol = cIdx;
+                  } else if (dateColMap[currDateStr].pulangCol === -1) {
+                    dateColMap[currDateStr].pulangCol = cIdx;
+                  }
+                }
+              }
+            }
+
+            if (Object.keys(dateColMap).length > 0) {
+              const isTwoRow = nextRow.some((cell) => {
+                const s = String(cell || '').toLowerCase();
+                return s.includes('hadir') || s.includes('pulang') || s.includes('datang') || s.includes('keluar');
+              });
+              matrixHeaderIdx = isTwoRow ? r + 1 : r;
+              matrixNameColIdx = foundNameIdx;
+              break;
+            }
+          }
+        }
+
+        const parsedResult: MatrixRowData[] = [];
+        const detectedDateList = Object.keys(dateColMap);
+
+        if (matrixHeaderIdx !== -1 && detectedDateList.length > 0) {
+          for (let r = matrixHeaderIdx + 1; r < rowsFormatted.length; r++) {
+            const rowF = rowsFormatted[r] || [];
+            let nameVal = String(rowF[matrixNameColIdx] || '').trim();
+            nameVal = nameVal.replace(/^\d+[\.\-\s]+/, '').trim();
+            if (!nameVal || nameVal.toLowerCase().includes('total') || nameVal.toLowerCase().includes('jumlah')) continue;
+
+            const recordsObj: Record<string, { hadir: 'Ada' | 'Tidak'; pulang: 'Ada' | 'Tidak' }> = {};
+            detectedDateList.forEach((dKey) => {
+              const cols = dateColMap[dKey];
+              const hValRaw = cols.hadirCol !== -1 ? String(rowF[cols.hadirCol] || '').trim() : '';
+              const pValRaw = cols.pulangCol !== -1 ? String(rowF[cols.pulangCol] || '').trim() : '';
+
+              recordsObj[dKey] = {
+                hadir: !isAbsent(hValRaw) ? 'Ada' : 'Tidak',
+                pulang: !isAbsent(pValRaw) ? 'Ada' : 'Tidak'
+              };
+            });
+
+            parsedResult.push({
+              id: `imported-csr-${Date.now()}-${r}`,
+              nama: nameVal,
+              isYellow: false,
+              records: recordsObj
+            });
+          }
+        } else {
+          // Fallback: parse flat list of rows (Nama, Tanggal, Hadir, Pulang)
+          const empMap = new Map<string, MatrixRowData>();
+          for (let r = 1; r < rowsFormatted.length; r++) {
+            const rowF = rowsFormatted[r] || [];
+            const nameVal = String(rowF[0] || rowF[1] || '').trim().replace(/^\d+[\.\-\s]+/, '').trim();
+            const dateVal = String(rowF[1] || rowF[2] || '22-Jul-26').trim();
+            const hadirVal = String(rowF[2] || rowF[3] || 'Ada').trim();
+            const pulangVal = String(rowF[3] || rowF[4] || 'Ada').trim();
+
+            if (!nameVal || nameVal.toLowerCase().includes('nama')) continue;
+
+            const dateKey = formatDateForHeader(dateVal) || dateVal;
+            if (!empMap.has(nameVal)) {
+              empMap.set(nameVal, {
+                id: `imported-csr-${Date.now()}-${r}`,
+                nama: nameVal,
+                isYellow: false,
+                records: {}
+              });
+            }
+
+            empMap.get(nameVal)!.records[dateKey] = {
+              hadir: !isAbsent(hadirVal) ? 'Ada' : 'Tidak',
+              pulang: !isAbsent(pulangVal) ? 'Ada' : 'Tidak'
+            };
+          }
+          parsedResult.push(...Array.from(empMap.values()));
+        }
+
+        if (parsedResult.length === 0) {
+          alert('Tidak dapat mengekstraksi data presensi pegawai dari file Excel. Harap pastikan format file sesuai template.');
+          return;
+        }
+
+        setExcelFileName(file.name);
+        setPreviewDocTitle(detectedTitle);
+        setPreviewMatrixData(parsedResult);
+        const allDates = Array.from(new Set(parsedResult.flatMap((r) => Object.keys(r.records || {}))));
+        setPreviewDates(allDates.length > 0 ? allDates : ['22-Jul-26', '23-Jul-26', '24-Jul-26', '27-Jul-26']);
+        setShowPreviewModal(true);
+      } catch (err) {
+        console.error('Error importing Excel:', err);
+        alert('Gagal membaca file Excel. Pastikan file valid.');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    e.target.value = '';
+  };
+
+  // Apply Excel Data & Overwrite Matrix Completely
+  const handleApplyExcel = () => {
+    updateMatrix(previewMatrixData);
+    setSelectedRowIds([]);
+    setShowPreviewModal(false);
+    setSuccessNotice(`BERHASIL MENIMPA DATA EXCEL LAMA! Memuat ${previewMatrixData.length} data pegawai dari file "${excelFileName}". Tampilan telah disesuaikan.`);
+    setTimeout(() => setSuccessNotice(''), 7000);
+  };
 
   // Toggle selection
   const toggleSelectAll = () => {
@@ -510,39 +931,68 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
     updateMatrix(updated);
     setSelectedRowIds((prev) => prev.filter((i) => i !== rowToDelete.id));
     setRowToDelete(null);
+    setSuccessNotice(`Berhasil menghapus data pegawai "${rowToDelete.nama}".`);
+    setTimeout(() => setSuccessNotice(''), 5000);
   };
 
   const handleConfirmDeleteSelected = () => {
+    const count = selectedRowIds.length;
     const updated = matrixData.filter((r) => !selectedRowIds.includes(r.id));
     updateMatrix(updated);
     setSelectedRowIds([]);
     setShowConfirmDeleteSelected(false);
+    setSuccessNotice(`Berhasil menghapus ${count} pegawai terpilih.`);
+    setTimeout(() => setSuccessNotice(''), 5000);
   };
 
   const handleConfirmDeleteAll = () => {
+    const total = matrixData.length;
     updateMatrix([]);
     setSelectedRowIds([]);
     setShowConfirmDeleteAll(false);
+    setSuccessNotice(`Berhasil menghapus SELURUH ${total} data presensi Cek Seribu.`);
+    setTimeout(() => setSuccessNotice(''), 5000);
   };
 
   // Reset to default sample
   const handleResetSample = () => {
     updateMatrix(INITIAL_CEK_SERIBU_MATRIX);
     setSelectedRowIds([]);
+    setSuccessNotice('Data presensi Cek Seribu telah dimuat ulang ke default template.');
+    setTimeout(() => setSuccessNotice(''), 5000);
   };
 
   return (
     <div className="space-y-4" id="cek-seribu-matrix-container">
-      {/* Top Controls & Filter Bar */}
+      {/* Top Success Notice Banner */}
+      {successNotice && (
+        <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-xl text-xs flex items-center justify-between shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-center space-x-2.5">
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-bold">{successNotice}</span>
+          </div>
+          <button
+            onClick={() => setSuccessNotice('')}
+            className="text-emerald-700 hover:text-emerald-900 text-xs font-bold p-1 cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Top Controls & Filter Bar (Matching Security Guard Layout) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
-        <div className="flex items-center space-x-2">
-          <FileSpreadsheet className="w-5 h-5 text-emerald-700 shrink-0" />
+        <div className="flex items-center space-x-2.5">
+          <div className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
+            <FileSpreadsheet className="w-5 h-5 text-emerald-700 shrink-0" />
+          </div>
           <div>
-            <h3 className="font-display font-extrabold text-sm text-slate-900">
-              Hasil Konversi Presensi Cek Seribu (Tampilan Matrix Excel)
+            <h3 className="font-display font-bold text-slate-800 text-sm md:text-base">
+              Hasil Konversi Presensi Cek Seribu
             </h3>
-            <p className="text-[11px] text-slate-500">
-              Format matriks per tanggal presensi ({dates.join(', ')}) • Total {matrixData.length} Pegawai
+            <p className="text-xs text-slate-500">
+              Bulan: <strong className="font-mono font-bold text-slate-700">{detectedMonthYear}</strong>
+              {dates.length > 0 && ` • (${dates.join(', ')})`} • <span className="font-bold text-emerald-700">{matrixData.length} Pegawai</span>
             </p>
           </div>
         </div>
@@ -556,7 +1006,7 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari nama pegawai..."
-              className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-djpb-blue focus:bg-white w-48 transition-all"
+              className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-djpb-blue focus:bg-white w-44 sm:w-48 transition-all"
             />
           </div>
 
@@ -564,36 +1014,37 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
           <select
             value={filterMode}
             onChange={(e) => setFilterMode(e.target.value as any)}
-            className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-djpb-blue cursor-pointer"
+            className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:outline-none focus:border-djpb-blue cursor-pointer"
           >
             <option value="ALL">Semua Data ({matrixData.length})</option>
             <option value="ANOMALI">Anomali / Sorot Kuning ({matrixData.filter((r) => r.isYellow || hasAnomaly(r)).length})</option>
             <option value="TIDAK_HADIR">Ada 'Tidak' Hadir/Pulang ({matrixData.filter(hasTidakHadir).length})</option>
           </select>
 
-          {/* Export Excel */}
+          {/* Import Excel Button (With hidden file input) */}
+          {canManageAdmin && (
+            <label className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center space-x-1.5 shadow-2xs cursor-pointer">
+              <Upload className="w-3.5 h-3.5" />
+              <span>Import Excel</span>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleExcelImport}
+                className="hidden"
+              />
+            </label>
+          )}
+
+          {/* Export Excel Button */}
           <button
             type="button"
             onClick={handleExportMatrixExcel}
-            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center space-x-1.5 shadow-2xs cursor-pointer"
+            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center space-x-1.5 shadow-2xs cursor-pointer"
             title="Unduh Tabel Matrix ke File Excel (.xlsx)"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Ekspor Excel</span>
           </button>
-
-          {/* Admin Delete Selected Button */}
-          {canManageAdmin && selectedRowIds.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setShowConfirmDeleteSelected(true)}
-              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center space-x-1.5 shadow-2xs cursor-pointer animate-fade-in"
-              title="Hapus Pegawai Terpilih"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Hapus Terpilih ({selectedRowIds.length})</span>
-            </button>
-          )}
 
           {/* Admin Delete All Cek Seribu Button */}
           {canManageAdmin && matrixData.length > 0 && (
@@ -601,10 +1052,10 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
               type="button"
               onClick={() => setShowConfirmDeleteAll(true)}
               className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-lg text-xs font-bold transition-colors flex items-center space-x-1.5 cursor-pointer"
-              title="Hapus Seluruh Data Matrix Presensi Cek Seribu"
+              title="Hapus Seluruh Data Presensi Cek Seribu"
             >
               <Trash className="w-3.5 h-3.5 text-rose-600" />
-              <span>Hapus Semua Data</span>
+              <span>Hapus Semua</span>
             </button>
           )}
 
@@ -616,75 +1067,102 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
             title="Muat Ulang Data Default Cek Seribu"
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Muat Reset Data</span>
+            <span>Reset Data</span>
           </button>
         </div>
       </div>
 
-      {/* Main Excel Matrix Table Frame */}
-      <div className="overflow-x-auto rounded-xl border border-slate-300 shadow-sm bg-white">
-        <table className="w-full border-collapse font-sans text-xs">
+      {/* Bulk Action Bar (When rows selected - exactly like Security Guard) */}
+      {selectedRowIds.length > 0 && (
+        <div className="bg-rose-50 border border-rose-300 p-3 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs animate-in fade-in duration-150 shadow-xs">
+          <div className="flex items-center space-x-2 text-rose-900 font-bold">
+            <Check className="w-4 h-4 text-rose-600" />
+            <span>{selectedRowIds.length} entri pegawai dipilih (centang aktif)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowConfirmDeleteSelected(true)}
+              className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-lg text-xs flex items-center space-x-1.5 transition-all cursor-pointer shadow-xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Hapus {selectedRowIds.length} Terpilih</span>
+            </button>
+            <button
+              onClick={() => setSelectedRowIds([])}
+              className="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-lg text-xs cursor-pointer"
+            >
+              Batal Pilih
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Main Table Frame matching Security Guard Table structure */}
+      <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs bg-white">
+        <table className="w-full text-left border-collapse text-xs">
           <thead>
             {/* Header Row 1: Nama & Date Headers */}
-            <tr className="bg-[#E2EFDA] text-slate-900 font-extrabold text-[12px] border-b border-slate-300">
+            <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-extrabold uppercase font-display tracking-wider">
               {canManageAdmin && (
                 <th
-                  rowSpan={2}
-                  className="py-2 px-2 text-center border-r border-slate-300 bg-[#E2EFDA] text-slate-900 w-10 align-middle"
+                  rowSpan={dates.length > 0 ? 2 : 1}
+                  className="py-3 px-3 w-10 text-center border-r border-slate-200 align-middle"
                 >
                   <input
                     type="checkbox"
                     checked={filteredData.length > 0 && selectedRowIds.length === filteredData.length}
                     onChange={toggleSelectAll}
-                    className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
-                    title="Pilih Semua Pegawai"
+                    className="rounded text-djpb-blue focus:ring-djpb-blue cursor-pointer"
+                    title="Pilih / Centang Semua Baris"
                   />
                 </th>
               )}
 
               <th
-                rowSpan={2}
-                className="py-2 px-4 text-left border-r border-slate-300 bg-[#E2EFDA] text-slate-900 w-64 uppercase tracking-wider align-middle"
+                rowSpan={dates.length > 0 ? 2 : 1}
+                className="py-3 px-4 border-r border-slate-200 text-left align-middle"
               >
-                Nama Pegawai
+                NAMA PEGAWAI
               </th>
 
               {dates.map((d) => (
                 <th
                   key={d}
                   colSpan={2}
-                  className="py-2 px-3 text-center border-r border-slate-300 bg-[#E2EFDA] text-slate-900 font-bold"
+                  className="py-3 px-3 text-center border-r border-slate-200 font-sans font-extrabold text-slate-800 bg-slate-100"
                 >
-                  {d}
+                  {formatDateForHeader(d)}
                 </th>
               ))}
 
               {canManageAdmin && (
                 <th
-                  rowSpan={2}
-                  className="py-2 px-3 text-center border-l border-slate-300 bg-[#E2EFDA] text-slate-900 w-16 uppercase tracking-wider align-middle"
+                  rowSpan={dates.length > 0 ? 2 : 1}
+                  className="py-3 px-4 text-right align-middle w-20"
                 >
-                  Aksi
+                  AKSI
                 </th>
               )}
             </tr>
 
             {/* Header Row 2: Sub-headers Hadir | Pulang */}
-            <tr className="bg-[#E2EFDA] text-slate-900 font-bold text-[11px] border-b border-slate-300">
-              {dates.map((d) => (
-                <React.Fragment key={`${d}-sub`}>
-                  <th className="py-1.5 px-3 text-center border-r border-slate-300 bg-[#E2EFDA] w-20">
-                    Hadir
-                  </th>
-                  <th className="py-1.5 px-3 text-center border-r border-slate-300 bg-[#E2EFDA] w-20">
-                    Pulang
-                  </th>
-                </React.Fragment>
-              ))}
-            </tr>
+            {dates.length > 0 && (
+              <tr className="bg-slate-100/90 text-slate-700 font-bold uppercase text-[10px] border-b border-slate-300">
+                {dates.map((d) => (
+                  <React.Fragment key={`${d}-sub`}>
+                    <th className="py-2 px-2 text-center border-r border-slate-200 w-16">
+                      Hadir
+                    </th>
+                    <th className="py-2 px-2 text-center border-r border-slate-200 w-16">
+                      Pulang
+                    </th>
+                  </React.Fragment>
+                ))}
+              </tr>
+            )}
           </thead>
 
-          <tbody className="divide-y divide-slate-300 text-slate-900 text-[11px]">
+          <tbody className="divide-y divide-slate-200 text-slate-800 font-mono">
             {filteredData.length > 0 ? (
               filteredData.map((row) => {
                 const isYellowRow = Boolean(row.isYellow);
@@ -693,32 +1171,32 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
                 return (
                   <tr
                     key={row.id}
-                    className={`transition-colors ${isSelected ? 'bg-rose-50/70' : 'hover:bg-blue-50/50'}`}
+                    className={`transition-colors ${isSelected ? 'bg-amber-50/80' : 'hover:bg-slate-50'}`}
                   >
                     {/* Select Checkbox Column */}
                     {canManageAdmin && (
-                      <td className="py-1.5 px-2 text-center border-r border-slate-300 bg-white">
+                      <td className="py-3 px-3 text-center border-r border-slate-200">
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={(e) => toggleSelectRow(row.id, e as any)}
-                          className="rounded border-slate-300 text-rose-600 focus:ring-rose-500 cursor-pointer"
+                          className="rounded text-djpb-blue focus:ring-djpb-blue cursor-pointer"
                         />
                       </td>
                     )}
 
-                    {/* Nama Cell (with Yellow Highlight exact match) */}
+                    {/* Nama Cell */}
                     <td
                       onClick={() => toggleYellowHighlight(row.id)}
-                      className={`py-1.5 px-4 font-bold border-r border-slate-300 text-slate-900 cursor-pointer select-none transition-colors ${
-                        isYellowRow ? 'bg-[#FFFF00] text-slate-900' : 'bg-white'
-                      }`}
-                      title={canManageAdmin ? 'Klik untuk aktifkan/nonaktifkan sorotan warna kuning' : undefined}
+                      className="py-3 px-4 border-r border-slate-200 font-sans font-extrabold text-slate-900 cursor-pointer select-none"
+                      title={canManageAdmin ? 'Klik untuk aktifkan/nonaktifkan sorotan kuning anomali' : undefined}
                     >
                       <div className="flex items-center justify-between space-x-2">
                         <span>{row.nama}</span>
                         {isYellowRow && (
-                          <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" title="Kategori Anomali / Disorot Admin" />
+                          <span className="inline-flex items-center px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold shrink-0">
+                            Anomali
+                          </span>
                         )}
                       </div>
                     </td>
@@ -726,31 +1204,39 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
                     {/* Date Presensi Columns */}
                     {dates.map((d) => {
                       const rec = row.records?.[d] || { hadir: 'Tidak', pulang: 'Tidak' };
-                      const isHadirAda = rec.hadir === 'Ada';
-                      const isPulangAda = rec.pulang === 'Ada';
+                      const isHadirAda = !isAbsent(rec.hadir);
+                      const isPulangAda = !isAbsent(rec.pulang);
 
                       return (
                         <React.Fragment key={`${row.id}-${d}`}>
                           {/* Hadir Cell */}
                           <td
-                            className={`py-1.5 px-2 text-center font-semibold border-r border-slate-300 ${
+                            className={`py-2 px-2 text-center font-bold border-r border-slate-200 ${
                               isHadirAda
-                                ? 'bg-white text-slate-900'
-                                : 'bg-[#F4CCCC] text-[#900C3F] font-bold'
+                                ? 'text-slate-800 bg-white'
+                                : 'bg-rose-50/90 text-rose-700 font-extrabold'
                             }`}
                           >
-                            {rec.hadir}
+                            {isHadirAda ? (
+                              <span className="text-emerald-700">Ada</span>
+                            ) : (
+                              <span className="text-rose-700">Tidak</span>
+                            )}
                           </td>
 
                           {/* Pulang Cell */}
                           <td
-                            className={`py-1.5 px-2 text-center font-semibold border-r border-slate-300 ${
+                            className={`py-2 px-2 text-center font-bold border-r border-slate-200 ${
                               isPulangAda
-                                ? 'bg-white text-slate-900'
-                                : 'bg-[#F4CCCC] text-[#900C3F] font-bold'
+                                ? 'text-slate-800 bg-white'
+                                : 'bg-rose-50/90 text-rose-700 font-extrabold'
                             }`}
                           >
-                            {rec.pulang}
+                            {isPulangAda ? (
+                              <span className="text-emerald-700">Ada</span>
+                            ) : (
+                              <span className="text-rose-700">Tidak</span>
+                            )}
                           </td>
                         </React.Fragment>
                       );
@@ -758,15 +1244,17 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
 
                     {/* Admin Action Row Delete Button */}
                     {canManageAdmin && (
-                      <td className="py-1.5 px-2 text-center border-l border-slate-300 bg-white">
-                        <button
-                          type="button"
-                          onClick={() => setRowToDelete(row)}
-                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors cursor-pointer"
-                          title={`Hapus data Cek Seribu untuk ${row.nama}`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      <td className="py-3 px-4 text-right font-sans">
+                        <div className="flex items-center justify-end space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => setRowToDelete(row)}
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title={`Hapus data ${row.nama}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     )}
                   </tr>
@@ -775,11 +1263,15 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
             ) : (
               <tr>
                 <td
-                  colSpan={1 + (canManageAdmin ? 2 : 0) + dates.length * 2}
-                  className="py-8 text-center text-slate-500 font-medium bg-slate-50"
+                  colSpan={(canManageAdmin ? 2 : 1) + (dates.length > 0 ? dates.length * 2 : 1) + (canManageAdmin ? 1 : 0)}
+                  className="py-10 text-center text-slate-500 font-medium bg-slate-50"
                 >
-                  <AlertTriangle className="w-6 h-6 text-amber-500 mx-auto mb-1.5" />
-                  <span>Tidak ada data pegawai yang sesuai dengan pencarian atau filter.</span>
+                  <AlertTriangle className="w-7 h-7 text-amber-500 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-slate-700">
+                    {matrixData.length === 0
+                      ? 'Belum ada data presensi Cek Seribu atau semua data telah dihapus.'
+                      : 'Tidak ada data pegawai yang sesuai dengan pencarian atau filter.'}
+                  </p>
                 </td>
               </tr>
             )}
@@ -787,21 +1279,21 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
         </table>
       </div>
 
-      {/* Footer Legend & Quick Info */}
+      {/* Footer Legend & Info */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 gap-2">
         <div className="flex flex-wrap items-center gap-4">
-          <span className="font-bold text-slate-800">Petunjuk Warna Matrix:</span>
+          <span className="font-bold text-slate-800">Keterangan Presensi:</span>
           <div className="flex items-center space-x-1.5">
-            <span className="w-3.5 h-3.5 bg-white border border-slate-300 rounded-xs" />
-            <span>Ada = Hadir / Pulang Terrekam</span>
+            <span className="w-3 h-3 bg-emerald-100 border border-emerald-400 rounded-xs" />
+            <span className="text-emerald-800 font-bold">Ada = Terekam Hadir / Pulang</span>
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-3.5 h-3.5 bg-[#F4CCCC] border border-rose-300 rounded-xs" />
-            <span className="text-[#900C3F] font-bold">Tidak = Belum Presensi / Absen</span>
+            <span className="w-3 h-3 bg-rose-100 border border-rose-400 rounded-xs" />
+            <span className="text-rose-800 font-bold">Tidak = Belum Presensi / Absen</span>
           </div>
           <div className="flex items-center space-x-1.5">
-            <span className="w-3.5 h-3.5 bg-[#FFFF00] border border-amber-300 rounded-xs" />
-            <span className="font-bold text-slate-900">Kuning = Anomali Cek Seribu (Klik Nama Pegawai)</span>
+            <span className="w-3 h-3 bg-amber-200 border border-amber-400 rounded-xs" />
+            <span className="font-bold text-amber-900">Anomali = Klik Nama Pegawai</span>
           </div>
         </div>
 
@@ -809,6 +1301,117 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
           Tampil: <strong>{filteredData.length}</strong> / <strong>{matrixData.length}</strong> Pegawai
         </div>
       </div>
+
+      {/* ---------------- MODALS ---------------- */}
+
+      {/* Excel Preview Confirmation Modal (EXACTLY MATCHING Konfirmasi Import Excel Security) */}
+      {showPreviewModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-3xl w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2 bg-emerald-100 text-emerald-800 rounded-xl">
+                  <FileSpreadsheet className="w-5 h-5 text-emerald-700" />
+                </div>
+                <div>
+                  <h3 className="font-display font-bold text-slate-800 text-sm md:text-base">
+                    Konfirmasi Import Excel Cek Seribu
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    File: <span className="font-mono font-bold text-slate-700">{excelFileName}</span>
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="p-1.5 hover:bg-slate-100 text-slate-400 rounded-xl cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-start space-x-2.5 shadow-2xs">
+              <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <span className="font-extrabold block text-amber-900">Perhatian: Pengunggahan ini akan MENIMPA data lama!</span>
+                <span className="text-amber-800">
+                  Seluruh data presensi Cek Seribu sebelumnya akan digantikan secara penuh dengan dokumen baru: <strong className="underline">{previewDocTitle}</strong> ({previewMatrixData.length} baris data pegawai).
+                </span>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto max-h-60 border border-slate-200 rounded-xl shadow-2xs">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-100 font-bold uppercase sticky top-0 text-slate-800 border-b border-slate-200">
+                  <tr>
+                    <th className="py-2.5 px-3 border-r border-slate-200">NAMA PEGAWAI</th>
+                    {previewDates.map((d) => (
+                      <th key={d} colSpan={2} className="py-2.5 px-3 border-r border-slate-200 text-center">
+                        {d}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-mono">
+                  {previewMatrixData.slice(0, 50).map((row, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50">
+                      <td className="py-2 px-3 font-bold text-slate-800 border-r border-slate-200 font-sans">
+                        {row.nama}
+                      </td>
+                      {previewDates.map((d) => {
+                        const rec = row.records?.[d] || { hadir: 'Tidak', pulang: 'Tidak' };
+                        return (
+                          <React.Fragment key={`${idx}-${d}`}>
+                            <td className="py-2 px-2 text-center border-r border-slate-200 font-semibold">
+                              {rec.hadir === 'Ada' ? (
+                                <span className="text-emerald-700 font-bold">Ada</span>
+                              ) : (
+                                <span className="text-rose-700 font-bold">Tidak</span>
+                              )}
+                            </td>
+                            <td className="py-2 px-2 text-center border-r border-slate-200 font-semibold">
+                              {rec.pulang === 'Ada' ? (
+                                <span className="text-emerald-700 font-bold">Ada</span>
+                              ) : (
+                                <span className="text-rose-700 font-bold">Tidak</span>
+                              )}
+                            </td>
+                          </React.Fragment>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {previewMatrixData.length > 50 && (
+              <p className="text-[11px] text-slate-500 text-center font-mono">
+                Menampilkan 50 dari total {previewMatrixData.length} baris pratinjau. Seluruh data akan disimpan.
+              </p>
+            )}
+
+            <div className="flex justify-end space-x-2 border-t border-slate-100 pt-3">
+              <button
+                type="button"
+                onClick={() => setShowPreviewModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs cursor-pointer transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleApplyExcel}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center space-x-1.5 shadow-xs cursor-pointer transition-colors"
+              >
+                <Check className="w-4 h-4" />
+                <span>Ya, Terapkan & Simpan Presensi Cek Seribu</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal Confirm Delete Single Employee */}
       {rowToDelete && (

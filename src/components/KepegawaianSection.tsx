@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Plus, BookOpen, Users, Calendar, Search, 
   GraduationCap, AlertCircle, Check, Award, Layers,
@@ -9,8 +9,9 @@ import {
 import * as XLSX from 'xlsx';
 import { GKMAgreement, ScholarshipInfo, CurrentUser } from '../types';
 import TLegoView from './TLegoView';
-import CekSeribuMatrixTable from './CekSeribuMatrixTable';
+import CekSeribuMatrixTable, { INITIAL_CEK_SERIBU_MATRIX, MatrixRowData } from './CekSeribuMatrixTable';
 import { saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
+import { safeLocalStorageSet } from '../lib/storage';
 
 interface KepegawaianSectionProps {
   subTab: string;
@@ -148,6 +149,61 @@ export default function KepegawaianSection({
     uploadDate: '22-07-2026',
     createdBy: 'Admin Kepegawaian'
   });
+  const [uploadMonth, setUploadMonth] = useState<string>('08');
+  const [uploadYear, setUploadYear] = useState<string>('2026');
+
+  const MONTH_OPTIONS = [
+    { value: '01', name: 'Januari' },
+    { value: '02', name: 'Februari' },
+    { value: '03', name: 'Maret' },
+    { value: '04', name: 'April' },
+    { value: '05', name: 'Mei' },
+    { value: '06', name: 'Juni' },
+    { value: '07', name: 'Juli' },
+    { value: '08', name: 'Agustus' },
+    { value: '09', name: 'September' },
+    { value: '10', name: 'Oktober' },
+    { value: '11', name: 'November' },
+    { value: '12', name: 'Desember' },
+  ];
+
+  const getMonthNameByNum = (numStr: string) => {
+    const found = MONTH_OPTIONS.find(m => m.value === numStr);
+    return found ? found.name : 'Agustus';
+  };
+
+  const adjustDateToSelectedMonthYear = (dateStr: string, mNum: string, yStr: string): string => {
+    if (!dateStr) return `01-${mNum}-${yStr}`;
+    const str = String(dateStr).trim();
+
+    const numMatch = str.match(/^(\d{1,2})[\/\.\-]([a-zA-Z0-9]{1,9})[\/\.\-](\d{2,4})$/);
+    if (numMatch) {
+      const day = numMatch[1].padStart(2, '0');
+      return `${day}-${mNum}-${yStr}`;
+    }
+
+    const isoMatch = str.match(/^(\d{4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})$/);
+    if (isoMatch) {
+      const day = isoMatch[3].padStart(2, '0');
+      return `${day}-${mNum}-${yStr}`;
+    }
+
+    const parts = str.split(/[\/\.\-\s]/);
+    const day = parts[0] && !isNaN(Number(parts[0])) ? parts[0].padStart(2, '0') : '01';
+    return `${day}-${mNum}-${yStr}`;
+  };
+
+  const handleMonthYearChange = (newM: string, newY: string) => {
+    setUploadMonth(newM);
+    setUploadYear(newY);
+    setUploadForm(prev => ({ ...prev, uploadDate: `01-${newM}-${newY}` }));
+    setExtractedEmployeesList(prevList =>
+      prevList.map(item => ({
+        ...item,
+        date: adjustDateToSelectedMonthYear(item.date || `01-${newM}-${newY}`, newM, newY)
+      }))
+    );
+  };
   const [tempJpegFile, setTempJpegFile] = useState<{
     fileName: string;
     fileSize: string;
@@ -166,7 +222,7 @@ export default function KepegawaianSection({
 
   const saveUploadedCerts = (certs: typeof uploadedCertificates) => {
     setUploadedCertificates(certs);
-    localStorage.setItem('melayu_cek_seribu_jpeg', JSON.stringify(certs));
+    safeLocalStorageSet('melayu_cek_seribu_jpeg', JSON.stringify(certs));
   };
 
   const formatDateDisplay = (dateStr?: string | null): string => {
@@ -179,30 +235,73 @@ export default function KepegawaianSection({
     return str;
   };
 
-  const handleDownloadExcelTemplate = () => {
-    const templateData = [
-      { 'No': 1, 'Nama Pegawai': 'Andi Wijaya, S.E.', 'Jam Hadir': '07:25 WIB', 'Jam Pulang': '17:05 WIB', 'Keterangan': 'Presensi Cek Seribu Valid' },
-      { 'No': 2, 'Nama Pegawai': 'Siti Rahma, M.Acc.', 'Jam Hadir': '07:30 WIB', 'Jam Pulang': '17:00 WIB', 'Keterangan': 'Presensi Cek Seribu Valid' },
-      { 'No': 3, 'Nama Pegawai': 'Bambang Haryono, M.Si.', 'Jam Hadir': '07:28 WIB', 'Jam Pulang': '17:10 WIB', 'Keterangan': 'Presensi Cek Seribu Valid' },
-      { 'No': 4, 'Nama Pegawai': 'Dewanti Putri, S.E.', 'Jam Hadir': '07:35 WIB', 'Jam Pulang': '16:55 WIB', 'Keterangan': 'Presensi Cek Seribu Valid' }
-    ];
+  const cekSeribuMonthDisplay = useMemo(() => {
+    const monthNames: Record<string, string> = {
+      '01': 'Januari', '1': 'Januari', 'jan': 'Januari', 'januari': 'Januari',
+      '02': 'Februari', '2': 'Februari', 'feb': 'Februari', 'februari': 'Februari',
+      '03': 'Maret', '3': 'Maret', 'mar': 'Maret', 'maret': 'Maret',
+      '04': 'April', '4': 'April', 'apr': 'April', 'april': 'April',
+      '05': 'Mei', '5': 'Mei', 'mei': 'Mei', 'may': 'Mei',
+      '06': 'Juni', '6': 'Juni', 'jun': 'Juni', 'juni': 'Juni',
+      '07': 'Juli', '7': 'Juli', 'jul': 'Juli', 'juli': 'Juli',
+      '08': 'Agustus', '8': 'Agustus', 'agu': 'Agustus', 'ags': 'Agustus', 'agustus': 'Agustus', 'aug': 'Agustus',
+      '09': 'September', '9': 'September', 'sep': 'September', 'september': 'September',
+      '10': 'Oktober', 'okt': 'Oktober', 'oktober': 'Oktober', 'oct': 'Oktober',
+      '11': 'November', 'nov': 'November', 'november': 'November',
+      '12': 'Desember', 'des': 'Desember', 'desember': 'Desember', 'dec': 'Desember'
+    };
 
-    const worksheet = XLSX.utils.json_to_sheet(templateData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Presensi_CekSeribu');
-    XLSX.writeFile(workbook, 'Template_Presensi_CekSeribu_Kanwil.xlsx');
-  };
+    if (uploadedCertificates && uploadedCertificates.length > 0) {
+      for (const cert of uploadedCertificates) {
+        if (!cert.uploadDate) continue;
+        const str = String(cert.uploadDate).toLowerCase().trim();
+
+        const numMatch = str.match(/(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})/);
+        if (numMatch) {
+          const m = numMatch[2].padStart(2, '0');
+          const y = numMatch[3];
+          if (monthNames[m]) return `${monthNames[m]} ${y}`;
+        }
+
+        const isoMatch = str.match(/(\d{4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})/);
+        if (isoMatch) {
+          const y = isoMatch[1];
+          const m = isoMatch[2].padStart(2, '0');
+          if (monthNames[m]) return `${monthNames[m]} ${y}`;
+        }
+
+        for (const [k, v] of Object.entries(monthNames)) {
+          if (str.includes(k)) {
+            const yr = str.match(/\d{4}/);
+            return `${v} ${yr ? yr[0] : '2026'}`;
+          }
+        }
+      }
+    }
+    return 'Agustus 2026';
+  }, [uploadedCertificates]);
 
   const parseFlexibleDate = (rawVal: any): string | null => {
     if (rawVal === undefined || rawVal === null || rawVal === '') return null;
 
     if (typeof rawVal === 'number' && rawVal > 30000 && rawVal < 60000) {
       try {
+        const parsed = XLSX.SSF.parse_date_code(rawVal);
+        if (parsed && parsed.y && parsed.m && parsed.d) {
+          const d = String(parsed.d).padStart(2, '0');
+          const m = String(parsed.m).padStart(2, '0');
+          const y = parsed.y;
+          return `${d}-${m}-${y}`;
+        }
+      } catch (e) {
+        // ignore
+      }
+      try {
         const dateObj = new Date(Math.round((rawVal - 25569) * 86400 * 1000));
         if (!isNaN(dateObj.getTime())) {
-          const d = String(dateObj.getDate()).padStart(2, '0');
-          const m = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const y = dateObj.getFullYear();
+          const d = String(dateObj.getUTCDate()).padStart(2, '0');
+          const m = String(dateObj.getUTCMonth() + 1).padStart(2, '0');
+          const y = dateObj.getUTCFullYear();
           return `${d}-${m}-${y}`;
         }
       } catch (e) {
@@ -227,38 +326,54 @@ export default function KepegawaianSection({
       feb: '02', februari: '02',
       mar: '03', maret: '03',
       apr: '04', april: '04',
-      mei: '05',
+      mei: '05', may: '05',
       jun: '06', juni: '06',
       jul: '07', juli: '07',
-      agu: '08', agustus: '08', ags: '08',
+      agu: '08', agustus: '08', ags: '08', aug: '08', august: '08',
       sep: '09', september: '09',
-      okt: '10', oktober: '10',
+      okt: '10', oktober: '10', oct: '10',
       nov: '11', november: '11',
-      des: '12', desember: '12'
+      des: '12', desember: '12', dec: '12'
     };
 
-    const indoMatch = str.match(/(\d{1,2})\s*[\s\/\.\-]\s*([a-zA-Z]+)\s*[\s\/\.\-]\s*(\d{4})/);
+    const indoMatch = str.match(/(\d{1,2})\s*[\s\/\.\-]\s*([a-zA-Z]+)\s*[\s\/\.\-]\s*(\d{2,4})/);
     if (indoMatch) {
       const day = indoMatch[1].padStart(2, '0');
       const monthStr = indoMatch[2].toLowerCase();
-      const year = indoMatch[3];
+      let year = indoMatch[3];
+      if (year.length === 2) year = `20${year}`;
       const month = monthMap[monthStr];
       if (month) {
         return `${day}-${month}-${year}`;
       }
     }
 
-    const slashMatch = str.match(/(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})/);
+    const slashMatch = str.match(/(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{2,4})/);
     if (slashMatch) {
-      const day = slashMatch[1].padStart(2, '0');
-      const month = slashMatch[2].padStart(2, '0');
-      const year = slashMatch[3];
+      const g1 = parseInt(slashMatch[1], 10);
+      const g2 = parseInt(slashMatch[2], 10);
+      let year = slashMatch[3];
+      if (year.length === 2) year = `20${year}`;
+
+      let day: string;
+      let month: string;
+      if (g1 > 12 && g2 <= 12) {
+        day = String(g1).padStart(2, '0');
+        month = String(g2).padStart(2, '0');
+      } else if (g2 > 12 && g1 <= 12) {
+        day = String(g2).padStart(2, '0');
+        month = String(g1).padStart(2, '0');
+      } else {
+        day = String(g1).padStart(2, '0');
+        month = String(g2).padStart(2, '0');
+      }
       return `${day}-${month}-${year}`;
     }
 
-    const revSlashMatch = str.match(/(\d{4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})/);
+    const revSlashMatch = str.match(/(\d{2,4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})/);
     if (revSlashMatch) {
-      const year = revSlashMatch[1];
+      let year = revSlashMatch[1];
+      if (year.length === 2) year = `20${year}`;
       const month = revSlashMatch[2].padStart(2, '0');
       const day = revSlashMatch[3].padStart(2, '0');
       return `${day}-${month}-${year}`;
@@ -266,6 +381,99 @@ export default function KepegawaianSection({
 
     return null;
   };
+
+  const matrixDataFromCertificates = useMemo<MatrixRowData[]>(() => {
+    if (!uploadedCertificates || uploadedCertificates.length === 0) {
+      return [];
+    }
+
+    const isAbsentValue = (val?: string) => {
+      if (!val) return true;
+      const s = val.toLowerCase().trim();
+      return (
+        s === '' ||
+        s === '-' ||
+        s === '0' ||
+        s === '0.0' ||
+        s === 'x' ||
+        s === 'a' ||
+        s === 'tap' ||
+        s === 'tk' ||
+        s === 'tidak' ||
+        s === 'tidak ada' ||
+        s === 'tidak hadir' ||
+        s === 'tidak pulang' ||
+        s === 'absen' ||
+        s.includes('tidak') ||
+        s.includes('absen') ||
+        s.includes('tanpa') ||
+        s.includes('mangkir')
+      );
+    };
+
+    const employeeMap = new Map<string, {
+      id: string;
+      nama: string;
+      isYellow?: boolean;
+      records: Record<string, { hadir: 'Ada' | 'Tidak'; pulang: 'Ada' | 'Tidak' }>;
+    }>();
+
+    uploadedCertificates.forEach((cert) => {
+      const name = (cert.employeeName || 'Pegawai').trim();
+      const rawDate = cert.uploadDate || '22-07-2026';
+      const dateKey = parseFlexibleDate(rawDate) || formatDateDisplay(rawDate) || rawDate;
+      
+      if (!employeeMap.has(name)) {
+        employeeMap.set(name, {
+          id: `cert-emp-${name.replace(/\s+/g, '-').toLowerCase()}`,
+          nama: name,
+          isYellow: false,
+          records: {}
+        });
+      }
+
+      const empObj = employeeMap.get(name)!;
+      const checkInHadir = isAbsentValue(cert.checkInTime) ? 'Tidak' : 'Ada';
+      const checkOutPulang = isAbsentValue(cert.checkOutTime) ? 'Tidak' : 'Ada';
+
+      empObj.records[dateKey] = {
+        hadir: checkInHadir,
+        pulang: checkOutPulang
+      };
+    });
+
+    return Array.from(employeeMap.values());
+  }, [uploadedCertificates]);
+
+  const handleDownloadExcelTemplate = () => {
+    // 2-row header matrix matching user screenshot
+    const row1 = ['Nama', '22-Jul-26', '', '23-Jul-26', '', '24-Jul-26', '', '27-Jul-26', ''];
+    const row2 = ['', 'Hadir', 'Pulang', 'Hadir', 'Pulang', 'Hadir', 'Pulang', 'Hadir', 'Pulang'];
+    const sampleRows = [
+      ['Andi Wijaya, S.E.', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada'],
+      ['Siti Rahma, M.Acc.', 'Ada', 'Ada', 'Ada', 'Tidak', 'Ada', 'Ada', 'Ada', 'Ada'],
+      ['Bambang Haryono, M.Si.', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada'],
+      ['Dewanti Putri, S.E.', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada', 'Ada']
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet([row1, row2, ...sampleRows]);
+
+    const merges: XLSX.Range[] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 1 }, e: { r: 0, c: 2 } },
+      { s: { r: 0, c: 3 }, e: { r: 0, c: 4 } },
+      { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } },
+      { s: { r: 0, c: 7 }, e: { r: 0, c: 8 } }
+    ];
+
+    worksheet['!merges'] = merges;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Rekap_Presensi_CekSeribu');
+    XLSX.writeFile(workbook, 'Template_Presensi_CekSeribu_Kanwil.xlsx');
+  };
+
+
 
   const parseExcelPresensiSheet = (worksheet: XLSX.WorkSheet) => {
     // 1. Get 2D matrix of formatted strings
@@ -275,6 +483,182 @@ export default function KepegawaianSection({
 
     if (!rowsFormatted || rowsFormatted.length === 0) return [];
 
+    let titleExtractedDate: string | null = null;
+
+    // First check if worksheet is a Matrix Layout Excel (multiple dates across columns)
+    let matrixHeaderIdx = -1;
+    let matrixNameColIdx = -1;
+    const matrixDateCols: Array<{ dateStr: string; hadirCol: number; pulangCol: number }> = [];
+
+    for (let r = 0; r < Math.min(rowsFormatted.length, 12); r++) {
+      const row = rowsFormatted[r] || [];
+      const rowR = rowsRaw[r] || [];
+      const nextRow = rowsFormatted[r + 1] || [];
+      const nextRowR = rowsRaw[r + 1] || [];
+
+      let foundNameIdx = -1;
+      row.forEach((cellVal: any, cIdx: number) => {
+        const str = String(cellVal || '').toLowerCase().trim();
+        if (str.includes('nama') || str.includes('pegawai') || str.includes('employee')) {
+          if (foundNameIdx === -1) foundNameIdx = cIdx;
+        }
+        if (!titleExtractedDate) {
+          const p = parseFlexibleDate(cellVal) || parseFlexibleDate(rowR[cIdx]);
+          if (p) titleExtractedDate = p;
+        }
+      });
+
+      if (foundNameIdx !== -1) {
+        const dateColMap: Record<string, { hadirCol: number; pulangCol: number }> = {};
+
+        // 1. Single-cell header matching (e.g. "10-Aug-26 (Hadir)")
+        row.forEach((cellVal: any, cIdx: number) => {
+          const str = String(cellVal || '').trim();
+          if (!str || cIdx === foundNameIdx) return;
+
+          const matchCol = str.match(/(.*?)\s*[\(\_]?\s*(hadir|datang|pulang|masuk|keluar|check\s*in|check\s*out)[\)]?/i);
+          if (matchCol) {
+            const rawDate = matchCol[1].trim();
+            const typeStr = matchCol[2].toLowerCase();
+            const parsedDate = parseFlexibleDate(rawDate) || rawDate || '22-07-2026';
+
+            if (!dateColMap[parsedDate]) {
+              dateColMap[parsedDate] = { hadirCol: -1, pulangCol: -1 };
+            }
+
+            if (typeStr.includes('hadir') || typeStr.includes('datang') || typeStr.includes('masuk') || typeStr.includes('in')) {
+              dateColMap[parsedDate].hadirCol = cIdx;
+            } else if (typeStr.includes('pulang') || typeStr.includes('keluar') || typeStr.includes('out')) {
+              dateColMap[parsedDate].pulangCol = cIdx;
+            }
+          }
+        });
+
+        // 2. Multi-row header matching (Row r = Date, Row r+1 = Hadir/Pulang)
+        if (Object.keys(dateColMap).length === 0 && nextRow.length > 0) {
+          let currDateStr: string | null = null;
+          const maxCols = Math.max(row.length, nextRow.length);
+          for (let cIdx = 0; cIdx < maxCols; cIdx++) {
+            if (cIdx === foundNameIdx) continue;
+            const topVal = row[cIdx] || rowR[cIdx];
+            const subVal = String(nextRow[cIdx] || nextRowR[cIdx] || '').toLowerCase().trim();
+
+            const parsedTopDate = parseFlexibleDate(topVal);
+            if (parsedTopDate) {
+              currDateStr = parsedTopDate;
+            }
+
+            if (currDateStr) {
+              if (!dateColMap[currDateStr]) {
+                dateColMap[currDateStr] = { hadirCol: -1, pulangCol: -1 };
+              }
+
+              if (subVal.includes('hadir') || subVal.includes('datang') || subVal.includes('masuk') || subVal.includes('in')) {
+                dateColMap[currDateStr].hadirCol = cIdx;
+              } else if (subVal.includes('pulang') || subVal.includes('keluar') || subVal.includes('out')) {
+                dateColMap[currDateStr].pulangCol = cIdx;
+              } else if (dateColMap[currDateStr].hadirCol === -1) {
+                dateColMap[currDateStr].hadirCol = cIdx;
+              } else if (dateColMap[currDateStr].pulangCol === -1) {
+                dateColMap[currDateStr].pulangCol = cIdx;
+              }
+            }
+          }
+        }
+
+        const keys = Object.keys(dateColMap);
+        if (keys.length > 0 && keys.some(k => dateColMap[k].hadirCol !== -1 || dateColMap[k].pulangCol !== -1)) {
+          const isTwoRow = nextRow.some(cell => {
+            const s = String(cell || '').toLowerCase();
+            return s.includes('hadir') || s.includes('pulang') || s.includes('datang') || s.includes('keluar');
+          });
+          matrixHeaderIdx = isTwoRow ? r + 1 : r;
+          matrixNameColIdx = foundNameIdx;
+          Object.entries(dateColMap).forEach(([dKey, cols]) => {
+            matrixDateCols.push({ dateStr: dKey, hadirCol: cols.hadirCol, pulangCol: cols.pulangCol });
+          });
+          break;
+        }
+      }
+    }
+
+    const results: Array<{
+      id: string;
+      employeeName: string;
+      checkInTime: string;
+      checkOutTime: string;
+      date?: string;
+    }> = [];
+
+    // Extract Matrix layout rows
+    if (matrixHeaderIdx !== -1 && matrixDateCols.length > 0) {
+      for (let r = matrixHeaderIdx + 1; r < rowsFormatted.length; r++) {
+        const rowF = rowsFormatted[r] || [];
+        const rowR = rowsRaw[r] || [];
+
+        let nameVal = String(rowF[matrixNameColIdx] || rowR[matrixNameColIdx] || '').trim();
+        nameVal = nameVal.replace(/^\d+[\.\-\s]+/, '').trim();
+
+        const lowerName = nameVal.toLowerCase();
+        if (
+          nameVal &&
+          nameVal.length >= 2 &&
+          !lowerName.startsWith('no') &&
+          !lowerName.includes('nama pegawai') &&
+          !lowerName.includes('nip') &&
+          !lowerName.includes('jumlah') &&
+          !lowerName.includes('total')
+        ) {
+          matrixDateCols.forEach((mCol) => {
+            const hVal = mCol.hadirCol !== -1 ? (rowF[mCol.hadirCol] ?? rowR[mCol.hadirCol]) : '';
+            const pVal = mCol.pulangCol !== -1 ? (rowF[mCol.pulangCol] ?? rowR[mCol.pulangCol]) : '';
+
+            const isAbsentVal = (val: any) => {
+              if (val === undefined || val === null) return true;
+              const s = String(val).toLowerCase().trim();
+              return (
+                s === '' ||
+                s === '-' ||
+                s === '0' ||
+                s === '0.0' ||
+                s === 'x' ||
+                s === 'a' ||
+                s === 'tap' ||
+                s === 'tk' ||
+                s === 'tidak' ||
+                s === 'tidak ada' ||
+                s === 'tidak hadir' ||
+                s === 'tidak pulang' ||
+                s === 'absen' ||
+                s.includes('tidak') ||
+                s.includes('absen') ||
+                s.includes('tanpa') ||
+                s.includes('mangkir')
+              );
+            };
+
+            const formatPresensi = (val: any): 'Ada' | 'Tidak' => {
+              if (isAbsentVal(val)) return 'Tidak';
+              return 'Ada';
+            };
+
+            const checkInFormatted = formatPresensi(hVal);
+            const checkOutFormatted = formatPresensi(pVal);
+
+            results.push({
+              id: `ext-mat-${Date.now()}-${r}-${mCol.dateStr}`,
+              employeeName: nameVal,
+              checkInTime: checkInFormatted,
+              checkOutTime: checkOutFormatted,
+              date: mCol.dateStr
+            });
+          });
+        }
+      }
+      if (results.length > 0) return results;
+    }
+
+    // Fallback: List Layout Excel Parser
     let headerRowIdx = -1;
     let colIndices = {
       name: -1,
@@ -283,9 +667,6 @@ export default function KepegawaianSection({
       date: -1
     };
 
-    let titleExtractedDate: string | null = null;
-
-    // Scan top rows to locate header columns or global date title
     for (let r = 0; r < Math.min(rowsFormatted.length, 15); r++) {
       const row = rowsFormatted[r] || [];
       const rowR = rowsRaw[r] || [];
@@ -299,7 +680,6 @@ export default function KepegawaianSection({
         const rawCell = rowR[cIdx];
         if (!cellStr) return;
 
-        // Try extracting title date if found
         if (!titleExtractedDate) {
           const parsed = parseFlexibleDate(cellVal) || parseFlexibleDate(rawCell);
           if (parsed) titleExtractedDate = parsed;
@@ -331,46 +711,33 @@ export default function KepegawaianSection({
       }
     }
 
-    const formatTimeString = (valFormatted: any, valRaw: any, fallback: string) => {
+    const formatPresensiString = (valFormatted: any, valRaw: any): 'Ada' | 'Tidak' => {
       let str = String(valFormatted || '').trim();
       if (!str && valRaw !== undefined && valRaw !== null && valRaw !== '') {
         str = String(valRaw).trim();
       }
-      if (!str) return fallback;
-
-      // Handle numeric fraction of day in Excel (e.g., 0.3125 -> 07:30)
-      const num = Number(str);
-      if (!isNaN(num) && num > 0 && num < 1) {
-        const totalSecs = Math.round(num * 86400);
-        const hrs = Math.floor(totalSecs / 3600) % 24;
-        const mins = Math.floor((totalSecs % 3600) / 60);
-        return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')} WIB`;
+      if (!str) return 'Tidak';
+      const s = str.toLowerCase();
+      if (
+        s === '-' ||
+        s === '0' ||
+        s === '0.0' ||
+        s === 'x' ||
+        s === 'a' ||
+        s === 'tap' ||
+        s === 'tk' ||
+        s === 'tidak' ||
+        s === 'tidak ada' ||
+        s === 'tidak hadir' ||
+        s === 'tidak pulang' ||
+        s === 'absen' ||
+        s.includes('tidak') ||
+        s.includes('absen')
+      ) {
+        return 'Tidak';
       }
-
-      // Clean text like "07.30.00", "07:30:00", "7:30", "07.30"
-      let cleaned = str.replace(/;.*$/, '').trim();
-      cleaned = cleaned.replace(/(\d{1,2})\.(\d{2})/g, '$1:$2');
-      cleaned = cleaned.replace(/(\d{1,2}:\d{2}):00/g, '$1');
-
-      if (/^\d{1,2}:\d{2}$/.test(cleaned)) {
-        const [h, m] = cleaned.split(':');
-        cleaned = `${h.padStart(2, '0')}:${m}`;
-      }
-
-      if (!cleaned.toUpperCase().includes('WIB')) {
-        cleaned = `${cleaned} WIB`;
-      }
-
-      return cleaned;
+      return 'Ada';
     };
-
-    const results: Array<{
-      id: string;
-      employeeName: string;
-      checkInTime: string;
-      checkOutTime: string;
-      date?: string;
-    }> = [];
 
     const startRow = headerRowIdx !== -1 ? headerRowIdx + 1 : 0;
     const defaultDates = ['22-07-2026', '23-07-2026', '24-07-2026', '27-07-2026'];
@@ -410,7 +777,6 @@ export default function KepegawaianSection({
         }
       }
 
-      // Check any cell in row for date if not found
       if (!dateVal) {
         for (const cell of [...rowF, ...rowR]) {
           const pDate = parseFlexibleDate(cell);
@@ -421,7 +787,6 @@ export default function KepegawaianSection({
         }
       }
 
-      // Strip leading number prefixes e.g. "1. Budi Santoso" -> "Budi Santoso"
       nameVal = nameVal.replace(/^\d+[\.\-\s]+/, '').trim();
 
       const lowerName = nameVal.toLowerCase();
@@ -435,14 +800,13 @@ export default function KepegawaianSection({
         !lowerName.includes('total') &&
         !lowerName.includes('rekapitulasi')
       ) {
-        const resultIdx = results.length;
-        const rowDate = dateVal || titleExtractedDate || defaultDates[resultIdx % defaultDates.length];
+        const rowDate = dateVal || titleExtractedDate || uploadForm.uploadDate || `01-${uploadMonth}-${uploadYear}`;
 
         results.push({
           id: `ext-xls-${Date.now()}-${r}`,
           employeeName: nameVal,
-          checkInTime: formatTimeString(checkInVal, rowR[colIndices.checkIn], '07:30 WIB'),
-          checkOutTime: formatTimeString(checkOutVal, rowR[colIndices.checkOut], '17:00 WIB'),
+          checkInTime: formatPresensiString(checkInVal, rowR[colIndices.checkIn]),
+          checkOutTime: formatPresensiString(checkOutVal, rowR[colIndices.checkOut]),
           date: rowDate
         });
       }
@@ -470,16 +834,28 @@ export default function KepegawaianSection({
           let parsedEmployees = parseExcelPresensiSheet(worksheet);
 
           if (parsedEmployees.length === 0) {
-            parsedEmployees = [
-              { id: `ext-xls-1`, employeeName: 'Drs. Hendra Saputra, M.Si.', checkInTime: '07:25 WIB', checkOutTime: '17:05 WIB', date: '22-07-2026' },
-              { id: `ext-xls-2`, employeeName: 'Rina Kurniawati, S.E.', checkInTime: '07:30 WIB', checkOutTime: '17:00 WIB', date: '23-07-2026' },
-              { id: `ext-xls-3`, employeeName: 'Budi Santoso, S.Kom.', checkInTime: '07:28 WIB', checkOutTime: '17:10 WIB', date: '24-07-2026' },
-              { id: `ext-xls-4`, employeeName: 'Dewanti Putri, S.E.', checkInTime: '07:35 WIB', checkOutTime: '16:55 WIB', date: '27-07-2026' }
-            ];
+            alert('File Excel yang diunggah tidak memiliki data pegawai yang dapat dibaca. Harap periksa kembali format file Excel.');
+            return;
           }
 
           if (parsedEmployees[0]?.date) {
             setUploadForm(prev => ({ ...prev, uploadDate: parsedEmployees[0].date! }));
+            
+            // Extract month and year from Excel parsed date if available
+            const dateParts = parsedEmployees[0].date.split(/[\/\.\-]/);
+            if (dateParts.length === 3) {
+              let mVal = dateParts[1];
+              let yVal = dateParts[2].length === 2 ? `20${dateParts[2]}` : dateParts[2];
+              if (mVal && yVal) {
+                const foundM = MONTH_OPTIONS.find(
+                  m => m.value === mVal.padStart(2, '0') || m.name.toLowerCase().startsWith(mVal.toLowerCase())
+                );
+                if (foundM) {
+                  setUploadMonth(foundM.value);
+                  setUploadYear(yVal);
+                }
+              }
+            }
           }
 
           const excelSvg = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400"><rect width="600" height="400" fill="%23107c41"/><rect x="40" y="40" width="520" height="320" rx="12" fill="%23ffffff"/><path d="M70 70h460v50H70z" fill="%23107c41"/><text x="90" y="102" fill="%23ffffff" font-family="sans-serif" font-weight="bold" font-size="20">DOKUMEN EXCEL PRESENSI CEK SERIBU</text><text x="90" y="160" fill="%23333333" font-family="sans-serif" font-weight="bold" font-size="16">Berkas: ${encodeURIComponent(file.name)}</text><text x="90" y="190" fill="%23666666" font-family="sans-serif" font-size="14">Jumlah Data Terbaca: ${parsedEmployees.length} Pegawai</text><rect x="90" y="220" width="420" height="2" fill="%23e2e8f0"/><text x="90" y="260" fill="%23107c41" font-family="sans-serif" font-weight="bold" font-size="14">Status: Terkonversi Otomatis ke Sistem Cek Seribu</text></svg>`;
@@ -521,29 +897,29 @@ export default function KepegawaianSection({
         {
           id: `ext-${Date.now()}-1`,
           employeeName: cleanFileName.length > 5 ? cleanFileName : 'M. Rizky Pratama, S.E.',
-          checkInTime: '07:25 WIB',
-          checkOutTime: '17:05 WIB',
+          checkInTime: 'Ada',
+          checkOutTime: 'Ada',
           date: '22-07-2026'
         },
         {
           id: `ext-${Date.now()}-2`,
           employeeName: 'Nurul Hidayah, S.A.P.',
-          checkInTime: '07:30 WIB',
-          checkOutTime: '17:00 WIB',
+          checkInTime: 'Ada',
+          checkOutTime: 'Ada',
           date: '23-07-2026'
         },
         {
           id: `ext-${Date.now()}-3`,
           employeeName: 'Rahmat Hidayat, M.M.',
-          checkInTime: '07:35 WIB',
-          checkOutTime: '17:15 WIB',
+          checkInTime: 'Ada',
+          checkOutTime: 'Ada',
           date: '24-07-2026'
         },
         {
           id: `ext-${Date.now()}-4`,
           employeeName: 'Siti Aminah, A.Md.Ak.',
-          checkInTime: '07:20 WIB',
-          checkOutTime: '16:50 WIB',
+          checkInTime: 'Ada',
+          checkOutTime: 'Ada',
           date: '27-07-2026'
         }
       ];
@@ -558,8 +934,8 @@ export default function KepegawaianSection({
       {
         id: `ext-${Date.now()}-${Math.random()}`,
         employeeName: '',
-        checkInTime: '07:30 WIB',
-        checkOutTime: '17:00 WIB',
+        checkInTime: 'Ada',
+        checkOutTime: 'Ada',
         date: uploadForm.uploadDate || '22-07-2026'
       }
     ]);
@@ -587,21 +963,32 @@ export default function KepegawaianSection({
       return;
     }
 
-    // Create entry rows for ALL extracted employees from the JPEG document
-    const newCerts = extractedEmployeesList.map((emp, index) => ({
-      id: `cert-${Date.now()}-${index}`,
-      fileName: tempJpegFile.fileName,
-      fileSize: tempJpegFile.fileSize,
-      imageUrl: tempJpegFile.imageUrl,
-      employeeName: emp.employeeName.trim() || `Pegawai ${index + 1}`,
-      uploadDate: formatDateDisplay(emp.date) || formatDateDisplay(uploadForm.uploadDate) || '22-07-2026',
-      checkInTime: emp.checkInTime.trim() || '07:30 WIB',
-      checkOutTime: emp.checkOutTime.trim() || '17:00 WIB',
-      createdBy: uploadForm.createdBy.trim() || 'Petugas Cek Seribu',
-      status: 'Cek Seribu Valid'
-    }));
+    // Create entry rows for ALL extracted employees from the JPEG/Excel document
+    const newCerts = extractedEmployeesList.map((emp, index) => {
+      const rawDate = emp.date || uploadForm.uploadDate || `01-${uploadMonth}-${uploadYear}`;
+      const adjustedDate = (tempJpegFile?.isExcel && emp.date)
+        ? emp.date
+        : adjustDateToSelectedMonthYear(rawDate, uploadMonth, uploadYear);
 
-    saveUploadedCerts([...newCerts, ...uploadedCertificates]);
+      return {
+        id: `cert-${Date.now()}-${index}`,
+        fileName: tempJpegFile.fileName,
+        fileSize: tempJpegFile.fileSize,
+        imageUrl: tempJpegFile.imageUrl,
+        employeeName: emp.employeeName.trim() || `Pegawai ${index + 1}`,
+        uploadDate: parseFlexibleDate(adjustedDate) || formatDateDisplay(adjustedDate) || adjustedDate,
+        checkInTime: emp.checkInTime ? emp.checkInTime.trim() : 'Tidak Ada',
+        checkOutTime: emp.checkOutTime ? emp.checkOutTime.trim() : 'Tidak Ada',
+        createdBy: uploadForm.createdBy.trim() || 'Petugas Cek Seribu',
+        status: 'Cek Seribu Valid'
+      };
+    });
+
+    if (tempJpegFile.isExcel) {
+      saveUploadedCerts(newCerts);
+    } else {
+      saveUploadedCerts([...newCerts, ...uploadedCertificates]);
+    }
     setShowUploadModal(false);
     setTempJpegFile(null);
     setExtractedEmployeesList([]);
@@ -1222,65 +1609,35 @@ export default function KepegawaianSection({
 
           {/* ----------------- FITUR & PANEL KELOLA ADMIN (CEK SERIBU) ----------------- */}
           {canManageAdmin && (
-            <div className="bg-gradient-to-r from-amber-50/90 via-slate-50 to-blue-50/80 border border-amber-200/80 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4" id="admin-cek-seribu-panel">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-amber-200/60 pb-3">
-                <div className="flex items-center space-x-2.5">
-                  <div className="p-2.5 bg-djpb-blue text-white rounded-xl shadow-xs">
-                    <Shield className="w-5 h-5 text-djpb-gold" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-display font-bold text-slate-800 flex items-center space-x-2">
-                      <span>Menu & Panel Kelola Admin (Cek Seribu)</span>
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold rounded-md">
-                        Akses Administrator
-                      </span>
-                    </h3>
-                    <p className="text-[11px] text-slate-600">
-                      Fitur khusus admin untuk pengunggahan file presensi (Excel / JPEG) dan penghapusan data rekapitulasi.
-                    </p>
-                  </div>
+            <div className="bg-gradient-to-r from-amber-50/90 via-slate-50 to-blue-50/80 border border-amber-200/80 rounded-2xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3" id="admin-cek-seribu-panel">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-2.5 bg-djpb-blue text-white rounded-xl shadow-xs">
+                  <Shield className="w-5 h-5 text-djpb-gold" />
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    id="btn-admin-panel-upload"
-                    onClick={() => setShowUploadModal(true)}
-                    className="px-3.5 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-                  >
-                    <Upload className="w-4 h-4" />
-                    <span>Menu Unggah File</span>
-                  </button>
-
-                  {uploadedCertificates.length > 0 && (
-                    <button
-                      type="button"
-                      id="btn-admin-panel-delete-all"
-                      onClick={() => setShowDeleteAllModal(true)}
-                      className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Menu Hapus Semua Data</span>
-                    </button>
-                  )}
+                <div>
+                  <h3 className="text-sm font-display font-bold text-slate-800 flex items-center space-x-2">
+                    <span>Menu & Panel Kelola Admin (Cek Seribu)</span>
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold rounded-md">
+                      Akses Administrator
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-slate-600">
+                    Fitur khusus admin untuk rekapitulasi data Cek Seribu. Pengunggahan file berkas dilakukan melalui tombol utama 'Unggah Berkas Cek Seribu' di kanan atas.
+                  </p>
                 </div>
               </div>
 
-              {/* Quick Upload Dropzone Area */}
-              <div 
-                onClick={() => setShowUploadModal(true)}
-                className="border-2 border-dashed border-amber-300 hover:border-djpb-blue rounded-xl p-3.5 text-center bg-white/80 hover:bg-blue-50/50 transition-all cursor-pointer group shadow-2xs"
-              >
-                <div className="flex items-center justify-center space-x-3">
-                  <div className="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center shadow-xs border border-amber-200 group-hover:scale-105 transition-all shrink-0">
-                    <Upload className="w-4 h-4 text-djpb-blue" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-xs font-bold text-slate-800">Klik untuk Unggah Berkas Excel (.xlsx, .xls, .csv) atau Gambar JPEG Cek Seribu</p>
-                    <p className="text-[10px] text-slate-500">Sistem otomatis membaca dan mengkonversi daftar presensi pegawai ke rekapitulasi Cek Seribu</p>
-                  </div>
-                </div>
-              </div>
+              {uploadedCertificates.length > 0 && (
+                <button
+                  type="button"
+                  id="btn-admin-panel-delete-all"
+                  onClick={() => setShowDeleteAllModal(true)}
+                  className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer shrink-0"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Menu Hapus Semua Data</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -1292,8 +1649,8 @@ export default function KepegawaianSection({
                 <Calendar className="w-4 h-4 text-djpb-blue" />
                 <span>Hasil Konversi & Rekapitulasi Presensi Cek Seribu</span>
               </div>
-              <span className="text-[10px] bg-slate-300 text-slate-700 px-2.5 py-0.5 rounded font-mono font-bold">
-                Triwulan II 2026 / Presensi Cek Seribu
+              <span className="text-[10px] bg-emerald-100 text-emerald-900 border border-emerald-300/80 px-2.5 py-0.5 rounded font-mono font-extrabold">
+                Bulan Presensi: {cekSeribuMonthDisplay} / Cek Seribu
               </span>
             </div>
 
@@ -1332,20 +1689,7 @@ export default function KepegawaianSection({
                     <span>Unduh Template Excel</span>
                   </button>
 
-                  <span className="bg-amber-100 text-amber-900 border border-amber-300/80 px-2.5 py-1 rounded-lg text-xs font-black tracking-widest uppercase shadow-2xs">
-                    InTress
-                  </span>
 
-                  {canManageAdmin && (
-                    <button
-                      type="button"
-                      onClick={() => setShowUploadModal(true)}
-                      className="px-3.5 py-1.5 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-xl shadow-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Unggah Excel / JPEG</span>
-                    </button>
-                  )}
                 </div>
               </div>
 
@@ -1406,7 +1750,17 @@ export default function KepegawaianSection({
               {/* Display Mode Render */}
               {cekSeribuViewMode === 'matrix' ? (
                 /* Full Matrix Table matching screenshot */
-                <CekSeribuMatrixTable canManageAdmin={canManageAdmin} />
+                <CekSeribuMatrixTable 
+                  data={matrixDataFromCertificates} 
+                  canManageAdmin={canManageAdmin} 
+                  selectedMonth={uploadMonth}
+                  selectedYear={uploadYear}
+                  onDataChange={(newData) => {
+                    if (newData.length === 0) {
+                      saveUploadedCerts([]);
+                    }
+                  }}
+                />
               ) : (
                 <>
                   {/* Menu Search & Filter Tanggal Presensi */}
@@ -1468,24 +1822,24 @@ export default function KepegawaianSection({
                 <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="bg-[#2B5282] text-white font-bold text-[11px] uppercase tracking-wider">
-                        <th className="py-2.5 px-3 w-12 text-center border-r border-blue-800">No.</th>
-                        <th className="py-2.5 px-4 border-r border-blue-800">Nama Pegawai</th>
-                        <th className="py-2.5 px-3 border-r border-blue-800 w-36">Tanggal</th>
-                        <th className="py-2.5 px-3 border-r border-blue-800 w-32">Hadir</th>
-                        <th className="py-2.5 px-3 border-r border-blue-800 w-32">Pulang</th>
-                        {canManageAdmin && <th className="py-2.5 px-3 w-24 text-center">Aksi</th>}
+                      <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-extrabold uppercase font-display tracking-wider text-xs">
+                        <th className="py-3 px-3 w-12 text-center border-r border-slate-200">No.</th>
+                        <th className="py-3 px-4 border-r border-slate-200">Nama Pegawai</th>
+                        <th className="py-3 px-3 border-r border-slate-200 w-36">Tanggal</th>
+                        <th className="py-3 px-3 border-r border-slate-200 w-32">Hadir</th>
+                        <th className="py-3 px-3 border-r border-slate-200 w-32">Pulang</th>
+                        {canManageAdmin && <th className="py-3 px-3 w-24 text-center">Aksi</th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-200 text-slate-800 font-sans text-[11px]">
+                    <tbody className="divide-y divide-slate-200 text-slate-800 font-sans text-xs">
                       {filteredCertificates.length > 0 ? (
                         filteredCertificates.map((cert, idx) => (
-                          <tr key={cert.id} className={`${idx % 2 === 1 ? 'bg-slate-50/50' : 'bg-white'} hover:bg-blue-50/40 transition-colors`}>
-                            <td className="py-2.5 px-3 text-center font-bold text-slate-500 font-mono">{idx + 1}</td>
-                            <td className="py-2.5 px-4 font-bold text-slate-900">{cert.employeeName}</td>
-                            <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold">{formatDateDisplay(cert.uploadDate)}</td>
-                            <td className="py-2.5 px-3 font-mono font-bold text-emerald-700">{cert.checkInTime}</td>
-                            <td className="py-2.5 px-3 font-mono font-bold text-rose-700">{cert.checkOutTime}</td>
+                          <tr key={cert.id} className="hover:bg-slate-50 transition-colors">
+                            <td className="py-2.5 px-3 text-center font-bold text-slate-500 font-mono border-r border-slate-200">{idx + 1}</td>
+                            <td className="py-2.5 px-4 font-bold text-slate-900 border-r border-slate-200">{cert.employeeName}</td>
+                            <td className="py-2.5 px-3 font-mono text-slate-700 font-semibold border-r border-slate-200">{formatDateDisplay(cert.uploadDate)}</td>
+                            <td className="py-2.5 px-3 font-mono font-bold text-emerald-700 border-r border-slate-200">{cert.checkInTime}</td>
+                            <td className="py-2.5 px-3 font-mono font-bold text-rose-700 border-r border-slate-200">{cert.checkOutTime}</td>
                             {canManageAdmin && (
                               <td className="py-2.5 px-3 text-center">
                                 <button
@@ -1985,6 +2339,62 @@ export default function KepegawaianSection({
             </div>
 
             <div className="space-y-4 text-xs">
+              {/* Pilihan Bulan & Tahun Presensi Cek Seribu */}
+              <div className="bg-gradient-to-r from-blue-50/90 to-slate-50 border border-blue-200/80 rounded-xl p-3.5 space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-7 h-7 rounded-lg bg-djpb-blue text-white flex items-center justify-center font-bold shrink-0">
+                      <Calendar className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs text-slate-900 font-display">
+                        Pilihan Bulan & Tahun Presensi yang Diunggah
+                      </h4>
+                      <p className="text-[10px] text-slate-500">
+                        Tentukan bulan rekapitulasi Cek Seribu untuk file Excel atau Gambar yang diunggah.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 bg-blue-100/90 text-djpb-blue font-extrabold text-[10px] rounded-lg border border-blue-200/80 font-mono shrink-0">
+                    Bulan: {getMonthNameByNum(uploadMonth)} {uploadYear}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-600 uppercase mb-1 tracking-wider">
+                      PILIH BULAN UNTUK DIUNGGAH
+                    </label>
+                    <select
+                      value={uploadMonth}
+                      onChange={(e) => handleMonthYearChange(e.target.value, uploadYear)}
+                      className="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:border-djpb-blue focus:ring-2 focus:ring-djpb-blue/20 cursor-pointer shadow-2xs"
+                    >
+                      {MONTH_OPTIONS.map(m => (
+                        <option key={m.value} value={m.value}>Bulan {m.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-extrabold text-slate-600 uppercase mb-1 tracking-wider">
+                      PILIH TAHUN PRESENSI
+                    </label>
+                    <select
+                      value={uploadYear}
+                      onChange={(e) => handleMonthYearChange(uploadMonth, e.target.value)}
+                      className="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:border-djpb-blue focus:ring-2 focus:ring-djpb-blue/20 cursor-pointer shadow-2xs"
+                    >
+                      <option value="2024">Tahun 2024</option>
+                      <option value="2025">Tahun 2025</option>
+                      <option value="2026">Tahun 2026</option>
+                      <option value="2027">Tahun 2027</option>
+                      <option value="2028">Tahun 2028</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
               {/* File upload input area */}
               <div>
                 <div className="flex items-center justify-between mb-1">
@@ -2063,7 +2473,7 @@ export default function KepegawaianSection({
                         <FileText className="w-3.5 h-3.5" />
                       </span>
                       <h4 className="font-bold text-xs text-slate-900 font-display">
-                        Hasil Otomatis Ekstraksi Pegawai & Jam Presensi ({extractedEmployeesList.length} Pegawai)
+                        Hasil Otomatis Ekstraksi Pegawai & Presensi Tanggal ({extractedEmployeesList.length} Pegawai)
                       </h4>
                     </div>
                     <div className="flex items-center space-x-1.5">
@@ -2078,8 +2488,17 @@ export default function KepegawaianSection({
                     </div>
                   </div>
                   <p className="text-[10px] text-slate-500">
-                    Sistem secara otomatis membaca seluruh daftar nama pegawai serta Jam Hadir & Jam Pulang dari dokumen JPEG Cek Seribu. Anda dapat menambah atau mengedit data di bawah ini.
+                    Sistem secara otomatis membaca seluruh daftar nama pegawai serta status Hadir & Pulang per Tanggal dari dokumen Cek Seribu. Anda dapat menambah atau mengedit data di bawah ini.
                   </p>
+
+                  {/* Table Column Headers */}
+                  <div className="grid grid-cols-12 gap-2 px-2 py-1.5 bg-slate-200/80 rounded-lg text-[10px] font-extrabold text-slate-700 uppercase tracking-wider text-center">
+                    <span className="col-span-1">No.</span>
+                    <span className="col-span-4 text-left">Nama Pegawai</span>
+                    <span className="col-span-3 text-left">Tanggal Presensi</span>
+                    <span className="col-span-2">Hadir</span>
+                    <span className="col-span-2">Pulang</span>
+                  </div>
 
                   <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                     {extractedEmployeesList.map((emp, index) => (
@@ -2087,7 +2506,7 @@ export default function KepegawaianSection({
                         <div className="col-span-1 text-center font-bold text-slate-400 font-mono text-[10px]">
                           #{index + 1}
                         </div>
-                        <div className="col-span-5">
+                        <div className="col-span-4">
                           <input
                             type="text"
                             required
@@ -2097,34 +2516,42 @@ export default function KepegawaianSection({
                             onChange={(e) => handleUpdateExtractedRow(emp.id, 'employeeName', e.target.value)}
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div className="col-span-3">
                           <input
                             type="text"
                             required
-                            placeholder="Jam Hadir"
-                            className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-[11px] font-mono font-bold text-emerald-700"
-                            value={emp.checkInTime}
+                            placeholder="Tanggal (DD-MM-YYYY)"
+                            className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-xs font-mono font-bold text-slate-700"
+                            value={emp.date || uploadForm.uploadDate || `01-${uploadMonth}-${uploadYear}`}
+                            onChange={(e) => handleUpdateExtractedRow(emp.id, 'date', e.target.value)}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <select
+                            className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-xs font-bold text-emerald-700 cursor-pointer"
+                            value={emp.checkInTime === 'Tidak' || emp.checkInTime === 'Tidak Ada' ? 'Tidak' : 'Ada'}
                             onChange={(e) => handleUpdateExtractedRow(emp.id, 'checkInTime', e.target.value)}
-                          />
+                          >
+                            <option value="Ada">Ada</option>
+                            <option value="Tidak">Tidak</option>
+                          </select>
                         </div>
-                        <div className="col-span-2">
-                          <input
-                            type="text"
-                            required
-                            placeholder="Jam Pulang"
-                            className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-[11px] font-mono font-bold text-rose-700"
-                            value={emp.checkOutTime}
+                        <div className="col-span-2 flex items-center space-x-1">
+                          <select
+                            className="w-full p-1.5 bg-slate-50 border border-slate-200 rounded text-xs font-bold text-rose-700 cursor-pointer"
+                            value={emp.checkOutTime === 'Tidak' || emp.checkOutTime === 'Tidak Ada' ? 'Tidak' : 'Ada'}
                             onChange={(e) => handleUpdateExtractedRow(emp.id, 'checkOutTime', e.target.value)}
-                          />
-                        </div>
-                        <div className="col-span-2 text-center">
+                          >
+                            <option value="Ada">Ada</option>
+                            <option value="Tidak">Tidak</option>
+                          </select>
                           <button
                             type="button"
                             onClick={() => handleRemoveExtractedRow(emp.id)}
-                            className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                            className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors cursor-pointer shrink-0"
                             title="Hapus baris ini"
                           >
-                            <Trash2 className="w-3.5 h-3.5 mx-auto" />
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>

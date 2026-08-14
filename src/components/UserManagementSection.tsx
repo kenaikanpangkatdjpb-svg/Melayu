@@ -3,6 +3,7 @@ import { Search, Plus, UserPlus, Edit3, X, Check, ShieldAlert, UserCheck, Key, S
 import { UserAccount, CurrentUser } from '../types';
 import KemenkeuLogo from './KemenkeuLogo';
 import { saveUserToFirestore, deleteUserFromFirestore } from '../lib/firebase';
+import { compressImage, safeLocalStorageSet } from '../lib/storage';
 
 const DEFAULT_KANWIL_IMAGE = 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1600&q=80';
 
@@ -51,24 +52,25 @@ export default function UserManagementSection({
   });
 
   // Handle Logo Upload File Selection
-  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Ukuran file logo terlalu besar. Maksimal 5MB.');
-        return;
+      try {
+        const compressed = await compressImage(file, 400, 400, 0.85);
+        setPreviewLogo(compressed);
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewLogo(reader.result as string);
+        };
+        reader.readAsDataURL(file);
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewLogo(reader.result as string);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
   const handleSaveLogo = () => {
     if (previewLogo) {
-      localStorage.setItem('app_custom_logo', previewLogo);
+      safeLocalStorageSet('app_custom_logo', previewLogo);
     } else {
       localStorage.removeItem('app_custom_logo');
     }
@@ -86,20 +88,21 @@ export default function UserManagementSection({
   };
 
   // Handle Banner Upload File Selection
-  const handleBannerFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBannerFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 8 * 1024 * 1024) {
-        alert('Ukuran file banner terlalu besar. Maksimal 8MB.');
-        return;
+      try {
+        const compressed = await compressImage(file, 1600, 700, 0.75);
+        setPreviewBanner(compressed);
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (reader.result) {
+            setPreviewBanner(reader.result as string);
+          }
+        };
+        reader.readAsDataURL(file);
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (reader.result) {
-          setPreviewBanner(reader.result as string);
-        }
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -112,7 +115,7 @@ export default function UserManagementSection({
 
   const handleSaveBanner = () => {
     if (previewBanner) {
-      localStorage.setItem('melayu_hero_bg_image', previewBanner);
+      safeLocalStorageSet('melayu_hero_bg_image', previewBanner);
       window.dispatchEvent(new Event('app_banner_updated'));
       setBannerSaveStatus('Gambar banner header berhasil disimpan & diterapkan ke seluruh sistem!');
       setTimeout(() => setBannerSaveStatus(null), 4500);

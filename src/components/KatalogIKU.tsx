@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ExternalLink, Link2, Edit3, Check, X, Sparkles, FolderDown, ShieldCheck, FileText } from 'lucide-react';
+import { safeLocalStorageSet } from '../lib/storage';
 
 export interface CatalogItem {
   id: string;
@@ -157,7 +158,7 @@ export default function KatalogIKU({ isEditMode = false }: KatalogIKUProps) {
 
     const updated = items.map(item => item.id === editingItem.id ? editingItem : item);
     setItems(updated);
-    localStorage.setItem('melayu_katalog_iku', JSON.stringify(updated));
+    safeLocalStorageSet('melayu_katalog_iku', JSON.stringify(updated));
     setSelectedItem(editingItem);
     setEditingItem(null);
   };

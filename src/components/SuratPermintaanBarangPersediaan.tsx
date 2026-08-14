@@ -8,6 +8,7 @@ import {
 import * as XLSX from 'xlsx';
 import KemenkeuLogo from './KemenkeuLogo';
 import { subscribeFirestoreCollection, saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
+import { safeLocalStorageSet } from '../lib/storage';
 
 export interface PermintaanItem {
   no: number;
@@ -142,11 +143,7 @@ export default function SuratPermintaanBarangPersediaan({
   }, []);
 
   useEffect(() => {
-    try {
-      localStorage.setItem('melayu_spbp_requests', JSON.stringify(requestsList));
-    } catch (e) {
-      console.error(e);
-    }
+    safeLocalStorageSet('melayu_spbp_requests', JSON.stringify(requestsList));
   }, [requestsList]);
 
   // Current Active Selected Document for Preview
@@ -831,7 +828,7 @@ export default function SuratPermintaanBarangPersediaan({
 
               <button
                 type="button"
-                onClick={handlePrintDocument}
+                onClick={() => handlePrintDocument(activeDocument)}
                 className="px-3.5 py-1.5 bg-djpb-blue hover:bg-djpb-blue-light text-white font-bold rounded-lg transition-all flex items-center space-x-1.5 cursor-pointer shadow-xs"
                 title="Cetak Surat atau Simpan ke PDF"
               >

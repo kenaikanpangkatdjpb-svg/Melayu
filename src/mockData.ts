@@ -12,7 +12,8 @@ import {
   VisitorLog,
   SecurityShift,
   SecurityRosterItem,
-  UserAccount
+  UserAccount,
+  ActivityGalleryItem
 } from './types';
 
 const getTodayStr = () => {
@@ -373,31 +374,48 @@ export const INITIAL_SECURITY_SHIFTS: SecurityShift[] = [
   { day: 'Minggu', shiftMorning: 'Sertu Dani / Prasetyo', shiftEvening: 'Agus / Jaka', shiftNight: 'Rudi / Slamet' }
 ];
 
-export const INITIAL_SECURITY_ROSTER: SecurityRosterItem[] = [
-  // SABTU, 1.8.2026
-  { id: 'ros-1', name: 'ARIEF', dateStr: 'SABTU/ 1 Agustus 2026', location: 'KANWIL DJPB', hours: '06.00/18.00' },
-  { id: 'ros-2', name: 'ROBBY', dateStr: 'SABTU/ 1 Agustus 2026', location: 'KANWIL DJPB', hours: '06.00/18.00' },
-  { id: 'ros-3', name: 'ADITYA', dateStr: 'SABTU/ 1 Agustus 2026', location: 'KANWIL DJPB', hours: '18.00/06.00' },
-  { id: 'ros-4', name: 'ERWIN', dateStr: 'SABTU/ 1 Agustus 2026', location: 'KANWIL DJPB', hours: '18.00/06.00' },
-  { id: 'ros-5', name: 'RATMANSYAH', dateStr: 'SABTU/ 1 Agustus 2026', location: 'RUMAH DINAS', hours: '18.00/06.00' },
-  { id: 'ros-6', name: 'DIAN ARI', dateStr: 'SABTU/ 1 Agustus 2026', location: 'LIBUR', hours: '-' },
+const DAYS_OF_WEEK = ['SABTU', 'MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT'];
 
-  // MINGGU, 2.8.2026
-  { id: 'ros-7', name: 'ROBBY', dateStr: 'MINGGU/ 2 Agustus 2026', location: 'KANWIL DJPB', hours: '06.00/18.00' },
-  { id: 'ros-8', name: 'DIAN ARI', dateStr: 'MINGGU/ 2 Agustus 2026', location: 'KANWIL DJPB', hours: '06.00/18.00' },
-  { id: 'ros-9', name: 'ERWIN', dateStr: 'MINGGU/ 2 Agustus 2026', location: 'KANWIL DJPB', hours: '18.00/06.00' },
-  { id: 'ros-10', name: 'RATMANSYAH', dateStr: 'MINGGU/ 2 Agustus 2026', location: 'KANWIL DJPB', hours: '18.00/06.00' },
-  { id: 'ros-11', name: 'ARIEF', dateStr: 'MINGGU/ 2 Agustus 2026', location: 'RUMAH DINAS', hours: '18.00/06.00' },
-  { id: 'ros-12', name: 'ADITYA', dateStr: 'MINGGU/ 2 Agustus 2026', location: 'LIBUR', hours: '-' },
-
-  // SENIN, 3.8.2026
-  { id: 'ros-13', name: 'DIAN ARI', dateStr: 'SENIN/ 3 Agustus 2026', location: 'KANWIL DJPB', hours: '06.00/18.00' },
-  { id: 'ros-14', name: 'ADITYA', dateStr: 'SENIN/ 3 Agustus 2026', location: 'KANWIL DJPB', hours: '06.00/18.00' },
-  { id: 'ros-15', name: 'RATMANSYAH', dateStr: 'SENIN/ 3 Agustus 2026', location: 'KANWIL DJPB', hours: '18.00/06.00' },
-  { id: 'ros-16', name: 'ARIEF', dateStr: 'SENIN/ 3 Agustus 2026', location: 'KANWIL DJPB', hours: '18.00/06.00' },
-  { id: 'ros-17', name: 'ROBBY', dateStr: 'SENIN/ 3 Agustus 2026', location: 'RUMAH DINAS', hours: '18.00/06.00' },
-  { id: 'ros-18', name: 'ERWIN', dateStr: 'SENIN/ 3 Agustus 2026', location: 'LIBUR', hours: '-' }
+// 6-day rotation patterns for security guard shifts:
+// Position 1: KANWIL DJPB (06.00/18.00)
+// Position 2: KANWIL DJPB (06.00/18.00)
+// Position 3: KANWIL DJPB (18.00/06.00)
+// Position 4: KANWIL DJPB (18.00/06.00)
+// Position 5: RUMAH DINAS (18.00/06.00)
+// Position 6: LIBUR (-)
+const ROTATION_PATTERNS = [
+  ['ARIEF', 'ROBBY', 'ADITYA', 'ERWIN', 'RATMANSYAH', 'DIAN ARI'],
+  ['ROBBY', 'DIAN ARI', 'ERWIN', 'RATMANSYAH', 'ARIEF', 'ADITYA'],
+  ['DIAN ARI', 'ADITYA', 'RATMANSYAH', 'ARIEF', 'ROBBY', 'ERWIN'],
+  ['ADITYA', 'ERWIN', 'ARIEF', 'ROBBY', 'DIAN ARI', 'RATMANSYAH'],
+  ['ERWIN', 'RATMANSYAH', 'ROBBY', 'DIAN ARI', 'ADITYA', 'ARIEF'],
+  ['RATMANSYAH', 'ARIEF', 'DIAN ARI', 'ADITYA', 'ERWIN', 'ROBBY'],
 ];
+
+export function generateAugustSecurityRoster(): SecurityRosterItem[] {
+  const roster: SecurityRosterItem[] = [];
+  let idCounter = 1;
+
+  for (let day = 1; day <= 31; day++) {
+    const dayOfWeek = DAYS_OF_WEEK[(day - 1) % 7];
+    const dateStr = `${dayOfWeek}/ ${day} Agustus 2026`;
+    const pattern = ROTATION_PATTERNS[(day - 1) % 6];
+
+    roster.push(
+      { id: `ros-${String(idCounter).padStart(3, '0')}`, orderIndex: idCounter - 1, name: pattern[0], dateStr, location: 'KANWIL DJPB', hours: '06.00/18.00' },
+      { id: `ros-${String(idCounter + 1).padStart(3, '0')}`, orderIndex: idCounter, name: pattern[1], dateStr, location: 'KANWIL DJPB', hours: '06.00/18.00' },
+      { id: `ros-${String(idCounter + 2).padStart(3, '0')}`, orderIndex: idCounter + 1, name: pattern[2], dateStr, location: 'KANWIL DJPB', hours: '18.00/06.00' },
+      { id: `ros-${String(idCounter + 3).padStart(3, '0')}`, orderIndex: idCounter + 2, name: pattern[3], dateStr, location: 'KANWIL DJPB', hours: '18.00/06.00' },
+      { id: `ros-${String(idCounter + 4).padStart(3, '0')}`, orderIndex: idCounter + 3, name: pattern[4], dateStr, location: 'RUMAH DINAS', hours: '18.00/06.00' },
+      { id: `ros-${String(idCounter + 5).padStart(3, '0')}`, orderIndex: idCounter + 4, name: pattern[5], dateStr, location: 'LIBUR', hours: '-' }
+    );
+    idCounter += 6;
+  }
+
+  return roster;
+}
+
+export const INITIAL_SECURITY_ROSTER: SecurityRosterItem[] = generateAugustSecurityRoster();
 
 export const INITIAL_USERS: UserAccount[] = [
   { id: 'PEG-001', employeeId: 'PEG-001', fullName: 'DWI SUPRIYONO', username: 'dwi', password: 'dwi123', role: 'Administrator', status: 'Aktif' },
@@ -409,6 +427,100 @@ export const INITIAL_USERS: UserAccount[] = [
   { id: 'PEG-007', employeeId: 'PEG-007', fullName: 'HENDRA WIJAYA', username: 'hendra', password: 'user123', role: 'Pegawai', status: 'Aktif' },
   { id: 'PEG-008', employeeId: 'PEG-008', fullName: 'RINA WATI', username: 'rina', password: 'user123', role: 'Pegawai', status: 'Aktif' },
   { id: 'PEG-009', employeeId: 'PEG-009', fullName: 'AHMAD FAUZI', username: 'ahmad', password: 'user123', role: 'Pegawai', status: 'Aktif' },
+];
+
+export const INITIAL_ACTIVITY_GALLERY: ActivityGalleryItem[] = [
+  {
+    id: 'act-001',
+    title: 'Rapat Koordinasi Daerah (RAKORDA) Pelaksanaan Anggaran Kanwil DJPb Riau TA 2026',
+    date: '2026-08-10',
+    division: 'Bidang PPA I & Bagian Umum',
+    mediaType: 'photo',
+    mediaUrl: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?auto=format&fit=crop&w=1200&q=80',
+    additionalPhotos: [
+      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&q=80',
+      'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80'
+    ],
+    category: 'Rapat & Forum',
+    narration: 'Kanwil Ditjen Perbendaharaan Provinsi Riau menyelenggarakan Rapat Koordinasi Daerah (RAKORDA) Pelaksanaan Anggaran Semester I Tahun 2026 di Aula Lancang Kuning. Acara dihadiri oleh seluruh pimpinan Satker mitra kerja dan KPPN se-wilayah Riau guna memperkuat sinergi akselerasi belanja negara yang akuntabel, tepat sasaran, serta berdaya dorong optimal bagi pertumbuhan ekonomi daerah.',
+    authorName: 'Tim Humas & TI Kanwil DJPb Riau',
+    createdAt: '2026-08-10T14:30:00Z',
+    location: 'Aula Lancang Kuning, Kanwil DJPb Prov. Riau',
+    tags: ['Rakorda', 'IKPA', 'Perbendaharaan', 'APBN']
+  },
+  {
+    id: 'act-002',
+    title: 'Gugus Kendali Mutu (GKM) Internalisasi Budaya Kerja BerAKHLAK & Zona Integritas WBBM',
+    date: '2026-08-08',
+    division: 'Subbagian Kepegawaian & SKKI',
+    mediaType: 'video',
+    mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1200&q=80',
+    category: 'GKM Kepegawaian',
+    narration: 'Kegiatan rutin Gugus Kendali Mutu (GKM) yang diinisiasi oleh Subbagian Kepegawaian dan Tim Pembangunan ZI-WBBM. Mengusung tema "Penguatan Integritas dan Pelayanan Prima", kegiatan ini mempertegas komitmen seluruh pejabat dan pegawai dalam menerapkan nilai-nilai BerAKHLAK serta menolak gratifikasi dalam seluruh rantai layanan publik.',
+    authorName: 'Septina Puspa Prabowo',
+    createdAt: '2026-08-08T10:15:00Z',
+    location: 'Ruang Rapat Zapin & Media Zoom Hybrid',
+    tags: ['GKM', 'BerAKHLAK', 'WBBM', 'Kepegawaian']
+  },
+  {
+    id: 'act-003',
+    title: 'Sosialisasi Digitalisasi Pembayaran & Penguatan Kartu Kredit Pemerintah (KKP) Domestik',
+    date: '2026-08-04',
+    division: 'Bidang PPA II & KPPN Pekanbaru',
+    mediaType: 'photo',
+    mediaUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80',
+    category: 'Sosialisasi & Edukasi',
+    narration: 'Bimbingan teknis dan sosialisasi implementasi KKP Domestik serta optimalisasi platform Digipay Satu bersama Pejabat Pembuat Komitmen (PPK) dan Bendahara Pengeluaran satuan kerja kementerian/lembaga. Langkah ini mempercepat modernisasi transaksi non-tunai pemerintah dan memberdayakan UMKM lokal.',
+    authorName: 'Bidang PPA II',
+    createdAt: '2026-08-04T16:00:00Z',
+    location: 'Hotel Pangeran Pekanbaru',
+    tags: ['KKP', 'Digipay', 'Digitalisasi', 'Cashless']
+  },
+  {
+    id: 'act-004',
+    title: 'Bakti Sosial & Santunan Peduli Kemenkeu Satu Riau Menyambut Hari Kemerdekaan RI',
+    date: '2026-08-02',
+    division: 'Dharma Wanita Persatuan (DWP) & Bagian Umum',
+    mediaType: 'photo',
+    mediaUrl: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1200&q=80',
+    category: 'Bakti Sosial & Dharma Wanita',
+    narration: 'Dalam rangka memeriahkan peringatan Kemerdekaan Republik Indonesia, DWP Kanwil DJPb Provinsi Riau menggelar aksi kepedulian sosial berupa penyerahan puluhan paket sembako dan perlengkapan sekolah bagi anak-anak di panti asuhan serta warga sekitar, sebagai wujud nyata bakti sosial Kemenkeu Mengabdi.',
+    authorName: 'Pengurus DWP DJPb Riau',
+    createdAt: '2026-08-02T11:45:00Z',
+    location: 'Panti Asuhan Fajar Harapan, Pekanbaru',
+    tags: ['Bakti Sosial', 'DWP', 'Kemenkeu Mengabdi', 'HUT RI']
+  },
+  {
+    id: 'act-005',
+    title: 'Senam Kebugaran Jasmani Bersama & Turnamen Olahraga Insan Perbendaharaan Riau',
+    date: '2026-07-31',
+    division: 'Bapor DJPb Riau & Bagian Umum',
+    mediaType: 'video',
+    mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    thumbnailUrl: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=80',
+    category: 'Olahraga & Seni',
+    narration: 'Guna menjaga kesehatan raga, semangat kerja, dan keakraban antar pegawai, Kanwil DJPb Riau menggelar senam kesegaran jasmani bersama yang diikuti antusias oleh seluruh staf dan pejabat struktural di lapangan terbuka kantor, dirangkaikan dengan laga persahabatan tenis meja dan bulutangkis.',
+    authorName: 'Tim Bapor Kanwil DJPb Riau',
+    createdAt: '2026-07-31T08:30:00Z',
+    location: 'Halaman & Lapangan Kanwil DJPb Riau',
+    tags: ['Senam Sehat', 'Olahraga', 'WorkLifeBalance', 'Kebersamaan']
+  },
+  {
+    id: 'act-006',
+    title: 'Kunjungan Kerja Edukatif & Pembinaan Pengelolaan Keuangan Desa di Kabupaten Kampar',
+    date: '2026-07-25',
+    division: 'Bidang PAPK & Tim Monev Desa',
+    mediaType: 'photo',
+    mediaUrl: 'https://images.unsplash.com/photo-1577495508048-b635879837f1?auto=format&fit=crop&w=1200&q=80',
+    category: 'Kunjungan Kerja',
+    narration: 'Tim Monitoring dan Evaluasi Penyaluran Transfer ke Daerah (TKD) Kanwil DJPb Riau melakukan kunjungan kerja lapangan dan asistensi pengelolaan Dana Desa kepada perangkat desa di Kabupaten Kampar untuk memastikan transparansi realisasi dan ketepatan pemanfaatan dana bagi kesejahteraan masyarakat.',
+    authorName: 'Bidang PAPK',
+    createdAt: '2026-07-25T15:20:00Z',
+    location: 'Kantor Bupati Kampar & Balai Desa Mitra',
+    tags: ['TKD', 'Dana Desa', 'Kunjungan Kerja', 'Monev']
+  }
 ];
 
 

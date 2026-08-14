@@ -4,12 +4,17 @@ import {
   Layers, ArrowUpRight, TrendingUp, X, LayoutDashboard, Calendar,
   ExternalLink, FileSpreadsheet, FolderHeart, Check, Crown, ShieldCheck, PlusCircle, Filter
 } from 'lucide-react';
-import { RoomBooking, VehicleBooking, ItemBooking, CurrentUser } from '../types';
+import { RoomBooking, VehicleBooking, ItemBooking, CurrentUser, ActivityGalleryItem } from '../types';
+import ActivityGallerySection from './ActivityGallerySection';
 
 interface WelcomeViewProps {
   roomBookings: RoomBooking[];
   vehicleBookings: VehicleBooking[];
   itemBookings?: ItemBooking[];
+  galleryItems?: ActivityGalleryItem[];
+  setGalleryItems?: React.Dispatch<React.SetStateAction<ActivityGalleryItem[]>>;
+  onSaveGalleryToFirebase?: (items: ActivityGalleryItem[]) => void;
+  onDeleteGalleryFromFirebase?: (id: string) => void;
   onNavigateToTab: (tabId: string) => void;
   currentUser?: CurrentUser;
   onLogout?: () => void;
@@ -55,9 +60,7 @@ function JadwalManajemenKinerjaCard() {
               <span>Spreadsheet Subbagian Penilaian Kinerja</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-            <span className="bg-amber-100 text-amber-900 border border-amber-300/80 px-3 py-1 rounded-lg text-xs font-black tracking-widest uppercase shadow-2xs">
-              InTress
-            </span>
+
           </div>
         </div>
 
@@ -202,7 +205,18 @@ function JadwalManajemenKinerjaCard() {
   );
 }
 
-export default function WelcomeView({ roomBookings, vehicleBookings, itemBookings = [], onNavigateToTab, currentUser, isEditMode = false }: WelcomeViewProps) {
+export default function WelcomeView({ 
+  roomBookings, 
+  vehicleBookings, 
+  itemBookings = [], 
+  galleryItems = [],
+  setGalleryItems = () => {},
+  onSaveGalleryToFirebase,
+  onDeleteGalleryFromFirebase,
+  onNavigateToTab, 
+  currentUser, 
+  isEditMode = false 
+}: WelcomeViewProps) {
   // Hero Background Image state saved in localStorage
   const [heroBgImage, setHeroBgImage] = useState<string>(() => {
     return localStorage.getItem('melayu_hero_bg_image') || DEFAULT_KANWIL_IMAGE;
@@ -659,6 +673,16 @@ export default function WelcomeView({ roomBookings, vehicleBookings, itemBooking
           )}
         </div>
       </div>
+
+      {/* 5. PROMINENT SECTION: GALERI KEGIATAN (FOTO, VIDEO & NARASI KEGIATAN) */}
+      <ActivityGallerySection
+        galleryItems={galleryItems}
+        setGalleryItems={setGalleryItems}
+        onSaveToFirebase={onSaveGalleryToFirebase}
+        onDeleteFromFirebase={onDeleteGalleryFromFirebase}
+        currentUser={currentUser}
+        isEditMode={isEditMode}
+      />
 
       {/* Agenda Detail Modal */}
       {selectedAgenda && (

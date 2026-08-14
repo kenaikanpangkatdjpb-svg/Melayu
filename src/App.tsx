@@ -21,7 +21,7 @@ import {
   FacilityFeedback, MonthlyNeed, GKMAgreement,
   ScholarshipInfo, PerformanceMetric, WorkloadMetric,
   RealizationProgress, VisitorLog, SecurityShift, SecurityRosterItem,
-  CurrentUser, UserAccount
+  CurrentUser, UserAccount, ActivityGalleryItem
 } from './types';
 
 import {
@@ -38,15 +38,20 @@ import {
   INITIAL_VISITOR_LOGS,
   INITIAL_SECURITY_SHIFTS,
   INITIAL_SECURITY_ROSTER,
-  INITIAL_USERS
+  INITIAL_USERS,
+  INITIAL_ACTIVITY_GALLERY
 } from './mockData';
-import { getUsersFromFirestore, subscribeFirestoreCollection, saveFirestoreCollection } from './lib/firebase';
+import { getUsersFromFirestore, subscribeFirestoreCollection, saveFirestoreCollection, deleteFirestoreDoc } from './lib/firebase';
+import { safeLocalStorageSet, safeLocalStorageGet } from './lib/storage';
+
+function safeParse<T>(key: string, fallback: T): T {
+  return safeLocalStorageGet<T>(key, fallback);
+}
 
 export default function App() {
   // User Session State
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(() => {
-    const saved = localStorage.getItem('melayu_current_user');
-    return saved ? JSON.parse(saved) : null;
+    return safeParse<CurrentUser | null>('melayu_current_user', null);
   });
 
   // Navigation & Sidebar State
@@ -55,14 +60,13 @@ export default function App() {
   });
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(() => {
-    const saved = localStorage.getItem('melayu_sidebar_collapsed');
-    return saved ? JSON.parse(saved) : false;
+    return safeParse<boolean>('melayu_sidebar_collapsed', false);
   });
 
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    localStorage.setItem('melayu_sidebar_collapsed', JSON.stringify(isSidebarCollapsed));
+    safeLocalStorageSet('melayu_sidebar_collapsed', JSON.stringify(isSidebarCollapsed));
   }, [isSidebarCollapsed]);
 
   // Edit Mode State
@@ -71,7 +75,7 @@ export default function App() {
   // Sync user state to local storage and guard Edit Mode
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem('melayu_current_user', JSON.stringify(currentUser));
+      safeLocalStorageSet('melayu_current_user', JSON.stringify(currentUser));
       if (currentUser.role !== 'admin') {
         setIsEditMode(false);
       }
@@ -84,89 +88,74 @@ export default function App() {
   const handleLoginSuccess = (user: CurrentUser) => {
     setCurrentUser(user);
     setActiveTab('selamat-datang');
-    localStorage.setItem('melayu_active_tab', 'selamat-datang');
+    safeLocalStorageSet('melayu_active_tab', 'selamat-datang');
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
     setActiveTab('selamat-datang');
-    localStorage.setItem('melayu_active_tab', 'selamat-datang');
+    safeLocalStorageSet('melayu_active_tab', 'selamat-datang');
   };
 
   // Core Persistent States (with LocalStorage backing)
   const [roomBookings, setRoomBookings] = useState<RoomBooking[]>(() => {
-    const saved = localStorage.getItem('melayu_rooms');
-    return saved ? JSON.parse(saved) : INITIAL_ROOM_BOOKINGS;
+    return safeParse<RoomBooking[]>('melayu_rooms', INITIAL_ROOM_BOOKINGS);
   });
 
   const [itemBookings, setItemBookings] = useState<ItemBooking[]>(() => {
-    const saved = localStorage.getItem('melayu_items');
-    return saved ? JSON.parse(saved) : INITIAL_ITEM_BOOKINGS;
+    return safeParse<ItemBooking[]>('melayu_items', INITIAL_ITEM_BOOKINGS);
   });
 
   const [vehicleBookings, setVehicleBookings] = useState<VehicleBooking[]>(() => {
-    const saved = localStorage.getItem('melayu_vehicles');
-    return saved ? JSON.parse(saved) : INITIAL_VEHICLE_BOOKINGS;
+    return safeParse<VehicleBooking[]>('melayu_vehicles', INITIAL_VEHICLE_BOOKINGS);
   });
 
   const [feedbacks, setFeedbacks] = useState<FacilityFeedback[]>(() => {
-    const saved = localStorage.getItem('melayu_feedbacks');
-    return saved ? JSON.parse(saved) : INITIAL_FACILITY_FEEDBACK;
+    return safeParse<FacilityFeedback[]>('melayu_feedbacks', INITIAL_FACILITY_FEEDBACK);
   });
 
   const [needs, setNeeds] = useState<MonthlyNeed[]>(() => {
-    const saved = localStorage.getItem('melayu_needs');
-    return saved ? JSON.parse(saved) : INITIAL_MONTHLY_NEEDS;
+    return safeParse<MonthlyNeed[]>('melayu_needs', INITIAL_MONTHLY_NEEDS);
   });
 
   const [gkmList, setGkmList] = useState<GKMAgreement[]>(() => {
-    const saved = localStorage.getItem('melayu_gkm');
-    return saved ? JSON.parse(saved) : INITIAL_GKM_AGREEMENTS;
+    return safeParse<GKMAgreement[]>('melayu_gkm', INITIAL_GKM_AGREEMENTS);
   });
 
   const [realizations, setRealizations] = useState<RealizationProgress[]>(() => {
-    const saved = localStorage.getItem('melayu_realizations');
-    return saved ? JSON.parse(saved) : INITIAL_REALIZATION_PROGRESS;
+    return safeParse<RealizationProgress[]>('melayu_realizations', INITIAL_REALIZATION_PROGRESS);
   });
 
   const [visitorLogs, setVisitorLogs] = useState<VisitorLog[]>(() => {
-    const saved = localStorage.getItem('melayu_visitors');
-    return saved ? JSON.parse(saved) : INITIAL_VISITOR_LOGS;
+    return safeParse<VisitorLog[]>('melayu_visitors', INITIAL_VISITOR_LOGS);
   });
 
   const [usersList, setUsersList] = useState<UserAccount[]>(() => {
-    const saved = localStorage.getItem('melayu_users');
-    return saved ? JSON.parse(saved) : INITIAL_USERS;
+    return safeParse<UserAccount[]>('melayu_users', INITIAL_USERS);
   });
 
   // Security shifts state with local storage persistence
   const [securityShifts, setSecurityShifts] = useState<SecurityShift[]>(() => {
-    const saved = localStorage.getItem('melayu_security_shifts');
-    return saved ? JSON.parse(saved) : INITIAL_SECURITY_SHIFTS;
+    return safeParse<SecurityShift[]>('melayu_security_shifts', INITIAL_SECURITY_SHIFTS);
   });
 
   // Security roster state (individual per-guard schedule) with local storage persistence
   const [securityRoster, setSecurityRoster] = useState<SecurityRosterItem[]>(() => {
-    const saved = localStorage.getItem('melayu_security_roster');
-    const raw: SecurityRosterItem[] = saved ? JSON.parse(saved) : INITIAL_SECURITY_ROSTER;
-    return raw.map(item => {
-      if (!item.dateStr || item.dateStr === 'AGUSTUS 2026' || item.dateStr === 'SABTU.1.8.2026') {
-        return { ...item, dateStr: 'SABTU/ 1 Agustus 2026' };
-      }
-      if (item.dateStr === 'MINGGU.2.8.2026') {
-        return { ...item, dateStr: 'MINGGU/ 2 Agustus 2026' };
-      }
-      if (item.dateStr === 'SENIN.3.8.2026') {
-        return { ...item, dateStr: 'SENIN/ 3 Agustus 2026' };
-      }
-      return item;
-    });
+    const parsed = safeParse<SecurityRosterItem[]>('melayu_security_roster', INITIAL_SECURITY_ROSTER);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_SECURITY_ROSTER;
   });
 
   const [scholarships, setScholarships] = useState<ScholarshipInfo[]>(() => {
-    const saved = localStorage.getItem('melayu_scholarships');
-    return saved ? JSON.parse(saved) : INITIAL_SCHOLARSHIPS;
+    return safeParse<ScholarshipInfo[]>('melayu_scholarships', INITIAL_SCHOLARSHIPS);
   });
+
+  const [galleryItems, setGalleryItems] = useState<ActivityGalleryItem[]>(() => {
+    const deletedIds: string[] = safeParse<string[]>('melayu_deleted_activity_gallery_ids', []);
+    const parsed = safeParse<ActivityGalleryItem[]>('melayu_activity_gallery', INITIAL_ACTIVITY_GALLERY);
+    const source = Array.isArray(parsed) ? parsed : INITIAL_ACTIVITY_GALLERY;
+    return source.filter((it) => !deletedIds.includes(String(it.id)));
+  });
+
   const performanceMetrics: PerformanceMetric[] = INITIAL_PERFORMANCE_METRICS;
   const workloadMetrics: WorkloadMetric[] = INITIAL_WORKLOAD_METRICS;
 
@@ -181,9 +170,24 @@ export default function App() {
     const unsubRealizations = subscribeFirestoreCollection<RealizationProgress>('realizations', INITIAL_REALIZATION_PROGRESS, setRealizations);
     const unsubVisitors = subscribeFirestoreCollection<VisitorLog>('visitors', INITIAL_VISITOR_LOGS, setVisitorLogs);
     const unsubShifts = subscribeFirestoreCollection<SecurityShift>('security_shifts', INITIAL_SECURITY_SHIFTS, setSecurityShifts);
-    const unsubRoster = subscribeFirestoreCollection<SecurityRosterItem>('security_roster', INITIAL_SECURITY_ROSTER, setSecurityRoster);
+    const unsubRoster = subscribeFirestoreCollection<SecurityRosterItem>(
+      'security_roster', 
+      INITIAL_SECURITY_ROSTER, 
+      (data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          // Sort strictly by orderIndex if present, or preserved array order
+          const sorted = [...data].sort((a: any, b: any) => {
+            const idxA = typeof a.orderIndex === 'number' ? a.orderIndex : (parseInt(String(a.id || '').replace(/\D/g, ''), 10) || 0);
+            const idxB = typeof b.orderIndex === 'number' ? b.orderIndex : (parseInt(String(b.id || '').replace(/\D/g, ''), 10) || 0);
+            return idxA - idxB;
+          });
+          setSecurityRoster(sorted);
+        }
+      }
+    );
     const unsubUsers = subscribeFirestoreCollection<UserAccount>('users', INITIAL_USERS, setUsersList);
     const unsubScholarships = subscribeFirestoreCollection<ScholarshipInfo>('scholarships', INITIAL_SCHOLARSHIPS, setScholarships);
+    const unsubGallery = subscribeFirestoreCollection<ActivityGalleryItem>('activity_gallery', INITIAL_ACTIVITY_GALLERY, setGalleryItems);
 
     return () => {
       unsubRooms();
@@ -198,72 +202,65 @@ export default function App() {
       unsubRoster();
       unsubUsers();
       unsubScholarships();
+      unsubGallery();
     };
   }, []);
 
-  // Sync state to local storage and Firestore
+  // Sync state to local storage
   useEffect(() => {
-    localStorage.setItem('melayu_scholarships', JSON.stringify(scholarships));
-    saveFirestoreCollection('scholarships', scholarships);
+    safeLocalStorageSet('melayu_scholarships', JSON.stringify(scholarships));
   }, [scholarships]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_active_tab', activeTab);
+    safeLocalStorageSet('melayu_activity_gallery', JSON.stringify(galleryItems));
+  }, [galleryItems]);
+
+  useEffect(() => {
+    safeLocalStorageSet('melayu_active_tab', activeTab);
   }, [activeTab]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_rooms', JSON.stringify(roomBookings));
-    saveFirestoreCollection('rooms', roomBookings);
+    safeLocalStorageSet('melayu_rooms', JSON.stringify(roomBookings));
   }, [roomBookings]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_items', JSON.stringify(itemBookings));
-    saveFirestoreCollection('items', itemBookings);
+    safeLocalStorageSet('melayu_items', JSON.stringify(itemBookings));
   }, [itemBookings]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_vehicles', JSON.stringify(vehicleBookings));
-    saveFirestoreCollection('vehicles', vehicleBookings);
+    safeLocalStorageSet('melayu_vehicles', JSON.stringify(vehicleBookings));
   }, [vehicleBookings]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_feedbacks', JSON.stringify(feedbacks));
-    saveFirestoreCollection('feedbacks', feedbacks);
+    safeLocalStorageSet('melayu_feedbacks', JSON.stringify(feedbacks));
   }, [feedbacks]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_needs', JSON.stringify(needs));
-    saveFirestoreCollection('needs', needs);
+    safeLocalStorageSet('melayu_needs', JSON.stringify(needs));
   }, [needs]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_gkm', JSON.stringify(gkmList));
-    saveFirestoreCollection('gkm', gkmList);
+    safeLocalStorageSet('melayu_gkm', JSON.stringify(gkmList));
   }, [gkmList]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_realizations', JSON.stringify(realizations));
-    saveFirestoreCollection('realizations', realizations);
+    safeLocalStorageSet('melayu_realizations', JSON.stringify(realizations));
   }, [realizations]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_visitors', JSON.stringify(visitorLogs));
-    saveFirestoreCollection('visitors', visitorLogs);
+    safeLocalStorageSet('melayu_visitors', JSON.stringify(visitorLogs));
   }, [visitorLogs]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_security_shifts', JSON.stringify(securityShifts));
-    saveFirestoreCollection('security_shifts', securityShifts);
+    safeLocalStorageSet('melayu_security_shifts', JSON.stringify(securityShifts));
   }, [securityShifts]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_security_roster', JSON.stringify(securityRoster));
-    saveFirestoreCollection('security_roster', securityRoster);
+    safeLocalStorageSet('melayu_security_roster', JSON.stringify(securityRoster));
   }, [securityRoster]);
 
   useEffect(() => {
-    localStorage.setItem('melayu_users', JSON.stringify(usersList));
-    saveFirestoreCollection('users', usersList);
+    safeLocalStorageSet('melayu_users', JSON.stringify(usersList));
   }, [usersList]);
 
   // Reset Handler
@@ -278,6 +275,7 @@ export default function App() {
       localStorage.removeItem('melayu_realizations');
       localStorage.removeItem('melayu_visitors');
       localStorage.removeItem('melayu_users');
+      localStorage.removeItem('melayu_activity_gallery');
 
       setRoomBookings(INITIAL_ROOM_BOOKINGS);
       setItemBookings(INITIAL_ITEM_BOOKINGS);
@@ -288,6 +286,7 @@ export default function App() {
       setRealizations(INITIAL_REALIZATION_PROGRESS);
       setVisitorLogs(INITIAL_VISITOR_LOGS);
       setUsersList(INITIAL_USERS);
+      setGalleryItems(INITIAL_ACTIVITY_GALLERY);
       setActiveTab('selamat-datang');
       setIsEditMode(false);
     }
@@ -306,6 +305,10 @@ export default function App() {
             roomBookings={roomBookings}
             vehicleBookings={vehicleBookings}
             itemBookings={itemBookings}
+            galleryItems={galleryItems}
+            setGalleryItems={setGalleryItems}
+            onSaveGalleryToFirebase={(items) => saveFirestoreCollection('activity_gallery', items)}
+            onDeleteGalleryFromFirebase={(id) => deleteFirestoreDoc('activity_gallery', id)}
             onNavigateToTab={(tabId) => setActiveTab(tabId)}
             currentUser={currentUser}
             onLogout={handleLogout}

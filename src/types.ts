@@ -125,10 +125,28 @@ export interface SecurityShift {
 
 export interface SecurityRosterItem {
   id: string;
+  orderIndex?: number;
   name: string;
   dateStr: string;
   location: 'KANWIL DJPB' | 'RUMAH DINAS' | 'LIBUR' | string;
   hours: string;
+}
+
+export interface ActivityGalleryItem {
+  id: string;
+  title: string;
+  date: string;
+  division: string;
+  mediaType: 'photo' | 'video';
+  mediaUrl: string;
+  additionalPhotos?: string[];
+  thumbnailUrl?: string;
+  narration: string;
+  category: 'Rapat & Forum' | 'Sosialisasi & Edukasi' | 'GKM Kepegawaian' | 'Bakti Sosial & Dharma Wanita' | 'Kunjungan Kerja' | 'Olahraga & Seni' | 'Inovasi & Apresiasi' | string;
+  authorName: string;
+  createdAt: string;
+  location?: string;
+  tags?: string[];
 }
 
 export interface CurrentUser {

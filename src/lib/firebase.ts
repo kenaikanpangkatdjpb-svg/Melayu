@@ -12,19 +12,44 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || '(default)');
 export const auth = getAuth(app);
 
+// Global flag to track if Firestore write/read quota is exhausted
+let isQuotaExceeded = false;
+
+function checkAndSetQuotaError(error: any): boolean {
+  if (!error) return false;
+  const str = String(error.code || error.message || error).toLowerCase();
+  if (str.includes('resource-exhausted') || str.includes('quota') || str.includes('limit exceeded')) {
+    if (!isQuotaExceeded) {
+      isQuotaExceeded = true;
+      console.warn('Firestore write/read quota limit exceeded. Falling back to local state and localStorage.');
+    }
+    return true;
+  }
+  return false;
+}
+
 // Collection Reference
 const USERS_COLLECTION = 'users';
 
 // Helper function to seed initial users to Firestore if collection is empty
 export async function syncInitialUsersToFirestore(): Promise<UserAccount[]> {
+  const local = localStorage.getItem('melayu_users');
+  const fallback = local ? JSON.parse(local) : INITIAL_USERS;
+
+  if (isQuotaExceeded) return fallback;
+
   try {
     const usersRef = collection(db, USERS_COLLECTION);
     const snapshot = await getDocs(usersRef);
 
     if (snapshot.empty) {
       console.log('Seeding initial users to Firebase Firestore...');
-      for (const u of INITIAL_USERS) {
-        await setDoc(doc(db, USERS_COLLECTION, u.id), u);
+      try {
+        for (const u of INITIAL_USERS) {
+          await setDoc(doc(db, USERS_COLLECTION, u.id), u);
+        }
+      } catch (e) {
+        checkAndSetQuotaError(e);
       }
       return INITIAL_USERS;
     } else {
@@ -35,14 +60,18 @@ export async function syncInitialUsersToFirestore(): Promise<UserAccount[]> {
       return users;
     }
   } catch (error) {
-    console.warn('Firebase sync failed, falling back to local users:', error);
-    const local = localStorage.getItem('melayu_users');
-    return local ? JSON.parse(local) : INITIAL_USERS;
+    checkAndSetQuotaError(error);
+    return fallback;
   }
 }
 
 // Fetch all users from Firebase Firestore
 export async function getUsersFromFirestore(): Promise<UserAccount[]> {
+  const local = localStorage.getItem('melayu_users');
+  const fallback = local ? JSON.parse(local) : INITIAL_USERS;
+
+  if (isQuotaExceeded) return fallback;
+
   try {
     const usersRef = collection(db, USERS_COLLECTION);
     const snapshot = await getDocs(usersRef);
@@ -55,29 +84,30 @@ export async function getUsersFromFirestore(): Promise<UserAccount[]> {
     });
     return users;
   } catch (error) {
-    console.error('Error fetching users from Firestore:', error);
-    const local = localStorage.getItem('melayu_users');
-    return local ? JSON.parse(local) : INITIAL_USERS;
+    checkAndSetQuotaError(error);
+    return fallback;
   }
 }
 
 // Save or Update User in Firebase Firestore
 export async function saveUserToFirestore(user: UserAccount): Promise<void> {
+  if (isQuotaExceeded) return;
   try {
     const userRef = doc(db, USERS_COLLECTION, user.id);
     await setDoc(userRef, user, { merge: true });
   } catch (error) {
-    console.error('Error saving user to Firestore:', error);
+    checkAndSetQuotaError(error);
   }
 }
 
 // Delete User from Firebase Firestore
 export async function deleteUserFromFirestore(userId: string): Promise<void> {
+  if (isQuotaExceeded) return;
   try {
     const userRef = doc(db, USERS_COLLECTION, userId);
     await deleteDoc(userRef);
   } catch (error) {
-    console.error('Error deleting user from Firestore:', error);
+    checkAndSetQuotaError(error);
   }
 }
 
@@ -98,7 +128,7 @@ export async function authenticateUserReal(usernameInput: string, passwordInput:
 
     return null;
   } catch (error) {
-    console.error('Error authenticating user via Firestore:', error);
+    checkAndSetQuotaError(error);
     return null;
   }
 }
@@ -109,47 +139,87 @@ export function subscribeFirestoreCollection<T extends { id?: string }>(
   initialData: T[],
   onUpdate: (data: T[]) => void
 ): () => void {
+  const deletedKey = `melayu_deleted_${collectionName}_ids`;
+  const getDeletedIds = (): string[] => {
+    try {
+      const stored = localStorage.getItem(deletedKey);
+      return stored ? JSON.parse(stored) : [];
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const getLocalFallback = () => {
+    const local = localStorage.getItem(`melayu_${collectionName}`);
+    const deletedIds = getDeletedIds();
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((it: any) => !deletedIds.includes(String(it.id)));
+        }
+      } catch (e) {
+        return initialData.filter((it: any) => !deletedIds.includes(String(it.id)));
+      }
+    }
+    return initialData.filter((it: any) => !deletedIds.includes(String(it.id)));
+  };
+
+  if (isQuotaExceeded) {
+    onUpdate(getLocalFallback());
+    return () => {};
+  }
+
   try {
     const colRef = collection(db, collectionName);
     const unsubscribe = onSnapshot(
       colRef,
       async (snapshot) => {
-        if (snapshot.empty) {
+        const deletedIds = getDeletedIds();
+        const seededMarkerKey = `melayu_${collectionName}_seeded_v2`;
+        const isAlreadySeeded = localStorage.getItem(seededMarkerKey) === 'true';
+
+        if (snapshot.empty && !isAlreadySeeded) {
           console.log(`Seeding initial ${collectionName} to Firestore...`);
-          for (let i = 0; i < initialData.length; i++) {
-            const item = initialData[i];
-            const docId = item.id || `doc_${i}`;
-            await setDoc(doc(db, collectionName, docId), item);
+          const filteredInitial = initialData.filter((it: any) => !deletedIds.includes(String(it.id)));
+          onUpdate(filteredInitial);
+          localStorage.setItem(seededMarkerKey, 'true');
+          if (!isQuotaExceeded) {
+            try {
+              for (let i = 0; i < filteredInitial.length; i++) {
+                const item = filteredInitial[i];
+                const docId = item.id ? String(item.id) : `doc_${i}`;
+                await setDoc(doc(db, collectionName, docId), item);
+              }
+            } catch (seedErr) {
+              checkAndSetQuotaError(seedErr);
+            }
           }
-          onUpdate(initialData);
         } else {
+          localStorage.setItem(seededMarkerKey, 'true');
           const items: T[] = [];
           snapshot.forEach((docSnap) => {
             const data = docSnap.data();
             if (data) {
-              items.push({ id: docSnap.id, ...data } as T);
+              const effectiveId = String(data.id || docSnap.id);
+              // Filter out any document marked as deleted
+              if (!deletedIds.includes(effectiveId) && !deletedIds.includes(docSnap.id)) {
+                items.push({ ...data, id: effectiveId } as T);
+              }
             }
           });
           onUpdate(items);
         }
       },
       (error) => {
-        console.warn(`Firestore subscription error for ${collectionName}:`, error);
-        const local = localStorage.getItem(`melayu_${collectionName}`);
-        if (local) {
-          try {
-            onUpdate(JSON.parse(local));
-          } catch (e) {
-            onUpdate(initialData);
-          }
-        } else {
-          onUpdate(initialData);
-        }
+        checkAndSetQuotaError(error);
+        onUpdate(getLocalFallback());
       }
     );
     return unsubscribe;
   } catch (err) {
-    console.error(`Failed to subscribe to ${collectionName}:`, err);
+    checkAndSetQuotaError(err);
+    onUpdate(getLocalFallback());
     return () => {};
   }
 }
@@ -159,25 +229,55 @@ export async function saveFirestoreDoc<T extends { id?: string }>(
   collectionName: string,
   item: T
 ): Promise<void> {
+  if (isQuotaExceeded) return;
   try {
-    const docId = item.id || `doc_${Date.now()}`;
+    const docId = item.id ? String(item.id) : `doc_${Date.now()}`;
     const itemRef = doc(db, collectionName, docId);
     await setDoc(itemRef, item, { merge: true });
   } catch (error) {
-    console.error(`Error saving doc to ${collectionName}:`, error);
+    checkAndSetQuotaError(error);
   }
 }
 
-// Generic delete single doc from Firestore
+// Generic delete doc from Firestore thoroughly (by direct doc ID and matching field ID)
 export async function deleteFirestoreDoc(
   collectionName: string,
   id: string
 ): Promise<void> {
+  const targetId = String(id);
+
+  // 1. Instantly record into persistent deleted blacklist to prevent ghost items
   try {
-    const itemRef = doc(db, collectionName, id);
+    const deletedKey = `melayu_deleted_${collectionName}_ids`;
+    const stored = localStorage.getItem(deletedKey);
+    const deletedList: string[] = stored ? JSON.parse(stored) : [];
+    if (!deletedList.includes(targetId)) {
+      deletedList.push(targetId);
+      localStorage.setItem(deletedKey, JSON.stringify(deletedList));
+    }
+  } catch (e) {}
+
+  if (isQuotaExceeded) return;
+  try {
+    // 2. Delete direct doc by ID
+    const itemRef = doc(db, collectionName, targetId);
     await deleteDoc(itemRef);
+
+    // 3. Scan and delete any documents where docSnap.id or data.id matches targetId
+    const colRef = collection(db, collectionName);
+    const snapshot = await getDocs(colRef);
+    const deletePromises: Promise<void>[] = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (docSnap.id === targetId || data.id === targetId || String(data.id) === targetId) {
+        deletePromises.push(deleteDoc(doc(db, collectionName, docSnap.id)));
+      }
+    });
+    if (deletePromises.length > 0) {
+      await Promise.all(deletePromises);
+    }
   } catch (error) {
-    console.error(`Error deleting doc from ${collectionName}:`, error);
+    checkAndSetQuotaError(error);
   }
 }
 
@@ -186,14 +286,16 @@ export async function saveFirestoreCollection<T extends { id?: string }>(
   collectionName: string,
   items: T[]
 ): Promise<void> {
+  if (isQuotaExceeded) return;
   try {
     for (let i = 0; i < items.length; i++) {
+      if (isQuotaExceeded) break;
       const item = items[i];
-      const docId = item.id || `doc_${i}`;
+      const docId = item.id ? String(item.id) : `doc_${i}`;
       await setDoc(doc(db, collectionName, docId), item, { merge: true });
     }
   } catch (error) {
-    console.error(`Error saving collection ${collectionName}:`, error);
+    checkAndSetQuotaError(error);
   }
 }
 

@@ -1257,7 +1257,7 @@ export default function TurtSection({
       )}
 
       {/* ----------------- SUB-TAB: PEMINJAMAN RUANGAN ----------------- */}
-      {(subTab === 'peminjaman-ruangan' && roomActiveTab === 'daftar') && (
+      {((subTab === 'peminjaman-ruangan' || subTab === 'persetujuan-ruangan') && (roomActiveTab as string) === 'daftar') && (
         <div className="space-y-4" id="room-subtab">
           {/* Admin Inner Navigation Tabs */}
           {isAdmin && (
@@ -1266,7 +1266,7 @@ export default function TurtSection({
                 type="button"
                 onClick={() => setRoomActiveTab('daftar')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
-                  roomActiveTab === 'daftar'
+                  (roomActiveTab as string) === 'daftar'
                     ? 'bg-djpb-blue text-white shadow-xs'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
@@ -1278,7 +1278,7 @@ export default function TurtSection({
                 type="button"
                 onClick={() => setRoomActiveTab('persetujuan')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
-                  roomActiveTab === 'persetujuan'
+                  (roomActiveTab as string) === 'persetujuan'
                     ? 'bg-amber-500 text-white shadow-xs'
                     : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
                 }`}
@@ -1782,7 +1782,7 @@ export default function TurtSection({
       )}
 
       {/* ----------------- SUB-TAB: PEMINJAMAN KENDARAAN ----------------- */}
-      {(subTab === 'peminjaman-kendaraan' && vehicleActiveTab === 'daftar') && (
+      {((subTab === 'peminjaman-kendaraan' || subTab === 'persetujuan-kendaraan') && (vehicleActiveTab as string) === 'daftar') && (
         <div className="space-y-4" id="vehicle-subtab">
           {/* Admin Inner Navigation Tabs */}
           {isAdmin && (
@@ -1791,7 +1791,7 @@ export default function TurtSection({
                 type="button"
                 onClick={() => setVehicleActiveTab('daftar')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
-                  vehicleActiveTab === 'daftar'
+                  (vehicleActiveTab as string) === 'daftar'
                     ? 'bg-djpb-blue text-white shadow-xs'
                     : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                 }`}
@@ -1803,7 +1803,7 @@ export default function TurtSection({
                 type="button"
                 onClick={() => setVehicleActiveTab('persetujuan')}
                 className={`px-3.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition-all cursor-pointer ${
-                  vehicleActiveTab === 'persetujuan'
+                  (vehicleActiveTab as string) === 'persetujuan'
                     ? 'bg-amber-500 text-white shadow-xs'
                     : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300'
                 }`}

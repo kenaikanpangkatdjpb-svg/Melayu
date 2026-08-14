@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { 
   Shield, Plus, Trash2, Edit3, Check, X,
   FileSpreadsheet, Upload, Download, RotateCcw, AlertCircle, FileCheck,
@@ -7,6 +7,100 @@ import {
 import * as XLSX from 'xlsx';
 import { SecurityShift, SecurityRosterItem } from '../types';
 import { INITIAL_SECURITY_SHIFTS, INITIAL_SECURITY_ROSTER } from '../mockData';
+import { saveFirestoreCollection } from '../lib/firebase';
+import { safeLocalStorageSet } from '../lib/storage';
+
+const ID_DAYS_UPPER = ['MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT', 'SABTU'];
+const ID_MONTHS_TITLE = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+];
+
+export function getNextDayDateStr(dateStr: string): string {
+  if (!dateStr) return 'MINGGU/ 2 Agustus 2026';
+  const trimmed = dateStr.trim();
+  const isAllUpper = trimmed === trimmed.toUpperCase();
+
+  let dayNum: number | null = null;
+  let monthIdx: number | null = null;
+  let yearNum: number | null = null;
+
+  // Regex 1: Word month e.g. "SABTU/ 1 Agustus 2026" or "SABTU, 1 AGUSTUS 2026" or "1 Agustus 2026"
+  const wordMatch = trimmed.match(/(\d{1,2})[\s\/\.\-]+([a-zA-Z]{3,10})[\s\/\.\-]+(\d{2,4})/);
+  if (wordMatch) {
+    dayNum = parseInt(wordMatch[1], 10);
+    const mStr = wordMatch[2].toLowerCase();
+    let yVal = parseInt(wordMatch[3], 10);
+    if (yVal < 100) yVal += 2000;
+    yearNum = yVal;
+
+    const findM = ID_MONTHS_TITLE.findIndex((m) =>
+      m.toLowerCase().startsWith(mStr) || mStr.startsWith(m.toLowerCase().substring(0, 3))
+    );
+    if (findM !== -1) {
+      monthIdx = findM;
+    }
+  }
+
+  // Regex 2: Numbers e.g. "1.8.2026" or "01/08/2026" or "2026-08-01"
+  if (dayNum === null || monthIdx === null || yearNum === null) {
+    const numMatch = trimmed.match(/(\d{1,4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,4})/);
+    if (numMatch) {
+      const p1 = parseInt(numMatch[1], 10);
+      const p2 = parseInt(numMatch[2], 10);
+      const p3 = parseInt(numMatch[3], 10);
+
+      if (p1 > 1000) { // YYYY-MM-DD
+        yearNum = p1;
+        monthIdx = p2 - 1;
+        dayNum = p3;
+      } else if (p3 > 1000) { // DD-MM-YYYY
+        dayNum = p1;
+        monthIdx = p2 - 1;
+        yearNum = p3;
+      } else if (p3 < 100) { // DD-MM-YY
+        dayNum = p1;
+        monthIdx = p2 - 1;
+        yearNum = 2000 + p3;
+      }
+    }
+  }
+
+  if (dayNum !== null && monthIdx !== null && monthIdx >= 0 && monthIdx <= 11 && yearNum !== null) {
+    const dObj = new Date(yearNum, monthIdx, dayNum + 1);
+    const newDayNum = dObj.getDate();
+    const newMonthIdx = dObj.getMonth();
+    const newYear = dObj.getFullYear();
+    const newDayName = ID_DAYS_UPPER[dObj.getDay()];
+    const rawMonthName = ID_MONTHS_TITLE[newMonthIdx];
+    const newMonthName = isAllUpper ? rawMonthName.toUpperCase() : rawMonthName;
+
+    if (trimmed.includes('/')) {
+      return `${newDayName}/ ${newDayNum} ${newMonthName} ${newYear}`;
+    } else if (trimmed.includes(',')) {
+      return `${newDayName}, ${newDayNum} ${newMonthName} ${newYear}`;
+    } else if (trimmed.includes('.')) {
+      return `${newDayName}.${newDayNum}.${newMonthIdx + 1}.${newYear}`;
+    } else {
+      return `${newDayName}/ ${newDayNum} ${newMonthName} ${newYear}`;
+    }
+  }
+
+  return dateStr;
+}
+
+// Preserve items as-is with clean whitespace and valid defaults
+export function sanitizeRosterDates(roster: SecurityRosterItem[]): SecurityRosterItem[] {
+  if (!roster || roster.length === 0) return [];
+  return roster.map((item, idx) => ({
+    ...item,
+    orderIndex: typeof item.orderIndex === 'number' ? item.orderIndex : idx,
+    name: (item.name || '').trim(),
+    dateStr: (item.dateStr || '').trim(),
+    location: (item.location || 'KANWIL DJPB').trim(),
+    hours: (item.hours || (item.location === 'LIBUR' ? '-' : '06.00/18.00')).trim()
+  }));
+}
 
 interface SecurityGuardSectionProps {
   securityShifts: SecurityShift[];
@@ -23,7 +117,7 @@ export default function SecurityGuardSection({
   setSecurityRoster,
   isAdmin
 }: SecurityGuardSectionProps) {
-  // View mode: 'roster' (Individual Guard Table - like user's image) or 'matrix' (3-Shift View)
+  // View mode: 'roster' (Individual Guard Table) or 'matrix' (3-Shift View)
   const [viewMode, setViewMode] = useState<'roster' | 'matrix'>('roster');
 
   // Document Title & Dynamic Headers State (persisted to localStorage)
@@ -33,7 +127,7 @@ export default function SecurityGuardSection({
 
   const [dynamicHeaders, setDynamicHeaders] = useState<string[]>(() => {
     const saved = localStorage.getItem('melayu_security_doc_headers');
-    return saved ? JSON.parse(saved) : ['NAMA', 'HARI / TANGGAL', 'LOKASI', 'JAM HADIR'];
+    return saved ? JSON.parse(saved) : ['NO.', 'NAMA PETUGAS', 'HARI / TANGGAL', 'LOKASI / POS', 'JAM HADIR'];
   });
 
   // Filter states
@@ -47,8 +141,8 @@ export default function SecurityGuardSection({
   const [previewType, setPreviewType] = useState<'roster' | 'matrix'>('roster');
   const [previewRosterData, setPreviewRosterData] = useState<SecurityRosterItem[]>([]);
   const [previewMatrixData, setPreviewMatrixData] = useState<SecurityShift[]>([]);
-  const [previewDocTitle, setPreviewDocTitle] = useState<string>('JADWAL SECURITY BULAN AGUSTUS');
-  const [previewDocHeaders, setPreviewDocHeaders] = useState<string[]>(['NAMA', 'HARI / TANGGAL', 'LOKASI', 'JAM HADIR']);
+  const [previewDocTitle, setPreviewDocTitle] = useState<string>('JADWAL SECURITY');
+  const [previewDocHeaders, setPreviewDocHeaders] = useState<string[]>(['NO.', 'NAMA PETUGAS', 'HARI / TANGGAL', 'LOKASI / POS', 'JAM HADIR']);
   const [excelFileName, setExcelFileName] = useState('');
   const [successNotice, setSuccessNotice] = useState('');
 
@@ -72,8 +166,16 @@ export default function SecurityGuardSection({
     shiftNight: ''
   });
 
-  // Filtered Roster Data
-  const safeRoster = securityRoster || [];
+  // Filtered Roster Data (Preserving exact sequential array order)
+  const safeRoster = useMemo(() => {
+    const list = securityRoster || [];
+    return [...list].sort((a, b) => {
+      const idxA = typeof a.orderIndex === 'number' ? a.orderIndex : 0;
+      const idxB = typeof b.orderIndex === 'number' ? b.orderIndex : 0;
+      return idxA - idxB;
+    });
+  }, [securityRoster]);
+
   const filteredRoster = safeRoster.filter(item => {
     if (!item) return false;
     const name = item.name || '';
@@ -86,17 +188,57 @@ export default function SecurityGuardSection({
     return matchName && matchLoc && matchDate;
   });
 
+  // Calculate rowSpans for contiguous identical dateStr rows in filteredRoster
+  const rowSpanMap = useMemo(() => {
+    const map: { [index: number]: number } = {};
+    if (!filteredRoster || filteredRoster.length === 0) return map;
+
+    let i = 0;
+    while (i < filteredRoster.length) {
+      const currentDate = filteredRoster[i]?.dateStr?.trim();
+      let count = 1;
+      let j = i + 1;
+      while (j < filteredRoster.length && (filteredRoster[j]?.dateStr?.trim() === currentDate)) {
+        count++;
+        j++;
+      }
+      map[i] = count;
+      i = j;
+    }
+    return map;
+  }, [filteredRoster]);
+
+  // Calculate rowSpans for preview modal
+  const previewRowSpanMap = useMemo(() => {
+    const map: { [index: number]: number } = {};
+    if (!previewRosterData || previewRosterData.length === 0) return map;
+
+    let i = 0;
+    while (i < previewRosterData.length) {
+      const currentDate = previewRosterData[i]?.dateStr?.trim();
+      let count = 1;
+      let j = i + 1;
+      while (j < previewRosterData.length && (previewRosterData[j]?.dateStr?.trim() === currentDate)) {
+        count++;
+        j++;
+      }
+      map[i] = count;
+      i = j;
+    }
+    return map;
+  }, [previewRosterData]);
+
   // Unique list of dates for filter
   const uniqueDates = Array.from(new Set(safeRoster.map(r => r?.dateStr || '').filter(Boolean)));
   const uniqueNames = Array.from(new Set(safeRoster.map(r => r?.name || '').filter(Boolean)));
 
   // KPI Calculations
   const totalGuards = uniqueNames.length || 6;
-  const kanwilCount = securityRoster.filter(r => r.location === 'KANWIL DJPB').length;
-  const rumdinCount = securityRoster.filter(r => r.location === 'RUMAH DINAS').length;
-  const liburCount = securityRoster.filter(r => r.location === 'LIBUR').length;
+  const kanwilCount = safeRoster.filter(r => r.location === 'KANWIL DJPB').length;
+  const rumdinCount = safeRoster.filter(r => r.location === 'RUMAH DINAS').length;
+  const liburCount = safeRoster.filter(r => r.location === 'LIBUR').length;
 
-  // Handle Excel File Upload
+  // Handle Excel File Upload with Intelligent Column Detection
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -109,51 +251,56 @@ export default function SecurityGuardSection({
         const sheetName = wb.SheetNames[0];
         const ws = wb.Sheets[sheetName];
         
-        // Convert sheet to 2D array of rows
-        const rawRows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '' });
+        // Convert sheet to 2D array of rows (formatted strings)
+        const rawRows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1, defval: '', raw: false });
         if (!rawRows || rawRows.length < 1) {
           alert('File Excel kosong atau tidak berisi data.');
           return;
         }
 
-        let detectedTitle = 'JADWAL SECURITY';
-        let detectedHeaders = ['NAMA', 'HARI / TANGGAL', 'LOKASI', 'JAM HADIR'];
+        let detectedTitle = 'JADWAL PENGAWASAN PENJAGAAN KEAMANAN';
         let headerRowIdx = -1;
+        let bestScore = 0;
 
-        // 1. Scan first 5 rows to detect Title & Header Row
-        for (let r = 0; r < Math.min(rawRows.length, 5); r++) {
+        // 1. Scan first 15 rows to detect Title & Header Row
+        for (let r = 0; r < Math.min(rawRows.length, 15); r++) {
           const rowArr = rawRows[r] || [];
-          const rowStr = rowArr.join(' ').toUpperCase().trim();
+          const rowStr = rowArr.map(c => String(c || '').trim()).join(' ').toUpperCase();
 
           // Title detection
-          if ((rowStr.includes('JADWAL') || rowStr.includes('SECURITY') || rowStr.includes('PENJAGAAN') || rowStr.includes('BULAN')) && !rowStr.includes('LOKASI')) {
+          if ((rowStr.includes('JADWAL') || rowStr.includes('SECURITY') || rowStr.includes('PENJAGAAN') || rowStr.includes('SATPAM') || rowStr.includes('KEAMANAN')) && !rowStr.includes('LOKASI') && !rowStr.includes('HADIR')) {
             const nonNullCells = rowArr.map(c => String(c || '').trim()).filter(Boolean);
             if (nonNullCells.length > 0) {
               detectedTitle = nonNullCells.join(' ');
             }
           }
 
-          // Header row detection
-          if (rowStr.includes('NAMA') || rowStr.includes('HARI') || rowStr.includes('TANGGAL') || rowStr.includes('LOKASI')) {
+          // Header scoring
+          let score = 0;
+          rowArr.forEach(c => {
+            const val = String(c || '').trim().toUpperCase();
+            if (val.includes('NAMA') || val.includes('PETUGAS') || val.includes('PERSONIL') || val.includes('SATPAM') || val.includes('SECURITY')) score += 3;
+            if (val.includes('HARI') || val.includes('TANGGAL') || val.includes('TGL') || val.includes('DATE')) score += 3;
+            if (val.includes('LOKASI') || val.includes('POS') || val.includes('PENEMPATAN') || val.includes('TEMPAT')) score += 2;
+            if (val.includes('JAM') || val.includes('WAKTU') || val.includes('PUKUL') || val.includes('SHIFT')) score += 2;
+            if (val === 'NO' || val === 'NO.' || val === 'NOMOR') score += 1;
+          });
+
+          if (score > bestScore) {
+            bestScore = score;
             headerRowIdx = r;
-            const headers = rowArr.map(c => String(c || '').trim()).filter(Boolean);
-            if (headers.length > 0) {
-              detectedHeaders = headers;
-            }
-            break;
           }
         }
 
-        if (headerRowIdx === -1) {
+        if (headerRowIdx === -1 || bestScore < 2) {
           headerRowIdx = 0;
         }
 
-        // Check if matrix format (Shift Pagi, Sore, Malam)
-        let isMatrixFormat = false;
-        const headerCombined = detectedHeaders.join(' ').toLowerCase();
-        if (headerCombined.includes('shift pagi') || headerCombined.includes('shift sore') || headerCombined.includes('shift malam')) {
-          isMatrixFormat = true;
-        }
+        const headerRow = (rawRows[headerRowIdx] || []).map(c => String(c || '').trim());
+
+        // Check if matrix format (Shift Pagi, Shift Sore, Shift Malam)
+        const headerCombined = headerRow.join(' ').toLowerCase();
+        const isMatrixFormat = (headerCombined.includes('shift pagi') || headerCombined.includes('shift sore') || headerCombined.includes('shift malam')) && headerCombined.includes('hari');
 
         if (isMatrixFormat) {
           const parsedShifts: SecurityShift[] = [];
@@ -173,21 +320,104 @@ export default function SecurityGuardSection({
           setPreviewType('matrix');
           setPreviewMatrixData(parsedShifts);
         } else {
-          // Parse Individual Roster with merged-cell date carry forward
+          // Identify columns dynamically
+          let colNo = -1;
+          let colName = -1;
+          let colDate = -1;
+          let colLoc = -1;
+          let colHours = -1;
+
+          headerRow.forEach((h, colIdx) => {
+            const hUp = h.toUpperCase();
+            if (colNo === -1 && (hUp === 'NO' || hUp === 'NO.' || hUp === 'NOMOR' || hUp.startsWith('NO '))) {
+              colNo = colIdx;
+            } else if (colName === -1 && (hUp.includes('NAMA') || hUp.includes('PETUGAS') || hUp.includes('PERSONIL') || hUp.includes('SATPAM') || hUp.includes('SECURITY') || hUp.includes('ANGGOTA'))) {
+              colName = colIdx;
+            } else if (colDate === -1 && (hUp.includes('HARI') || hUp.includes('TANGGAL') || hUp.includes('TGL') || hUp.includes('DATE') || hUp.includes('WAKTU/TGL'))) {
+              colDate = colIdx;
+            } else if (colLoc === -1 && (hUp.includes('LOKASI') || hUp.includes('POS') || hUp.includes('PENEMPATAN') || hUp.includes('TEMPAT') || hUp.includes('STATUS'))) {
+              colLoc = colIdx;
+            } else if (colHours === -1 && (hUp.includes('JAM') || hUp.includes('PUKUL') || hUp.includes('WAKTU') || hUp.includes('SHIFT') || hUp.includes('HOURS'))) {
+              colHours = colIdx;
+            }
+          });
+
+          // Fallback heuristic if headers are not standard
+          if (colName === -1 || colDate === -1 || colLoc === -1) {
+            const sampleRows = rawRows.slice(headerRowIdx + 1, headerRowIdx + 10).filter(r => r && r.length > 0);
+            const numCols = Math.max(...sampleRows.map(r => r.length), 4);
+            
+            for (let c = 0; c < numCols; c++) {
+              if (c === colNo || c === colName || c === colDate || c === colLoc || c === colHours) continue;
+              const values = sampleRows.map(r => String(r[c] || '').trim()).filter(Boolean);
+              
+              // Check if date column (contains day names, month names, slashes or dots)
+              const hasDateIndicators = values.some(v => {
+                const up = v.toUpperCase();
+                return /SENIN|SELASA|RABU|KAMIS|JUMAT|SABTU|MINGGU|JAN|FEB|MAR|APR|MEI|JUN|JUL|AGU|SEP|OKT|NOV|DES|\d{1,2}[\/\.\-]\d{1,2}[\/\.\-]\d{2,4}/.test(up);
+              });
+              if (colDate === -1 && hasDateIndicators) {
+                colDate = c;
+                continue;
+              }
+
+              // Check if location column (contains KANWIL, RUMAH, LIBUR, POS, OFF)
+              const hasLocIndicators = values.some(v => {
+                const up = v.toUpperCase();
+                return up.includes('KANWIL') || up.includes('RUMAH') || up.includes('LIBUR') || up.includes('POS') || up.includes('OFF') || up.includes('DINAS');
+              });
+              if (colLoc === -1 && hasLocIndicators) {
+                colLoc = c;
+                continue;
+              }
+
+              // Check if hours column (contains numbers like 06.00, 18.00, 07:00, 19:00, or -)
+              const hasHoursIndicators = values.some(v => {
+                return /\d{1,2}[\.:]\d{2}/.test(v) || v === '-';
+              });
+              if (colHours === -1 && hasHoursIndicators) {
+                colHours = c;
+                continue;
+              }
+            }
+
+            // Assign name to first remaining text column
+            if (colName === -1) {
+              for (let c = 0; c < numCols; c++) {
+                if (c !== colNo && c !== colDate && c !== colLoc && c !== colHours) {
+                  colName = c;
+                  break;
+                }
+              }
+            }
+          }
+
+          // Defaults if still not matched
+          if (colName === -1) colName = colNo === 0 ? 1 : 0;
+          if (colDate === -1) colDate = colName === 0 ? 1 : (colName === 1 && colNo === 0 ? 2 : 1);
+          if (colLoc === -1) colLoc = 2;
+          if (colHours === -1) colHours = 3;
+
+          // Parse rows
           const parsedRoster: SecurityRosterItem[] = [];
           let lastActiveDate = '';
+          let rowOrder = 0;
 
           for (let i = headerRowIdx + 1; i < rawRows.length; i++) {
             const row = rawRows[i];
             if (!row || row.length === 0) continue;
 
-            const nameRaw = row[0] ? String(row[0]).trim() : '';
-            let dateRaw = row[1] ? String(row[1]).trim() : '';
-            const locRaw = row[2] ? String(row[2]).trim().toUpperCase() : '';
-            let hoursRaw = row[3] ? String(row[3]).trim() : '';
+            let nameRaw = row[colName] !== undefined ? String(row[colName]).trim() : '';
+            let dateRaw = row[colDate] !== undefined ? String(row[colDate]).trim() : '';
+            let locRaw = row[colLoc] !== undefined ? String(row[colLoc]).trim() : '';
+            let hoursRaw = row[colHours] !== undefined ? String(row[colHours]).trim() : '';
 
-            // Skip header repeat lines or empty name
-            if (!nameRaw || nameRaw.toUpperCase() === 'NAMA' || nameRaw.toUpperCase().startsWith('JADWAL')) {
+            // Clean name of leading numbers (e.g. "1. ARIEF" -> "ARIEF")
+            nameRaw = nameRaw.replace(/^\d+[\.\-\)]\s*/, '').trim();
+
+            // Skip empty/header/summary rows
+            const upName = nameRaw.toUpperCase();
+            if (!nameRaw || upName === 'NAMA' || upName === 'NAMA PETUGAS' || upName.startsWith('JADWAL') || upName.startsWith('TOTAL') || upName.startsWith('MENGETAHUI') || upName.startsWith('CATATAN')) {
               continue;
             }
 
@@ -198,35 +428,38 @@ export default function SecurityGuardSection({
               dateRaw = lastActiveDate;
             }
 
-            // Normalize location
-            let location = locRaw;
-            if (locRaw.includes('LIBUR') || locRaw.includes('OFF') || locRaw.includes('LEPAS')) {
+            // Normalize location text
+            let location = locRaw.toUpperCase();
+            if (location.includes('LIBUR') || location.includes('OFF') || location.includes('LEPAS') || location === 'L') {
               location = 'LIBUR';
-            } else if (locRaw.includes('RUMAH') || locRaw.includes('RUMDIN')) {
+            } else if (location.includes('RUMAH') || location.includes('RUMDIN') || location.includes('JABATAN')) {
               location = 'RUMAH DINAS';
-            } else if (locRaw.includes('KANWIL') || locRaw.includes('DJPB')) {
+            } else if (location.includes('KANWIL') || location.includes('DJPB') || location.includes('GEDUNG')) {
               location = 'KANWIL DJPB';
             } else if (!location) {
               location = 'KANWIL DJPB';
             }
 
+            // Normalize hours
             if (!hoursRaw) {
               hoursRaw = location === 'LIBUR' ? '-' : '06.00/18.00';
             }
 
             parsedRoster.push({
-              id: `ros-up-${i}-${Date.now()}`,
+              id: `ros-up-${rowOrder}-${Date.now()}`,
+              orderIndex: rowOrder,
               name: nameRaw.toUpperCase(),
               dateStr: dateRaw || 'SABTU/ 1 Agustus 2026',
               location: location,
               hours: hoursRaw
             });
+            rowOrder++;
           }
 
           setPreviewType('roster');
           setPreviewRosterData(parsedRoster);
           setPreviewDocTitle(detectedTitle);
-          setPreviewDocHeaders(detectedHeaders);
+          setPreviewDocHeaders(['NO.', 'NAMA PETUGAS', 'HARI / TANGGAL', 'LOKASI / POS', 'JAM HADIR']);
         }
 
         setExcelFileName(file.name);
@@ -249,20 +482,26 @@ export default function SecurityGuardSection({
         setDocTitle(previewDocTitle);
         setDynamicHeaders(previewDocHeaders);
 
-        // Save title and dynamic headers to localStorage
-        localStorage.setItem('melayu_security_doc_title', previewDocTitle);
-        localStorage.setItem('melayu_security_doc_headers', JSON.stringify(previewDocHeaders));
+        // Save title, headers and data to localStorage
+        safeLocalStorageSet('melayu_security_doc_title', previewDocTitle);
+        safeLocalStorageSet('melayu_security_doc_headers', JSON.stringify(previewDocHeaders));
+        safeLocalStorageSet('melayu_security_roster', JSON.stringify(previewRosterData));
+
+        // Save to Firestore for permanent persistence
+        saveFirestoreCollection('security_roster', previewRosterData);
 
         // Reset filter
         setSearchQuery('');
         setSelectedLocation('ALL');
         setSelectedDate('ALL');
 
-        setSuccessNotice(`BERHASIL MENIMPA DATA EXCEL LAMA! Memuat ${previewRosterData.length} baris roster terbaru dari file "${excelFileName}". Tampilan telah disesuaikan.`);
+        setSuccessNotice(`BERHASIL MEMUAT DATA EXCEL! Menampilkan ${previewRosterData.length} baris roster penjagaan dari file "${excelFileName}" secara presisi.`);
       }
     } else {
       if (setSecurityShifts) {
         setSecurityShifts(previewMatrixData);
+        saveFirestoreCollection('security_shifts', previewMatrixData);
+        safeLocalStorageSet('melayu_security_shifts', JSON.stringify(previewMatrixData));
         setSuccessNotice(`Berhasil menimpa data matrix shift dengan ${previewMatrixData.length} baris data dari file "${excelFileName}".`);
       }
     }
@@ -272,14 +511,13 @@ export default function SecurityGuardSection({
 
   // Download Templates
   const handleDownloadRosterTemplate = () => {
-    const templateRows = [
-      { 'NAMA': 'ARIEF', 'HARI/TANGGAL': 'SABTU.1.8.2026', 'LOKASI': 'KANWIL DJPB', 'JAM HADIR': '06.00/18.00' },
-      { 'NAMA': 'ROBBY', 'HARI/TANGGAL': 'SABTU.1.8.2026', 'LOKASI': 'KANWIL DJPB', 'JAM HADIR': '06.00/18.00' },
-      { 'NAMA': 'ADITYA', 'HARI/TANGGAL': 'SABTU.1.8.2026', 'LOKASI': 'KANWIL DJPB', 'JAM HADIR': '18.00/06.00' },
-      { 'NAMA': 'ERWIN', 'HARI/TANGGAL': 'SABTU.1.8.2026', 'LOKASI': 'KANWIL DJPB', 'JAM HADIR': '18.00/06.00' },
-      { 'NAMA': 'RATMANSYAH', 'HARI/TANGGAL': 'SABTU.1.8.2026', 'LOKASI': 'RUMAH DINAS', 'JAM HADIR': '18.00/06.00' },
-      { 'NAMA': 'DIAN ARI', 'HARI/TANGGAL': 'SABTU.1.8.2026', 'LOKASI': 'LIBUR', 'JAM HADIR': '-' }
-    ];
+    const templateRows = (securityRoster.length > 0 ? securityRoster : INITIAL_SECURITY_ROSTER).map((r, idx) => ({
+      'NO': idx + 1,
+      'NAMA PETUGAS': r.name,
+      'HARI / TANGGAL': r.dateStr,
+      'LOKASI / POS': r.location,
+      'JAM HADIR': r.hours
+    }));
 
     const ws = XLSX.utils.json_to_sheet(templateRows);
     const wb = XLSX.utils.book_new();
@@ -289,11 +527,12 @@ export default function SecurityGuardSection({
 
   // Export Current
   const handleExportRoster = () => {
-    const rows = securityRoster.map(r => ({
-      [dynamicHeaders[0] || 'NAMA']: r.name,
-      [dynamicHeaders[1] || 'HARI/TANGGAL']: r.dateStr,
-      [dynamicHeaders[2] || 'LOKASI']: r.location,
-      [dynamicHeaders[3] || 'JAM HADIR']: r.hours
+    const rows = securityRoster.map((r, idx) => ({
+      'NO': idx + 1,
+      'NAMA PETUGAS': r.name,
+      'HARI / TANGGAL': r.dateStr,
+      'LOKASI / POS': r.location,
+      'JAM HADIR': r.hours
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
     const wb = XLSX.utils.book_new();
@@ -312,6 +551,8 @@ export default function SecurityGuardSection({
     if (setSecurityRoster) {
       setSecurityRoster([]);
       setSelectedIds([]);
+      safeLocalStorageSet('melayu_security_roster', JSON.stringify([]));
+      saveFirestoreCollection('security_roster', []);
       setSuccessNotice(`Berhasil menghapus SELURUH ${total} data Pengawasan Penjagaan Keamanan.`);
       setTimeout(() => setSuccessNotice(''), 6000);
     }
@@ -323,8 +564,11 @@ export default function SecurityGuardSection({
     if (count === 0) return;
     if (setSecurityRoster) {
       const filteredIds = new Set(filteredRoster.map(r => r.id));
-      setSecurityRoster(prev => (prev || []).filter(r => !filteredIds.has(r.id)));
+      const updated = (securityRoster || []).filter(r => !filteredIds.has(r.id));
+      setSecurityRoster(updated);
       setSelectedIds([]);
+      safeLocalStorageSet('melayu_security_roster', JSON.stringify(updated));
+      saveFirestoreCollection('security_roster', updated);
       setSuccessNotice(`Berhasil menghapus ${count} entri pengawasan terfilter.`);
       setTimeout(() => setSuccessNotice(''), 6000);
     }
@@ -336,8 +580,11 @@ export default function SecurityGuardSection({
     if (count === 0) return;
     if (setSecurityRoster) {
       const selectedSet = new Set(selectedIds);
-      setSecurityRoster(prev => (prev || []).filter(r => !selectedSet.has(r.id)));
+      const updated = (securityRoster || []).filter(r => !selectedSet.has(r.id));
+      setSecurityRoster(updated);
       setSelectedIds([]);
+      safeLocalStorageSet('melayu_security_roster', JSON.stringify(updated));
+      saveFirestoreCollection('security_roster', updated);
       setSuccessNotice(`Berhasil menghapus ${count} entri pengawasan yang dipilih.`);
       setTimeout(() => setSuccessNotice(''), 6000);
     }
@@ -346,15 +593,11 @@ export default function SecurityGuardSection({
 
   const handleDeleteByLocation = (targetLoc: string) => {
     if (setSecurityRoster) {
-      let removedCount = 0;
-      setSecurityRoster(prev => {
-        const current = prev || [];
-        const countBefore = current.length;
-        const updated = current.filter(r => r.location !== targetLoc);
-        removedCount = countBefore - updated.length;
-        return updated;
-      });
+      const updated = (securityRoster || []).filter(r => r.location !== targetLoc);
+      setSecurityRoster(updated);
       setSelectedIds([]);
+      safeLocalStorageSet('melayu_security_roster', JSON.stringify(updated));
+      saveFirestoreCollection('security_roster', updated);
       setSuccessNotice(`Berhasil menghapus data pengawasan lokasi ${targetLoc}.`);
       setTimeout(() => setSuccessNotice(''), 6000);
     }
@@ -374,37 +617,54 @@ export default function SecurityGuardSection({
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
+
   const handleSaveRoster = (e: React.FormEvent) => {
     e.preventDefault();
     if (!setSecurityRoster) return;
 
+    let updated: SecurityRosterItem[] = [];
     if (editingRosterId) {
-      setSecurityRoster(securityRoster.map(r => r.id === editingRosterId ? { ...r, ...rosterForm } : r));
+      updated = securityRoster.map(r => r.id === editingRosterId ? { ...r, ...rosterForm } : r);
     } else {
       const newItem: SecurityRosterItem = {
         id: `ros-${Date.now()}`,
+        orderIndex: securityRoster.length,
         ...rosterForm
       };
-      setSecurityRoster([...securityRoster, newItem]);
+      updated = [...securityRoster, newItem];
     }
+    setSecurityRoster(updated);
+    safeLocalStorageSet('melayu_security_roster', JSON.stringify(updated));
+    saveFirestoreCollection('security_roster', updated);
     setShowRosterModal(false);
   };
 
   // Delete Roster Item
   const handleDeleteRoster = (id: string) => {
     if (!setSecurityRoster) return;
-    setSecurityRoster(prev => (prev || []).filter(r => r.id !== id));
+    const updated = (securityRoster || []).filter(r => r.id !== id);
+    setSecurityRoster(updated);
     setSelectedIds(prev => prev.filter(i => i !== id));
+    safeLocalStorageSet('melayu_security_roster', JSON.stringify(updated));
+    saveFirestoreCollection('security_roster', updated);
     setSuccessNotice('Berhasil menghapus 1 entri pengawasan.');
     setTimeout(() => setSuccessNotice(''), 4000);
   };
 
   // Reset Default
   const handleReset = () => {
-    if (setSecurityRoster) setSecurityRoster(INITIAL_SECURITY_ROSTER);
-    if (setSecurityShifts) setSecurityShifts(INITIAL_SECURITY_SHIFTS);
+    if (setSecurityRoster) {
+      setSecurityRoster(INITIAL_SECURITY_ROSTER);
+      safeLocalStorageSet('melayu_security_roster', JSON.stringify(INITIAL_SECURITY_ROSTER));
+      saveFirestoreCollection('security_roster', INITIAL_SECURITY_ROSTER);
+    }
+    if (setSecurityShifts) {
+      setSecurityShifts(INITIAL_SECURITY_SHIFTS);
+      safeLocalStorageSet('melayu_security_shifts', JSON.stringify(INITIAL_SECURITY_SHIFTS));
+      saveFirestoreCollection('security_shifts', INITIAL_SECURITY_SHIFTS);
+    }
     setDocTitle('JADWAL SECURITY BULAN AGUSTUS');
-    setDynamicHeaders(['NAMA', 'HARI / TANGGAL', 'LOKASI', 'JAM HADIR']);
+    setDynamicHeaders(['NO.', 'NAMA PETUGAS', 'HARI / TANGGAL', 'LOKASI / POS', 'JAM HADIR']);
     localStorage.removeItem('melayu_security_doc_title');
     localStorage.removeItem('melayu_security_doc_headers');
     setSelectedIds([]);
@@ -508,13 +768,13 @@ export default function SecurityGuardSection({
           <p className="text-[11px] text-teal-600 font-medium">Patroli Rumah Jabatan</p>
         </div>
 
-        <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4 shadow-2xs space-y-1">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wider">Status Libur / Off</span>
-            <span className="w-2 h-2 rounded-full bg-rose-600 animate-ping"></span>
+            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Status Libur / Off</span>
+            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
           </div>
-          <div className="text-xl font-display font-extrabold text-rose-800">{liburCount} Personil Off</div>
-          <p className="text-[11px] text-rose-600 font-semibold">Tanda Merah di Roster</p>
+          <div className="text-xl font-display font-extrabold text-slate-800">{liburCount} Personil Off</div>
+          <p className="text-[11px] text-slate-500 font-medium">Batas Pergantian Hari</p>
         </div>
       </div>
 
@@ -587,13 +847,22 @@ export default function SecurityGuardSection({
                   <button
                     onClick={() => {
                       setEditingRosterId(null);
-                      setRosterForm({ name: 'ARIEF', dateStr: 'SABTU/ 1 Agustus 2026', location: 'KANWIL DJPB', hours: '06.00/18.00' });
+                      let defaultDate = 'SABTU/ 1 Agustus 2026';
+                      if (safeRoster.length > 0) {
+                        const last = safeRoster[safeRoster.length - 1];
+                        if (last.location === 'LIBUR') {
+                          defaultDate = getNextDayDateStr(last.dateStr);
+                        } else {
+                          defaultDate = last.dateStr || defaultDate;
+                        }
+                      }
+                      setRosterForm({ name: 'ARIEF', dateStr: defaultDate, location: 'KANWIL DJPB', hours: '06.00/18.00' });
                       setShowRosterModal(true);
                     }}
                     className="px-3 py-1.5 bg-djpb-blue hover:bg-djpb-blue-light text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer shadow-2xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Tambah Duty Roster</span>
+                    <span>Tambah Baris</span>
                   </button>
                 ) : (
                   <button
@@ -605,31 +874,23 @@ export default function SecurityGuardSection({
                     className="px-3 py-1.5 bg-djpb-blue hover:bg-djpb-blue-light text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer shadow-2xs"
                   >
                     <Plus className="w-3.5 h-3.5" />
-                    <span>Tambah Baris Shift</span>
+                    <span>Tambah Shift</span>
                   </button>
                 )}
-
-                <button
-                  onClick={handleReset}
-                  className="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl transition-colors cursor-pointer border border-slate-200"
-                  title="Reset Ke Default"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
               </>
             )}
           </div>
         </div>
 
-        {/* Filters Bar (Only for Roster View) */}
+        {/* Filters */}
         {viewMode === 'roster' && (
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-slate-50/80 p-3 rounded-xl border border-slate-200/80">
-            <div className="relative w-full md:w-64">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div className="relative w-full md:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Cari nama / tanggal..."
-                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue"
+                placeholder="Cari nama petugas / tanggal..."
+                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-djpb-blue outline-none"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -671,16 +932,16 @@ export default function SecurityGuardSection({
         )}
 
         {/* Bulk Action Bar (When rows selected) */}
-        {isAdmin && selectedIds.length > 0 && (
-          <div className="bg-rose-50 border border-rose-200 p-3 rounded-xl flex items-center justify-between text-xs animate-in fade-in duration-150">
+        {selectedIds.length > 0 && (
+          <div className="bg-rose-50 border border-rose-300 p-3 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs animate-in fade-in duration-150 shadow-xs">
             <div className="flex items-center space-x-2 text-rose-900 font-bold">
               <Check className="w-4 h-4 text-rose-600" />
-              <span>{selectedIds.length} entri pengawasan dipilih</span>
+              <span>{selectedIds.length} entri pengawasan dipilih (centang aktif)</span>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleDeleteSelectedRoster}
-                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs flex items-center space-x-1 transition-all cursor-pointer shadow-xs"
+                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-extrabold rounded-lg text-xs flex items-center space-x-1.5 transition-all cursor-pointer shadow-xs"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Hapus {selectedIds.length} Terpilih</span>
@@ -695,36 +956,38 @@ export default function SecurityGuardSection({
           </div>
         )}
 
-        {/* ---------------- VIEW MODE 1: INDIVIDUAL ROSTER TABLE (FORMAT SAMA SEPERTI GAMBAR USER) ---------------- */}
+        {/* ---------------- VIEW MODE 1: INDIVIDUAL ROSTER TABLE ---------------- */}
         {viewMode === 'roster' && (
           <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-extrabold uppercase font-display tracking-wider">
-                  {isAdmin && (
+                  {setSecurityRoster && (
                     <th className="py-3 px-3 w-10 text-center border-r border-slate-200">
                       <input
                         type="checkbox"
                         className="rounded text-djpb-blue focus:ring-djpb-blue cursor-pointer"
                         checked={selectedIds.length === filteredRoster.length && filteredRoster.length > 0}
                         onChange={toggleSelectAll}
-                        title="Pilih Semua Baris"
+                        title="Pilih / Centang Semua Baris"
                       />
                     </th>
                   )}
-                  {dynamicHeaders.map((headerText, idx) => (
-                    <th key={idx} className="py-3 px-4 border-r border-slate-200">{headerText}</th>
-                  ))}
-                  {isAdmin && <th className="py-3 px-4 text-right">AKSI ADMIN</th>}
+                  <th className="py-3 px-3 w-12 text-center border-r border-slate-200">No.</th>
+                  <th className="py-3 px-4 border-r border-slate-200">Nama Petugas</th>
+                  <th className="py-3 px-4 border-r border-slate-200 text-center">Hari / Tanggal</th>
+                  <th className="py-3 px-4 border-r border-slate-200">Lokasi / Pos Penjagaan</th>
+                  <th className="py-3 px-4 border-r border-slate-200">Jam Hadir / Shift</th>
+                  {setSecurityRoster && <th className="py-3 px-4 text-right w-24">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800 font-mono">
-                {filteredRoster.map((item) => {
+                {filteredRoster.map((item, idx) => {
                   const isLibur = item.location === 'LIBUR';
                   const isSelected = selectedIds.includes(item.id);
                   return (
-                    <tr key={item.id} className={`transition-colors ${isSelected ? 'bg-amber-50/80' : isLibur ? 'bg-rose-50/60' : 'hover:bg-slate-50'}`}>
-                      {isAdmin && (
+                    <tr key={item.id} className={`transition-colors ${isSelected ? 'bg-amber-50/80' : 'hover:bg-slate-50'}`}>
+                      {setSecurityRoster && (
                         <td className="py-3 px-3 text-center border-r border-slate-200">
                           <input
                             type="checkbox"
@@ -734,19 +997,27 @@ export default function SecurityGuardSection({
                           />
                         </td>
                       )}
-                      {/* NAMA CELL: Highlighted RED if LIBUR (Matching user's Excel image!) */}
-                      <td className={`py-3 px-4 border-r border-slate-200 font-sans font-extrabold ${
-                        isLibur 
-                          ? 'bg-red-600 text-white shadow-xs rounded-xs font-black tracking-wide text-center' 
-                          : 'text-slate-900 font-bold'
-                      }`}>
+                      {/* NO CELL */}
+                      <td className="py-3 px-3 text-center font-bold text-slate-500 font-mono border-r border-slate-200">
+                        {idx + 1}
+                      </td>
+
+                      {/* NAMA CELL */}
+                      <td className="py-3 px-4 border-r border-slate-200 font-sans font-extrabold text-slate-900">
                         {item.name}
                       </td>
 
                       {/* HARI / TANGGAL CELL */}
-                      <td className="py-3 px-4 border-r border-slate-200 font-sans font-semibold text-slate-700">
-                        {item.dateStr}
-                      </td>
+                      {rowSpanMap[idx] !== undefined ? (
+                        <td 
+                          rowSpan={rowSpanMap[idx]} 
+                          className="py-3 px-4 border-r border-slate-200 font-sans font-extrabold text-slate-800 bg-slate-50/70 text-center align-middle border-b-2 border-b-slate-200"
+                        >
+                          <div className="font-display font-extrabold text-djpb-blue tracking-wide py-1 text-xs">
+                            {item.dateStr}
+                          </div>
+                        </td>
+                      ) : null}
 
                       {/* LOKASI CELL */}
                       <td className="py-3 px-4 border-r border-slate-200 font-sans font-bold">
@@ -763,9 +1034,14 @@ export default function SecurityGuardSection({
                           </span>
                         )}
                         {isLibur && (
-                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-red-100 text-red-800 border border-red-300 text-[11px] font-black">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                            <span>LIBUR (OFF)</span>
+                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                            <span>LIBUR</span>
+                          </span>
+                        )}
+                        {!['KANWIL DJPB', 'RUMAH DINAS', 'LIBUR'].includes(item.location) && (
+                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-200 text-[11px] font-bold">
+                            <span>{item.location}</span>
                           </span>
                         )}
                       </td>
@@ -776,7 +1052,7 @@ export default function SecurityGuardSection({
                       </td>
 
                       {/* ADMIN ACTIONS */}
-                      {isAdmin && (
+                      {setSecurityRoster && (
                         <td className="py-3 px-4 text-right font-sans">
                           <div className="flex items-center justify-end space-x-1">
                             <button
@@ -811,7 +1087,7 @@ export default function SecurityGuardSection({
 
                 {filteredRoster.length === 0 && (
                   <tr>
-                    <td colSpan={isAdmin ? 5 : 4} className="py-8 text-center text-slate-400 text-xs">
+                    <td colSpan={isAdmin ? 7 : 5} className="py-8 text-center text-slate-400 text-xs">
                       Tidak ada entri roster yang sesuai dengan filter.
                     </td>
                   </tr>
@@ -901,33 +1177,40 @@ export default function SecurityGuardSection({
 
             <div className="overflow-y-auto max-h-60 border border-slate-200 rounded-xl">
               {previewType === 'roster' ? (
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-100 font-bold uppercase sticky top-0 text-slate-800 border-b border-slate-200">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-slate-100 font-extrabold uppercase sticky top-0 text-slate-800 border-b border-slate-200">
                     <tr>
-                      {previewDocHeaders.map((headerText, hIdx) => (
-                        <th key={hIdx} className="py-2.5 px-3 border-r border-slate-200">{headerText}</th>
-                      ))}
+                      <th className="py-2.5 px-3 w-12 text-center border-r border-slate-200">No.</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200">Nama Petugas</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200 text-center">Hari / Tanggal</th>
+                      <th className="py-2.5 px-3 border-r border-slate-200">Lokasi / Pos</th>
+                      <th className="py-2.5 px-3">Jam Hadir</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 font-mono">
+                  <tbody className="divide-y divide-slate-200 font-mono text-xs">
                     {previewRosterData.map((row, idx) => (
-                      <tr key={idx} className={row.location === 'LIBUR' ? 'bg-red-50 text-red-700 font-bold' : ''}>
-                        <td className={`py-2 px-3 ${row.location === 'LIBUR' ? 'bg-red-600 text-white font-black text-center' : ''}`}>{row.name}</td>
-                        <td className="py-2 px-3">{row.dateStr}</td>
-                        <td className="py-2 px-3">{row.location}</td>
+                      <tr key={idx} className="hover:bg-slate-50">
+                        <td className="py-2 px-3 text-center font-bold text-slate-500 border-r border-slate-200">{idx + 1}</td>
+                        <td className="py-2 px-3 font-bold text-slate-800 border-r border-slate-200">{row.name}</td>
+                        {previewRowSpanMap[idx] !== undefined ? (
+                          <td rowSpan={previewRowSpanMap[idx]} className="py-2 px-3 border-r border-slate-200 text-center align-middle font-bold bg-slate-50/70 text-slate-800">
+                            {row.dateStr}
+                          </td>
+                        ) : null}
+                        <td className="py-2 px-3 border-r border-slate-200 font-sans">{row.location}</td>
                         <td className="py-2 px-3">{row.hours}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-100 font-bold uppercase sticky top-0">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead className="bg-slate-100 font-bold uppercase sticky top-0 border-b border-slate-200">
                     <tr>
-                      <th className="py-2 px-3">Hari</th>
-                      <th className="py-2 px-3">Shift Pagi</th>
-                      <th className="py-2 px-3">Shift Sore</th>
-                      <th className="py-2 px-3">Shift Malam</th>
+                      <th className="py-2.5 px-3">Hari</th>
+                      <th className="py-2.5 px-3">Shift Pagi</th>
+                      <th className="py-2.5 px-3">Shift Sore</th>
+                      <th className="py-2.5 px-3">Shift Malam</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 font-mono">
@@ -968,161 +1251,182 @@ export default function SecurityGuardSection({
       {/* Roster Add / Edit Modal */}
       {showRosterModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <form onSubmit={handleSaveRoster} className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-display font-bold text-slate-800">
-                {editingRosterId ? 'Edit Duty Roster' : 'Tambah Duty Roster Security'}
+              <h3 className="font-display font-bold text-slate-800 text-base">
+                {editingRosterId ? 'Edit Entri Roster Penjagaan' : 'Tambah Entri Roster Penjagaan'}
               </h3>
-              <button type="button" onClick={() => setShowRosterModal(false)} className="p-1 hover:bg-slate-100 text-slate-400 rounded-lg cursor-pointer">
+              <button onClick={() => setShowRosterModal(false)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <form onSubmit={handleSaveRoster} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Nama Petugas Security</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Nama Petugas</label>
                 <input
-                  type="text" required
-                  className="w-full mt-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold uppercase"
+                  type="text"
+                  required
+                  placeholder="Contoh: ARIEF"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={rosterForm.name}
                   onChange={(e) => setRosterForm({ ...rosterForm, name: e.target.value.toUpperCase() })}
-                  placeholder="Contoh: ARIEF"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Hari / Tanggal</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Hari / Tanggal</label>
                 <input
-                  type="text" required
-                  className="w-full mt-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold"
+                  type="text"
+                  required
+                  placeholder="Contoh: SABTU/ 1 Agustus 2026"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={rosterForm.dateStr}
                   onChange={(e) => setRosterForm({ ...rosterForm, dateStr: e.target.value })}
-                  placeholder="Contoh: SABTU.1.8.2026"
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Lokasi Penjagaan</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Lokasi Penjagaan</label>
                 <select
-                  className="w-full mt-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={rosterForm.location}
                   onChange={(e) => {
                     const loc = e.target.value;
-                    let hrs = rosterForm.hours;
-                    if (loc === 'LIBUR') hrs = '-';
-                    else if (hrs === '-') hrs = '06.00/18.00';
+                    const hrs = loc === 'LIBUR' ? '-' : (rosterForm.hours === '-' ? '06.00/18.00' : rosterForm.hours);
                     setRosterForm({ ...rosterForm, location: loc, hours: hrs });
                   }}
                 >
-                  <option value="KANWIL DJPB">KANWIL DJPB</option>
+                  <option value="KANWIL DJPB">KANWIL DJPB (Gedung Utama)</option>
                   <option value="RUMAH DINAS">RUMAH DINAS</option>
-                  <option value="LIBUR">LIBUR (OFF / MERAH)</option>
+                  <option value="LIBUR">LIBUR (OFF)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Jam Hadir</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Jam Hadir / Jam Kerja</label>
                 <input
-                  type="text" required
-                  className="w-full mt-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold"
+                  type="text"
+                  required
+                  placeholder="Contoh: 06.00/18.00 atau 18.00/06.00 atau -"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={rosterForm.hours}
                   onChange={(e) => setRosterForm({ ...rosterForm, hours: e.target.value })}
-                  placeholder="Contoh: 06.00/18.00 atau 18.00/06.00 atau -"
                 />
               </div>
-            </div>
 
-            <div className="flex justify-end space-x-2 border-t border-slate-100 pt-3">
-              <button
-                type="button"
-                onClick={() => setShowRosterModal(false)}
-                className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-djpb-blue text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs"
-              >
-                Simpan Duty Roster
-              </button>
-            </div>
-          </form>
+              <div className="flex justify-end space-x-2 border-t border-slate-100 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRosterModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs"
+                >
+                  Simpan Roster
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* Shift Matrix Modal */}
+      {/* Matrix Shift Modal */}
       {showShiftModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <form onSubmit={(e) => {
-            e.preventDefault();
-            if (!setSecurityShifts) return;
-            if (editingShiftIndex !== null) {
-              const updated = [...securityShifts];
-              updated[editingShiftIndex] = shiftForm;
-              setSecurityShifts(updated);
-            } else {
-              setSecurityShifts([...securityShifts, shiftForm]);
-            }
-            setShowShiftModal(false);
-          }} className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-display font-bold text-slate-800">
-                {editingShiftIndex !== null ? 'Edit Baris Shift' : 'Tambah Shift'}
+              <h3 className="font-display font-bold text-slate-800 text-base">
+                {editingShiftIndex !== null ? 'Edit Matriks Shift Harian' : 'Tambah Matriks Shift Harian'}
               </h3>
-              <button type="button" onClick={() => setShowShiftModal(false)} className="p-1 hover:bg-slate-100 text-slate-400 rounded-lg cursor-pointer">
+              <button onClick={() => setShowShiftModal(false)} className="p-1 hover:bg-slate-100 rounded-lg text-slate-400">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!setSecurityShifts) return;
+                let updated: SecurityShift[] = [];
+                if (editingShiftIndex !== null) {
+                  updated = securityShifts.map((s, idx) => idx === editingShiftIndex ? shiftForm : s);
+                } else {
+                  updated = [...securityShifts, shiftForm];
+                }
+                setSecurityShifts(updated);
+                saveFirestoreCollection('security_shifts', updated);
+                safeLocalStorageSet('melayu_security_shifts', JSON.stringify(updated));
+                setShowShiftModal(false);
+              }}
+              className="space-y-4"
+            >
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Hari</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Hari</label>
                 <input
-                  type="text" required
-                  className="w-full mt-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                  type="text"
+                  required
+                  placeholder="Contoh: Senin"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={shiftForm.day}
                   onChange={(e) => setShiftForm({ ...shiftForm, day: e.target.value })}
                 />
               </div>
+
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Shift Pagi</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Shift Pagi (07:00 - 15:00)</label>
                 <input
-                  type="text" required
-                  className="w-full mt-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                  type="text"
+                  placeholder="Nama Petugas Pagi"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={shiftForm.shiftMorning}
                   onChange={(e) => setShiftForm({ ...shiftForm, shiftMorning: e.target.value })}
                 />
               </div>
+
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Shift Sore</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Shift Sore (15:00 - 23:00)</label>
                 <input
-                  type="text" required
-                  className="w-full mt-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                  type="text"
+                  placeholder="Nama Petugas Sore"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={shiftForm.shiftEvening}
                   onChange={(e) => setShiftForm({ ...shiftForm, shiftEvening: e.target.value })}
                 />
               </div>
+
               <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Shift Malam</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Shift Malam (23:00 - 07:00)</label>
                 <input
-                  type="text" required
-                  className="w-full mt-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium"
+                  type="text"
+                  placeholder="Nama Petugas Malam"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={shiftForm.shiftNight}
                   onChange={(e) => setShiftForm({ ...shiftForm, shiftNight: e.target.value })}
                 />
               </div>
-            </div>
 
-            <div className="flex justify-end space-x-2 border-t border-slate-100 pt-3">
-              <button type="button" onClick={() => setShowShiftModal(false)} className="px-4 py-2 bg-slate-100 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer">
-                Batal
-              </button>
-              <button type="submit" className="px-4 py-2 bg-djpb-blue text-white text-xs font-bold rounded-xl cursor-pointer">
-                Simpan Shift
-              </button>
-            </div>
-          </form>
+              <div className="flex justify-end space-x-2 border-t border-slate-100 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowShiftModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-bold rounded-xl cursor-pointer shadow-xs"
+                >
+                  Simpan Shift
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
@@ -1158,8 +1462,8 @@ export default function SecurityGuardSection({
                 Pilih metode penghapusan data jadwal security pengawasan penjagaan keamanan:
               </p>
 
-              {/* Option 1: Delete Selected Rows (if any rows checked) */}
-              {selectedIds.length > 0 && (
+              {/* Option 1: Delete Selected Rows */}
+              {selectedIds.length > 0 ? (
                 <button
                   onClick={handleDeleteSelectedRoster}
                   className="w-full p-3.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-left transition-all cursor-pointer shadow-sm flex items-center justify-between"
@@ -1170,11 +1474,31 @@ export default function SecurityGuardSection({
                       <span>HAPUS {selectedIds.length} DATA TERPILIH (CENTANG AKTIF)</span>
                     </div>
                     <p className="text-[11px] text-rose-100/90 mt-0.5 ml-6">
-                      Eksekusi hapus untuk {selectedIds.length} baris data pengawasan yang sedang centang dipilih.
+                      Eksekusi hapus untuk {selectedIds.length} baris data pengawasan yang sedang dicentang.
                     </p>
                   </div>
                   <span className="px-3 py-1 bg-white text-rose-700 font-extrabold text-[11px] rounded-lg shadow-2xs">
                     Eksekusi Hapus ({selectedIds.length})
+                  </span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setSelectedIds(filteredRoster.map(r => r.id));
+                  }}
+                  className="w-full p-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-left transition-all cursor-pointer flex items-center justify-between"
+                >
+                  <div>
+                    <div className="font-extrabold text-xs text-blue-900 flex items-center space-x-2">
+                      <Check className="w-4 h-4 text-blue-600" />
+                      <span>PILIH / CENTANG SEMUA DATA TAMPIL ({filteredRoster.length} BARIS)</span>
+                    </div>
+                    <p className="text-[11px] text-blue-700 mt-0.5 ml-6">
+                      Pilih/centang seluruh baris dalam tabel untuk mengaktifkan fitur Hapus Terpilih.
+                    </p>
+                  </div>
+                  <span className="px-2.5 py-1 bg-blue-600 text-white font-bold text-[10px] rounded-lg shadow-2xs">
+                    Centang Semua ({filteredRoster.length})
                   </span>
                 </button>
               )}
@@ -1219,10 +1543,10 @@ export default function SecurityGuardSection({
                 </span>
               </button>
 
-              {/* Option 3: Delete By Location */}
+              {/* Option 4: Delete By Location */}
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
                 <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider block">
-                  3. Hapus Berdasarkan Lokasi Penjagaan
+                  4. Hapus Berdasarkan Lokasi Penjagaan
                 </span>
                 <div className="grid grid-cols-3 gap-2">
                   <button
@@ -1246,10 +1570,10 @@ export default function SecurityGuardSection({
                 </div>
               </div>
 
-              {/* Option 4: Reset Default */}
+              {/* Option 5: Reset Default */}
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-xs text-slate-800 block">4. Kembalikan ke Data Standar Default</span>
+                  <span className="font-bold text-xs text-slate-800 block">5. Kembalikan ke Data Standar Default</span>
                   <span className="text-[11px] text-slate-500 block">Mengatur ulang jadwal ke data awal sistem.</span>
                 </div>
                 <button
