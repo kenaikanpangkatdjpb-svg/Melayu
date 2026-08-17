@@ -212,7 +212,7 @@ export default function ActivityGallerySection({
         const file = files[i];
         setCompressProgress(`Mengompresi & mengoptimalkan foto (${i + 1}/${files.length})...`);
         try {
-          const compressedDataUrl = await compressImage(file, 1280, 800, 0.75);
+          const compressedDataUrl = await compressImage(file, 1000, 700, 0.68);
           newCompressedPhotos.push(compressedDataUrl);
         } catch (err) {
           console.error('Failed to compress image:', err);
@@ -369,7 +369,7 @@ export default function ActivityGallerySection({
   };
 
   // Submit Handler for Create & Update
-  const handleSubmitForm = (e: React.FormEvent) => {
+  const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) {
       alert('Mohon masukkan Judul Kegiatan.');
@@ -403,18 +403,18 @@ export default function ActivityGallerySection({
         division: formData.division,
         mediaType: formData.mediaType,
         mediaUrl: formData.mediaUrl.trim(),
-        additionalPhotos: formData.mediaType === 'photo' && formData.additionalPhotos.length > 0 ? formData.additionalPhotos : undefined,
-        thumbnailUrl: formData.thumbnailUrl.trim() || undefined,
+        additionalPhotos: formData.mediaType === 'photo' && formData.additionalPhotos.length > 0 ? formData.additionalPhotos : [],
+        thumbnailUrl: formData.thumbnailUrl.trim() || '',
         narration: formData.narration.trim(),
         category: formData.category,
-        location: formData.location.trim() || undefined,
+        location: formData.location.trim() || '',
         authorName: formData.authorName.trim(),
-        tags: tags.length > 0 ? tags : undefined
+        tags: tags.length > 0 ? tags : []
       };
 
       const newItems = galleryItems.map(it => it.id === editingItem.id ? updated : it);
       updateAndPersist(newItems);
-      saveFirestoreDoc('activity_gallery', updated);
+      await saveFirestoreDoc('activity_gallery', updated);
       setEditingItem(null);
       if (selectedDetailItem?.id === editingItem.id) {
         setSelectedDetailItem(updated);
@@ -433,19 +433,19 @@ export default function ActivityGallerySection({
         division: formData.division,
         mediaType: formData.mediaType,
         mediaUrl: formData.mediaUrl.trim(),
-        additionalPhotos: formData.mediaType === 'photo' && formData.additionalPhotos.length > 0 ? formData.additionalPhotos : undefined,
-        thumbnailUrl: formData.thumbnailUrl.trim() || undefined,
+        additionalPhotos: formData.mediaType === 'photo' && formData.additionalPhotos.length > 0 ? formData.additionalPhotos : [],
+        thumbnailUrl: formData.thumbnailUrl.trim() || '',
         narration: formData.narration.trim(),
         category: formData.category,
-        location: formData.location.trim() || undefined,
+        location: formData.location.trim() || '',
         authorName: formData.authorName.trim() || (currentUser?.fullName || 'Petugas Dokumentasi'),
         createdAt: new Date().toISOString(),
-        tags: tags.length > 0 ? tags : undefined
+        tags: tags.length > 0 ? tags : []
       };
 
       const newItems = [newItem, ...galleryItems];
       updateAndPersist(newItems);
-      saveFirestoreDoc('activity_gallery', newItem);
+      await saveFirestoreDoc('activity_gallery', newItem);
       setIsUploadModalOpen(false);
       setToastMessage({
         text: `Dokumentasi baru "${newItem.title}" dengan ${1 + (newItem.additionalPhotos?.length || 0)} foto berhasil dipublikasikan dan tersimpan di database.`,
