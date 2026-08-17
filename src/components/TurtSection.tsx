@@ -11,6 +11,7 @@ import {
 import { formatIDR } from '../mockData';
 import SuratPermintaanBarangPersediaan from './SuratPermintaanBarangPersediaan';
 import { saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
+import { formatDisplayDate } from '../lib/dateUtils';
 
 interface TurtSectionProps {
   subTab: string;
@@ -688,7 +689,7 @@ export default function TurtSection({
                         </div>
                         <div className="flex justify-between text-slate-700">
                           <span className="text-slate-500">Waktu:</span>
-                          <span className="font-mono text-slate-800">{pending.date} | {pending.startTime} - {pending.endTime}</span>
+                          <span className="font-mono text-slate-800">{formatDisplayDate(pending.date)} | {pending.startTime} - {pending.endTime}</span>
                         </div>
                         <div className="pt-1.5 text-slate-700 border-t border-slate-200/60 space-y-1">
                           <div><span className="text-slate-500 font-medium">Kegiatan:</span> <span className="font-semibold text-slate-800">{pending.purpose}</span></div>
@@ -838,13 +839,15 @@ export default function TurtSection({
                           <div className="text-[10px] text-slate-400 font-mono">{booking.division}</div>
                         </td>
                         <td className="py-3.5 px-4">
-                          <div className="font-medium">{booking.date}</div>
+                          <div className="font-medium">{formatDisplayDate(booking.date)}</div>
                           <div className="text-[10px] text-slate-400 font-mono">{booking.startTime} - {booking.endTime}</div>
                         </td>
-                        <td className="py-3.5 px-4 max-w-xs truncate font-medium text-slate-800" title={booking.purpose}>{booking.purpose}</td>
-                        <td className="py-3.5 px-4 max-w-xs text-slate-600 font-sans" title={booking.equipmentNeeded || '-'}>
+                        <td className="py-3.5 px-4 min-w-[220px] max-w-sm whitespace-normal break-words font-medium text-slate-800 leading-snug">
+                          {booking.purpose}
+                        </td>
+                        <td className="py-3.5 px-4 min-w-[150px] max-w-xs whitespace-normal break-words text-slate-600 font-sans">
                           {booking.equipmentNeeded ? (
-                            <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-md text-[11px] font-medium">
+                            <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-md text-[11px] font-medium inline-block">
                               {booking.equipmentNeeded}
                             </span>
                           ) : (
@@ -862,7 +865,7 @@ export default function TurtSection({
                             {booking.status}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 max-w-xs text-slate-600 italic text-[11px]">
+                        <td className="py-3.5 px-4 min-w-[180px] max-w-xs whitespace-normal break-words text-slate-600 italic text-[11px]">
                           {booking.statusNote || '-'}
                         </td>
                         <td className="py-3.5 px-4 text-right">
@@ -1096,7 +1099,7 @@ export default function TurtSection({
                         </div>
                         <div className="flex justify-between text-slate-700">
                           <span className="text-slate-500">Tanggal & Durasi:</span>
-                          <span className="font-mono text-slate-800">{pending.date} ({pending.durationDays} hari)</span>
+                          <span className="font-mono text-slate-800">{formatDisplayDate(pending.date)} ({pending.durationDays} hari)</span>
                         </div>
                       </div>
                     </div>
@@ -1246,7 +1249,7 @@ export default function TurtSection({
                         <td className="py-3.5 px-4 font-medium">{booking.bookerName}</td>
                         <td className="py-3.5 px-4">
                           <div className="font-semibold text-slate-800">{booking.destination}</div>
-                          <div className="text-[10px] text-slate-400 font-mono">{booking.date} ({booking.durationDays} hari)</div>
+                          <div className="text-[10px] text-slate-400 font-mono">{formatDisplayDate(booking.date)} ({booking.durationDays} hari)</div>
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
@@ -1450,13 +1453,15 @@ export default function TurtSection({
                         <div className="text-[10px] text-slate-400 font-mono">{booking.division}</div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="font-medium">{booking.date}</div>
+                        <div className="font-medium">{formatDisplayDate(booking.date)}</div>
                         <div className="text-[10px] text-slate-400 font-mono">{booking.startTime} - {booking.endTime}</div>
                       </td>
-                      <td className="py-3.5 px-4 max-w-xs truncate font-medium text-slate-800" title={booking.purpose}>{booking.purpose}</td>
-                      <td className="py-3.5 px-4 max-w-xs text-slate-600 font-sans" title={booking.equipmentNeeded || '-'}>
+                      <td className="py-3.5 px-4 min-w-[220px] max-w-sm whitespace-normal break-words font-medium text-slate-800 leading-snug">
+                        {booking.purpose}
+                      </td>
+                      <td className="py-3.5 px-4 min-w-[150px] max-w-xs whitespace-normal break-words text-slate-600 font-sans">
                         {booking.equipmentNeeded ? (
-                          <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-md text-[11px] font-medium">
+                          <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200/80 rounded-md text-[11px] font-medium inline-block">
                             {booking.equipmentNeeded}
                           </span>
                         ) : (
@@ -1474,7 +1479,7 @@ export default function TurtSection({
                           {booking.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 max-w-xs text-slate-600 italic text-[11px]">
+                      <td className="py-3.5 px-4 min-w-[180px] max-w-xs whitespace-normal break-words text-slate-600 italic text-[11px]">
                         {booking.statusNote || '-'}
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -1619,7 +1624,7 @@ export default function TurtSection({
                             <span>Pemohon: <strong className="text-slate-800">{pendingItem.bookerName}</strong> ({pendingItem.division})</span>
                           </div>
                           <div className="text-[11px] text-slate-500 font-mono">
-                            Tgl Peminjaman: {pendingItem.date}
+                            Tgl Peminjaman: {formatDisplayDate(pendingItem.date)}
                           </div>
                         </div>
 
@@ -1770,7 +1775,7 @@ export default function TurtSection({
                       </td>
                       <td className="py-3.5 px-4 font-mono">
                         <div>{item.quantity} unit</div>
-                        <div className="text-[10px] text-slate-400">{item.date}</div>
+                        <div className="text-[10px] text-slate-400">{formatDisplayDate(item.date)}</div>
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -1985,7 +1990,7 @@ export default function TurtSection({
                       <td className="py-3.5 px-4 font-medium">{vehicle.bookerName}</td>
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-slate-800">{vehicle.destination}</div>
-                        <div className="text-[10px] text-slate-400 font-mono">{vehicle.date} ({vehicle.durationDays} hari)</div>
+                        <div className="text-[10px] text-slate-400 font-mono">{formatDisplayDate(vehicle.date)} ({vehicle.durationDays} hari)</div>
                       </td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
@@ -2112,7 +2117,7 @@ export default function TurtSection({
                 <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-[11px] text-slate-500">
                   <div>
                     <div className="font-semibold text-slate-700">{f.reporterName}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">{f.reporterDivision} • {f.date}</div>
+                    <div className="text-[10px] text-slate-400 font-mono">{f.reporterDivision} • {formatDisplayDate(f.date)}</div>
                   </div>
 
                   <div className="flex items-center space-x-2">

@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx';
 import KemenkeuLogo from './KemenkeuLogo';
 import { subscribeFirestoreCollection, saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
 import { safeLocalStorageSet } from '../lib/storage';
+import { formatDisplayDate } from '../lib/dateUtils';
 
 export interface PermintaanItem {
   no: number;
@@ -612,7 +613,7 @@ export default function SuratPermintaanBarangPersediaan({
                     <div>
                       <span className="font-mono font-bold text-xs text-djpb-blue">{req.documentNo}</span>
                       <h3 className="font-bold text-sm text-slate-900 mt-0.5">{req.division}</h3>
-                      <p className="text-[11px] text-slate-500">{req.date}</p>
+                      <p className="text-[11px] text-slate-500">{formatDisplayDate(req.date)}</p>
                     </div>
 
                     <div className="flex flex-col items-end gap-1">
@@ -923,7 +924,7 @@ export default function SuratPermintaanBarangPersediaan({
                       className="border border-slate-400 px-2 py-0.5 rounded text-xs w-64"
                     />
                   ) : (
-                    <span className="font-medium text-slate-900">{activeDocument.date}</span>
+                    <span className="font-medium text-slate-900">{formatDisplayDate(activeDocument.date)}</span>
                   )}
                 </div>
               </div>
@@ -1422,7 +1423,7 @@ export default function SuratPermintaanBarangPersediaan({
                         {req.division}
                       </td>
                       <td className="py-3.5 px-4 font-medium">
-                        {req.date}
+                        {formatDisplayDate(req.date)}
                       </td>
                       <td className="py-3.5 px-4">
                         <p className="font-semibold text-slate-800">
