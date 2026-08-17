@@ -152,10 +152,8 @@ export default function App() {
   });
 
   const [galleryItems, setGalleryItems] = useState<ActivityGalleryItem[]>(() => {
-    const deletedIds: string[] = safeParse<string[]>('melayu_deleted_activity_gallery_ids', []);
     const parsed = safeParse<ActivityGalleryItem[]>('melayu_activity_gallery', INITIAL_ACTIVITY_GALLERY);
-    const source = Array.isArray(parsed) ? parsed : INITIAL_ACTIVITY_GALLERY;
-    return source.filter((it) => !deletedIds.includes(String(it.id)));
+    return Array.isArray(parsed) ? parsed : INITIAL_ACTIVITY_GALLERY;
   });
 
   const performanceMetrics: PerformanceMetric[] = INITIAL_PERFORMANCE_METRICS;

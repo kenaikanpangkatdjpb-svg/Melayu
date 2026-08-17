@@ -68,13 +68,21 @@ export async function syncInitialUsersToFirestore(): Promise<UserAccount[]> {
 // Fetch all users from Firebase Firestore
 export async function getUsersFromFirestore(): Promise<UserAccount[]> {
   const local = localStorage.getItem('melayu_users');
-  const fallback = local ? JSON.parse(local) : INITIAL_USERS;
+  const fallback: UserAccount[] = local ? JSON.parse(local) : INITIAL_USERS;
 
   if (isQuotaExceeded) return fallback;
 
   try {
     const usersRef = collection(db, USERS_COLLECTION);
-    const snapshot = await getDocs(usersRef);
+    const snapshot = await Promise.race([
+      getDocs(usersRef),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000))
+    ]);
+
+    if (!snapshot) {
+      return fallback;
+    }
+
     if (snapshot.empty) {
       return await syncInitialUsersToFirestore();
     }
@@ -82,6 +90,9 @@ export async function getUsersFromFirestore(): Promise<UserAccount[]> {
     snapshot.forEach((docSnap) => {
       users.push(docSnap.data() as UserAccount);
     });
+    try {
+      localStorage.setItem('melayu_users', JSON.stringify(users));
+    } catch (e) {}
     return users;
   } catch (error) {
     checkAndSetQuotaError(error);
@@ -91,6 +102,19 @@ export async function getUsersFromFirestore(): Promise<UserAccount[]> {
 
 // Save or Update User in Firebase Firestore
 export async function saveUserToFirestore(user: UserAccount): Promise<void> {
+  // Update local cache immediately
+  try {
+    const local = localStorage.getItem('melayu_users');
+    let usersList: UserAccount[] = local ? JSON.parse(local) : INITIAL_USERS;
+    const idx = usersList.findIndex((u) => u.id === user.id);
+    if (idx >= 0) {
+      usersList[idx] = user;
+    } else {
+      usersList = [...usersList, user];
+    }
+    localStorage.setItem('melayu_users', JSON.stringify(usersList));
+  } catch (e) {}
+
   if (isQuotaExceeded) return;
   try {
     const userRef = doc(db, USERS_COLLECTION, user.id);
@@ -102,6 +126,15 @@ export async function saveUserToFirestore(user: UserAccount): Promise<void> {
 
 // Delete User from Firebase Firestore
 export async function deleteUserFromFirestore(userId: string): Promise<void> {
+  try {
+    const local = localStorage.getItem('melayu_users');
+    if (local) {
+      const usersList: UserAccount[] = JSON.parse(local);
+      const filtered = usersList.filter((u) => u.id !== userId);
+      localStorage.setItem('melayu_users', JSON.stringify(filtered));
+    }
+  } catch (e) {}
+
   if (isQuotaExceeded) return;
   try {
     const userRef = doc(db, USERS_COLLECTION, userId);
@@ -111,12 +144,38 @@ export async function deleteUserFromFirestore(userId: string): Promise<void> {
   }
 }
 
-// Authenticate user against Firebase Firestore
+// Authenticate user against Firebase Firestore (Instant fast-path + timeout race for fast mobile response)
 export async function authenticateUserReal(usernameInput: string, passwordInput: string): Promise<UserAccount | null> {
-  try {
-    const trimmedUser = usernameInput.trim().toLowerCase();
-    const trimmedPass = passwordInput.trim();
+  const trimmedUser = usernameInput.trim().toLowerCase();
+  const trimmedPass = passwordInput.trim();
 
+  // Fast Path 1: Check cached local users first (< 2ms instant response on mobile)
+  try {
+    const local = localStorage.getItem('melayu_users');
+    const localUsers: UserAccount[] = local ? JSON.parse(local) : INITIAL_USERS;
+    const foundLocal = localUsers.find(
+      (u) => u.username.toLowerCase() === trimmedUser && (u.password === trimmedPass || !u.password)
+    );
+
+    if (foundLocal && foundLocal.status === 'Aktif') {
+      // Refresh user database in background without delaying the user
+      getUsersFromFirestore().catch(() => {});
+      return foundLocal;
+    }
+  } catch (e) {
+    console.warn('Local user check error:', e);
+  }
+
+  // Fast Path 2: Check fallback INITIAL_USERS directly
+  const foundInitial = INITIAL_USERS.find(
+    (u) => u.username.toLowerCase() === trimmedUser && (u.password === trimmedPass || !u.password)
+  );
+  if (foundInitial && foundInitial.status === 'Aktif') {
+    return foundInitial;
+  }
+
+  // Path 3: If not found in local cache, query Firestore with 2.5s timeout race
+  try {
     const users = await getUsersFromFirestore();
     const foundUser = users.find(
       (u) => u.username.toLowerCase() === trimmedUser && (u.password === trimmedPass || !u.password)
@@ -154,37 +213,34 @@ export function sanitizeForFirestore<T>(obj: T): T {
   return obj;
 }
 
-// Generic subscribe with onSnapshot & auto-seed if empty
+// Generic subscribe with onSnapshot & cloud-authoritative sync across all devices (PC & Handphone)
 export function subscribeFirestoreCollection<T extends { id?: string | number }>(
   collectionName: string,
   initialData: T[],
   onUpdate: (data: T[]) => void
 ): () => void {
-  const deletedKey = `melayu_deleted_${collectionName}_ids`;
-  const getDeletedIds = (): string[] => {
-    try {
-      const stored = localStorage.getItem(deletedKey);
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      return [];
-    }
-  };
-
-  const getLocalFallback = () => {
+  const getLocalFallback = (): T[] => {
     const local = localStorage.getItem(`melayu_${collectionName}`);
-    const deletedIds = getDeletedIds();
     if (local) {
       try {
         const parsed = JSON.parse(local);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.filter((it: any) => !deletedIds.includes(String(it.id)));
+          return parsed;
         }
       } catch (e) {
-        return initialData.filter((it: any) => !deletedIds.includes(String(it.id)));
+        return initialData;
       }
     }
-    return initialData.filter((it: any) => !deletedIds.includes(String(it.id)));
+    return initialData;
   };
+
+  // Provide immediate local cache to prevent UI flash while connecting
+  try {
+    const immediateData = getLocalFallback();
+    if (immediateData && immediateData.length > 0) {
+      onUpdate(immediateData);
+    }
+  } catch (e) {}
 
   if (isQuotaExceeded) {
     onUpdate(getLocalFallback());
@@ -196,19 +252,21 @@ export function subscribeFirestoreCollection<T extends { id?: string | number }>
     const unsubscribe = onSnapshot(
       colRef,
       async (snapshot) => {
-        const deletedIds = getDeletedIds();
-        const seededMarkerKey = `melayu_${collectionName}_seeded_v2`;
+        const seededMarkerKey = `melayu_${collectionName}_seeded_v3`;
         const isAlreadySeeded = localStorage.getItem(seededMarkerKey) === 'true';
 
         if (snapshot.empty && !isAlreadySeeded) {
-          console.log(`Seeding initial ${collectionName} to Firestore...`);
-          const filteredInitial = initialData.filter((it: any) => !deletedIds.includes(String(it.id)));
-          onUpdate(filteredInitial);
+          console.log(`[Firestore] Seeding initial ${collectionName}...`);
+          onUpdate(initialData);
           localStorage.setItem(seededMarkerKey, 'true');
+          try {
+            localStorage.setItem(`melayu_${collectionName}`, JSON.stringify(initialData));
+          } catch (e) {}
+
           if (!isQuotaExceeded) {
             try {
-              for (let i = 0; i < filteredInitial.length; i++) {
-                const item = filteredInitial[i];
+              for (let i = 0; i < initialData.length; i++) {
+                const item = initialData[i];
                 const docId = item.id ? String(item.id) : `doc_${i}`;
                 await setDoc(doc(db, collectionName, docId), sanitizeForFirestore(item));
               }
@@ -216,40 +274,30 @@ export function subscribeFirestoreCollection<T extends { id?: string | number }>
               checkAndSetQuotaError(seedErr);
             }
           }
-        } else {
+        } else if (!snapshot.empty) {
           localStorage.setItem(seededMarkerKey, 'true');
           const remoteItems: T[] = [];
           snapshot.forEach((docSnap) => {
             const data = docSnap.data();
             if (data) {
               const effectiveId = String(data.id || docSnap.id);
-              // Filter out any document marked as deleted
-              if (!deletedIds.includes(effectiveId) && !deletedIds.includes(docSnap.id)) {
-                remoteItems.push({ ...data, id: effectiveId } as T);
-              }
+              remoteItems.push({ ...data, id: effectiveId } as T);
             }
           });
 
-          // Check if local cache has newer items not yet in snapshot to avoid accidental overwrite on quick refresh
-          const localFallback = getLocalFallback();
-          const remoteIdSet = new Set(remoteItems.map(r => String(r.id)));
-          const localOnlyItems = localFallback.filter(loc => !remoteIdSet.has(String(loc.id)) && !deletedIds.includes(String(loc.id)));
-
-          // Merge local-only items with remote items (local-only on top so user sees their uploads immediately)
-          const combinedItems = [...localOnlyItems, ...remoteItems];
-
-          if (combinedItems.length > 0) {
-            onUpdate(combinedItems);
-            try {
-              localStorage.setItem(`melayu_${collectionName}`, JSON.stringify(combinedItems));
-            } catch (e) {
-              console.warn(`Unable to cache ${collectionName} in localStorage:`, e);
-            }
-          } else if (snapshot.empty) {
-            onUpdate(getLocalFallback());
-          } else {
-            onUpdate([]);
+          // Cloud is the single source of truth across PC & Handphone
+          onUpdate(remoteItems);
+          try {
+            localStorage.setItem(`melayu_${collectionName}`, JSON.stringify(remoteItems));
+          } catch (e) {
+            console.warn(`Unable to cache ${collectionName} in localStorage:`, e);
           }
+        } else {
+          // Snapshot is empty and was previously seeded (e.g. all items were deleted from PC)
+          onUpdate([]);
+          try {
+            localStorage.setItem(`melayu_${collectionName}`, JSON.stringify([]));
+          } catch (e) {}
         }
       },
       (error) => {
@@ -272,10 +320,9 @@ export async function saveFirestoreDoc<T extends { id?: string | number }>(
 ): Promise<void> {
   const docId = item.id ? String(item.id) : `doc_${Date.now()}`;
 
-  // 1. Immediately update local storage cache for instant persistence on refresh
+  // 1. Immediately update local storage cache for instant UI feedback
   try {
     const local = localStorage.getItem(`melayu_${collectionName}`);
-    const deletedIds: string[] = JSON.parse(localStorage.getItem(`melayu_deleted_${collectionName}_ids`) || '[]');
     let currentList: any[] = local ? JSON.parse(local) : [];
     if (!Array.isArray(currentList)) currentList = [];
 
@@ -285,8 +332,7 @@ export async function saveFirestoreDoc<T extends { id?: string | number }>(
     } else {
       currentList = [{ ...item, id: docId }, ...currentList];
     }
-    const cleanList = currentList.filter(it => !deletedIds.includes(String(it.id)));
-    localStorage.setItem(`melayu_${collectionName}`, JSON.stringify(cleanList));
+    localStorage.setItem(`melayu_${collectionName}`, JSON.stringify(currentList));
   } catch (cacheErr) {
     console.warn(`[saveFirestoreDoc] Local cache error for ${collectionName}:`, cacheErr);
   }
@@ -296,38 +342,39 @@ export async function saveFirestoreDoc<T extends { id?: string | number }>(
     const itemRef = doc(db, collectionName, docId);
     const sanitized = sanitizeForFirestore({ ...item, id: docId });
     await setDoc(itemRef, sanitized, { merge: true });
-    console.log(`[saveFirestoreDoc] Successfully saved ${collectionName}/${docId} to Firestore.`);
+    console.log(`[saveFirestoreDoc] Successfully synced ${collectionName}/${docId} to Cloud.`);
   } catch (error) {
     console.error(`[saveFirestoreDoc] Error saving ${collectionName}/${docId} to Firestore:`, error);
     checkAndSetQuotaError(error);
   }
 }
 
-// Generic delete doc from Firestore thoroughly (by direct doc ID and matching field ID)
+// Generic delete doc from Firestore thoroughly
 export async function deleteFirestoreDoc(
   collectionName: string,
   id: string
 ): Promise<void> {
   const targetId = String(id);
 
-  // 1. Instantly record into persistent deleted blacklist to prevent ghost items
+  // 1. Immediately remove from local storage cache
   try {
-    const deletedKey = `melayu_deleted_${collectionName}_ids`;
-    const stored = localStorage.getItem(deletedKey);
-    const deletedList: string[] = stored ? JSON.parse(stored) : [];
-    if (!deletedList.includes(targetId)) {
-      deletedList.push(targetId);
-      localStorage.setItem(deletedKey, JSON.stringify(deletedList));
+    const local = localStorage.getItem(`melayu_${collectionName}`);
+    if (local) {
+      const currentList: any[] = JSON.parse(local);
+      if (Array.isArray(currentList)) {
+        const filtered = currentList.filter(it => String(it.id) !== targetId);
+        localStorage.setItem(`melayu_${collectionName}`, JSON.stringify(filtered));
+      }
     }
   } catch (e) {}
 
   if (isQuotaExceeded) return;
   try {
-    // 2. Delete direct doc by ID
+    // 2. Delete direct doc by ID in Firestore
     const itemRef = doc(db, collectionName, targetId);
     await deleteDoc(itemRef);
 
-    // 3. Scan and delete any documents where docSnap.id or data.id matches targetId
+    // 3. Scan and delete any duplicate doc where data.id matches targetId
     const colRef = collection(db, collectionName);
     const snapshot = await getDocs(colRef);
     const deletePromises: Promise<void>[] = [];
@@ -397,8 +444,11 @@ export async function saveAppSettingsToFirestore(settings: Partial<AppSettings>)
 export async function getAppSettingsFromFirestore(): Promise<AppSettings | null> {
   try {
     const docRef = doc(db, 'appSettings', 'branding');
-    const snap = await getDoc(docRef);
-    if (snap.exists()) {
+    const snap = await Promise.race([
+      getDoc(docRef),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
+    ]);
+    if (snap && snap.exists()) {
       const data = snap.data() as AppSettings;
       if (data.logoUrl) {
         localStorage.setItem('app_custom_logo', data.logoUrl);

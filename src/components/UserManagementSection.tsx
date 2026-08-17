@@ -625,7 +625,7 @@ export default function UserManagementSection({
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                   2. Tampilan Halaman Login System
                 </span>
-                <div className="bg-gradient-to-br from-slate-900 via-djpb-blue-dark to-slate-900 p-6 rounded-2xl flex flex-col items-center justify-center text-center text-white space-y-2 shadow-inner">
+                <div className="bg-gradient-to-br from-djpb-blue via-blue-700 to-djpb-blue-dark p-6 rounded-2xl flex flex-col items-center justify-center text-center text-white space-y-2 shadow-xs">
                   <div className="p-2 bg-white/10 rounded-2xl border border-white/20 backdrop-blur-xs">
                     <KemenkeuLogo className="w-14 h-14" customSrc={previewLogo || undefined} />
                   </div>

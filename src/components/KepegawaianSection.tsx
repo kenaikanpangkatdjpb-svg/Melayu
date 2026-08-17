@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 import { GKMAgreement, ScholarshipInfo, CurrentUser } from '../types';
 import TLegoView from './TLegoView';
 import CekSeribuMatrixTable, { INITIAL_CEK_SERIBU_MATRIX, MatrixRowData } from './CekSeribuMatrixTable';
-import { saveFirestoreDoc, deleteFirestoreDoc, saveFirestoreCollection } from '../lib/firebase';
+import { saveFirestoreDoc, deleteFirestoreDoc, saveFirestoreCollection, subscribeFirestoreCollection } from '../lib/firebase';
 import { safeLocalStorageSet } from '../lib/storage';
 
 interface KepegawaianSectionProps {
@@ -132,6 +132,17 @@ export default function KepegawaianSection({
       }
     ];
   });
+
+  // Real-time Firestore sync for Cek Seribu certificates across PC and Mobile
+  React.useEffect(() => {
+    const unsub = subscribeFirestoreCollection<any>('cek_seribu_certs', uploadedCertificates, (remoteCerts) => {
+      if (Array.isArray(remoteCerts) && remoteCerts.length > 0) {
+        setUploadedCertificates(remoteCerts);
+        safeLocalStorageSet('melayu_cek_seribu_jpeg', JSON.stringify(remoteCerts));
+      }
+    });
+    return () => unsub();
+  }, []);
 
   const [cekSeribuViewMode, setCekSeribuViewMode] = useState<'matrix' | 'table' | 'card'>('matrix');
   const [selectedImageModal, setSelectedImageModal] = useState<string | null>(null);
