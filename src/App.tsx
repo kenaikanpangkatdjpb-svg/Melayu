@@ -41,6 +41,7 @@ import {
   INITIAL_USERS,
   INITIAL_ACTIVITY_GALLERY
 } from './mockData';
+import { deduplicateRoster } from './components/SecurityGuardSection';
 import { getUsersFromFirestore, subscribeFirestoreCollection, saveFirestoreCollection, deleteFirestoreDoc } from './lib/firebase';
 import { safeLocalStorageSet, safeLocalStorageGet } from './lib/storage';
 
@@ -142,7 +143,8 @@ export default function App() {
   // Security roster state (individual per-guard schedule) with local storage persistence
   const [securityRoster, setSecurityRoster] = useState<SecurityRosterItem[]>(() => {
     const parsed = safeParse<SecurityRosterItem[]>('melayu_security_roster', INITIAL_SECURITY_ROSTER);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_SECURITY_ROSTER;
+    const source = Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_SECURITY_ROSTER;
+    return deduplicateRoster(source);
   });
 
   const [scholarships, setScholarships] = useState<ScholarshipInfo[]>(() => {
@@ -175,8 +177,9 @@ export default function App() {
       INITIAL_SECURITY_ROSTER, 
       (data) => {
         if (Array.isArray(data) && data.length > 0) {
+          const cleanData = deduplicateRoster(data);
           // Sort strictly by orderIndex if present, or preserved array order
-          const sorted = [...data].sort((a: any, b: any) => {
+          const sorted = [...cleanData].sort((a: any, b: any) => {
             const idxA = typeof a.orderIndex === 'number' ? a.orderIndex : (parseInt(String(a.id || '').replace(/\D/g, ''), 10) || 0);
             const idxB = typeof b.orderIndex === 'number' ? b.orderIndex : (parseInt(String(b.id || '').replace(/\D/g, ''), 10) || 0);
             return idxA - idxB;

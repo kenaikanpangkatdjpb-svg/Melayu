@@ -8,8 +8,11 @@ import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend 
 } from 'recharts';
-import { PerformanceMetric, WorkloadMetric } from '../types';
+import { PerformanceMetric, WorkloadMetric, DamsTask } from '../types';
+import { INITIAL_DAMS_TASKS } from '../mockData';
 import KatalogIKU from './KatalogIKU';
+import { saveFirestoreDoc, deleteFirestoreDoc, saveFirestoreCollection, subscribeFirestoreCollection } from '../lib/firebase';
+import { safeLocalStorageSet, safeLocalStorageGet } from '../lib/storage';
 
 interface KinerjaSectionProps {
   subTab: string;
@@ -25,44 +28,19 @@ export default function KinerjaSection({
   isEditMode
 }: KinerjaSectionProps) {
   // DAMS (Matriks Tindak Lanjut) states
-  const [damsMtlList, setDamsMtlList] = useState([
-    {
-      no: 1,
-      perihal: 'Organisasi dan SDM yang Agile serta Pengawasan dan Pengendalian Internal Yang Efektif',
-      uraian: 'Melakukan Identifikasi Penghargaan Tingkat Direktorat Jenderal Tahun 2026 dan menyampaikan himbauan berupa peningkatan capaian kinerja dalam rangka meraih penghargaan tersebut.',
-      output: 'Nota Dinas',
-      pj: 'Bidang SKKI',
-      deadline: 'Mei 2026',
-      status: 'Selesai'
-    },
-    {
-      no: 2,
-      perihal: 'Organisasi dan SDM yang Agile serta Pengawasan dan Pengendalian Internal Yang Efektif',
-      uraian: 'Pemberian Penghargaan kepada KPPN peraih NKO tertinggi pada triwulan I Tahun 2026 lingkup Kanwil DJPb Provinsi RIau sebagai bentuk apresiasi atas sinergi dan kinerja terbaik.',
-      output: 'Sertifikat',
-      pj: 'Bagian Umum',
-      deadline: 'Agustus 2026',
-      status: 'On Progress'
-    },
-    {
-      no: 3,
-      perihal: 'Dukungan Manajemen Yang Efektif',
-      uraian: 'Pelaksanaan Treasury Awards oleh masing-masing KPPN sebagai sarana komunikasi strategis dan penguatan engagement dengan stakeholders.',
-      output: 'Laporan',
-      pj: 'KPPN Pekanbaru, Dumai, dan Rengat',
-      deadline: 'Agustus 2026',
-      status: 'On Progress'
-    },
-    {
-      no: 4,
-      perihal: 'Dukungan Manajemen Yang Efektif',
-      uraian: 'Melakukan komunikasi yang lebih intensif dengan satker dalam rangka peningkatan hasil survei kepuasan terhadap layanan Kanwil DJPb',
-      output: 'Laporan',
-      pj: 'Bidang PPA I',
-      deadline: 'Agustus 2026',
-      status: 'On Progress'
-    }
-  ]);
+  const [damsMtlList, setDamsMtlList] = useState<DamsTask[]>(() => {
+    return safeLocalStorageGet<DamsTask[]>('melayu_dams_tasks', INITIAL_DAMS_TASKS);
+  });
+
+  // Real-time Firestore sync for DAMS tasks
+  React.useEffect(() => {
+    const unsub = subscribeFirestoreCollection<DamsTask>('dams_tasks', INITIAL_DAMS_TASKS, setDamsMtlList);
+    return () => unsub();
+  }, []);
+
+  React.useEffect(() => {
+    safeLocalStorageSet('melayu_dams_tasks', JSON.stringify(damsMtlList));
+  }, [damsMtlList]);
 
   const [damsSearch, setDamsSearch] = useState('');
   const [damsStatusFilter, setDamsStatusFilter] = useState<'all' | 'Selesai' | 'On Progress'>('all');
@@ -187,16 +165,19 @@ export default function KinerjaSection({
   const handleAddDamsMtl = (e: React.FormEvent) => {
     e.preventDefault();
     if (!damsForm.perihal || !damsForm.uraian || !damsForm.pj) return;
-    const newItem = {
+    const newItem: DamsTask = {
+      id: `dams-${Date.now()}`,
       no: damsMtlList.length + 1,
       perihal: damsForm.perihal,
       uraian: damsForm.uraian,
       output: damsForm.output || 'Laporan',
       pj: damsForm.pj,
       deadline: damsForm.deadline || 'Agustus 2026',
-      status: damsForm.status || 'On Progress'
+      status: (damsForm.status as 'Selesai' | 'On Progress') || 'On Progress'
     };
-    setDamsMtlList([...damsMtlList, newItem]);
+    const updated = [...damsMtlList, newItem];
+    setDamsMtlList(updated);
+    saveFirestoreDoc('dams_tasks', newItem);
     setShowDamsModal(false);
     setDamsForm({
       perihal: 'Dukungan Manajemen Yang Efektif',
@@ -209,20 +190,41 @@ export default function KinerjaSection({
   };
 
   const handleToggleDamsMtlStatus = (no: number) => {
-    setDamsMtlList(damsMtlList.map(item => 
-      item.no === no 
-        ? { ...item, status: item.status === 'Selesai' ? 'On Progress' : 'Selesai' } 
-        : item
-    ));
+    let updatedItem: DamsTask | null = null;
+    const updated = damsMtlList.map(item => {
+      if (item.no === no) {
+        updatedItem = { ...item, status: item.status === 'Selesai' ? 'On Progress' : 'Selesai' };
+        return updatedItem;
+      }
+      return item;
+    });
+    setDamsMtlList(updated);
+    if (updatedItem) {
+      saveFirestoreDoc('dams_tasks', updatedItem);
+    }
   };
 
   const handleDeleteDamsMtl = (no: number) => {
-    setDamsMtlList(damsMtlList.filter(item => item.no !== no));
+    const targetItem = damsMtlList.find(item => item.no === no);
+    const updated = damsMtlList.filter(item => item.no !== no);
+    setDamsMtlList(updated);
+    if (targetItem?.id) {
+      deleteFirestoreDoc('dams_tasks', targetItem.id);
+    } else {
+      saveFirestoreCollection('dams_tasks', updated);
+    }
   };
 
   // Survey action
   const handleSurveySubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const feedbackEntry = {
+      id: `survey-perf-${Date.now()}`,
+      rating: perfRating,
+      comment: perfComment.trim(),
+      submittedAt: new Date().toISOString()
+    };
+    saveFirestoreDoc('feedback_kinerja', feedbackEntry);
     setSurveySubmitted(true);
     setTimeout(() => {
       setSurveySubmitted(false);
@@ -718,14 +720,16 @@ export default function KinerjaSection({
               </p>
             </div>
 
-            <button
-              id="btn-add-dams"
-              onClick={() => setShowDamsModal(true)}
-              className="flex items-center justify-center space-x-1.5 px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer shrink-0"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Tambah Data MTL Baru</span>
-            </button>
+            {isEditMode && (
+              <button
+                id="btn-add-dams"
+                onClick={() => setShowDamsModal(true)}
+                className="flex items-center justify-center space-x-1.5 px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Data MTL Baru</span>
+              </button>
+            )}
           </div>
 
           {/* Stats / KPI Overview Cards */}
@@ -825,14 +829,14 @@ export default function KinerjaSection({
                     <th className="py-3 px-4 min-w-[150px] border-b border-slate-700">Penanggung Jawab</th>
                     <th className="py-3 px-3 text-center border-b border-slate-700 whitespace-nowrap">Batas Waktu</th>
                     <th className="py-3 px-3 text-center border-b border-slate-700 whitespace-nowrap">Keterangan</th>
-                    <th className="py-3 px-3 text-center border-b border-slate-700 whitespace-nowrap">Aksi</th>
+                    {isEditMode && <th className="py-3 px-3 text-center border-b border-slate-700 whitespace-nowrap">Aksi</th>}
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-slate-200 text-slate-800 font-sans">
                   {filteredDamsMtl.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-8 text-center text-slate-400 italic">
+                      <td colSpan={isEditMode ? 8 : 7} className="py-8 text-center text-slate-400 italic">
                         Tidak ada data Matriks Tindak Lanjut (MTL) yang cocok dengan filter pencarian.
                       </td>
                     </tr>
@@ -870,28 +874,30 @@ export default function KinerjaSection({
                             {row.status}
                           </span>
                         </td>
-                        <td className="py-3 px-3 text-center">
-                          <div className="flex items-center justify-center space-x-1">
-                            <button
-                              onClick={() => handleToggleDamsMtlStatus(row.no)}
-                              className={`p-1.5 rounded transition-colors cursor-pointer ${
-                                row.status === 'Selesai' 
-                                  ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200' 
-                                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
-                              }`}
-                              title={row.status === 'Selesai' ? 'Tandai On Progress' : 'Tandai Selesai'}
-                            >
-                              <Check className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteDamsMtl(row.no)}
-                              className="p-1.5 bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded border border-slate-200 transition-colors cursor-pointer"
-                              title="Hapus MTL"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
+                        {isEditMode && (
+                          <td className="py-3 px-3 text-center">
+                            <div className="flex items-center justify-center space-x-1">
+                              <button
+                                onClick={() => handleToggleDamsMtlStatus(row.no)}
+                                className={`p-1.5 rounded transition-colors cursor-pointer ${
+                                  row.status === 'Selesai' 
+                                    ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200' 
+                                    : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'
+                                }`}
+                                title={row.status === 'Selesai' ? 'Tandai On Progress' : 'Tandai Selesai'}
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteDamsMtl(row.no)}
+                                className="p-1.5 bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded border border-slate-200 transition-colors cursor-pointer"
+                                title="Hapus MTL"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}

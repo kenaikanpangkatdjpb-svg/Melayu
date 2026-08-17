@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 import { GKMAgreement, ScholarshipInfo, CurrentUser } from '../types';
 import TLegoView from './TLegoView';
 import CekSeribuMatrixTable, { INITIAL_CEK_SERIBU_MATRIX, MatrixRowData } from './CekSeribuMatrixTable';
-import { saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
+import { saveFirestoreDoc, deleteFirestoreDoc, saveFirestoreCollection } from '../lib/firebase';
 import { safeLocalStorageSet } from '../lib/storage';
 
 interface KepegawaianSectionProps {
@@ -223,6 +223,7 @@ export default function KepegawaianSection({
   const saveUploadedCerts = (certs: typeof uploadedCertificates) => {
     setUploadedCertificates(certs);
     safeLocalStorageSet('melayu_cek_seribu_jpeg', JSON.stringify(certs));
+    saveFirestoreCollection('cek_seribu_certs', certs);
   };
 
   const formatDateDisplay = (dateStr?: string | null): string => {
@@ -1009,6 +1010,7 @@ export default function KepegawaianSection({
     
     const updated = uploadedCertificates.filter(c => c.id !== targetId);
     saveUploadedCerts(updated);
+    deleteFirestoreDoc('cek_seribu_certs', targetId);
 
     if (certItem && selectedImageModal === certItem.imageUrl) {
       setSelectedImageModal(null);
@@ -1021,8 +1023,10 @@ export default function KepegawaianSection({
       const filteredIds = new Set(filteredCertificates.map(c => c.id));
       const remaining = uploadedCertificates.filter(c => !filteredIds.has(c.id));
       saveUploadedCerts(remaining);
+      filteredCertificates.forEach(c => deleteFirestoreDoc('cek_seribu_certs', c.id));
     } else {
       saveUploadedCerts([]);
+      uploadedCertificates.forEach(c => deleteFirestoreDoc('cek_seribu_certs', c.id));
     }
     setShowDeleteAllModal(false);
     if (selectedImageModal) setSelectedImageModal(null);
@@ -1330,15 +1334,17 @@ export default function KepegawaianSection({
       .filter(Boolean);
 
     if (editingScholarshipId) {
-      setScholarships(prev => prev.map(s => s.id === editingScholarshipId ? {
-        ...s,
+      const updatedSch: ScholarshipInfo = {
+        id: editingScholarshipId,
         name: scholarshipForm.name,
         provider: scholarshipForm.provider,
         degree: scholarshipForm.degree,
         deadline: scholarshipForm.deadline,
         description: scholarshipForm.description,
         eligibility: eligibilityArray.length > 0 ? eligibilityArray : ['Persyaratan sesuai ketentuan instansi']
-      } : s));
+      };
+      setScholarships(prev => prev.map(s => s.id === editingScholarshipId ? updatedSch : s));
+      saveFirestoreDoc('scholarships', updatedSch);
     } else {
       const newSch: ScholarshipInfo = {
         id: `sch-${Date.now()}`,
@@ -1350,6 +1356,7 @@ export default function KepegawaianSection({
         eligibility: eligibilityArray.length > 0 ? eligibilityArray : ['Persyaratan sesuai ketentuan instansi']
       };
       setScholarships(prev => [newSch, ...prev]);
+      saveFirestoreDoc('scholarships', newSch);
     }
 
     setShowScholarshipModal(false);
@@ -1362,7 +1369,9 @@ export default function KepegawaianSection({
 
   const handleConfirmDeleteScholarship = () => {
     if (!deletingScholarship || !setScholarships) return;
-    setScholarships(prev => prev.filter(s => s.id !== deletingScholarship.id));
+    const targetId = deletingScholarship.id;
+    setScholarships(prev => prev.filter(s => s.id !== targetId));
+    deleteFirestoreDoc('scholarships', targetId);
     setDeletingScholarship(null);
   };
 

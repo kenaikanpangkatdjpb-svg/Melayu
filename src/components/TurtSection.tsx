@@ -1427,14 +1427,16 @@ export default function TurtSection({
                               </button>
                             </>
                           )}
-                          <button
-                            id={`btn-delete-room-${booking.id}`}
-                            onClick={() => handleDeleteRoom(booking.id)}
-                            className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
-                            title="Hapus"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              id={`btn-delete-room-${booking.id}`}
+                              onClick={() => handleDeleteRoom(booking.id)}
+                              className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -2046,13 +2048,16 @@ export default function TurtSection({
                           Selesai
                         </button>
                       )}
-                      <button
-                        id={`btn-delete-fb-${f.id}`}
-                        onClick={() => handleDeleteFeedback(f.id)}
-                        className="p-1 hover:bg-slate-50 text-slate-400 hover:text-red-500 rounded transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                      {isAdmin && (
+                        <button
+                          id={`btn-delete-fb-${f.id}`}
+                          onClick={() => handleDeleteFeedback(f.id)}
+                          className="p-1 hover:bg-slate-50 text-slate-400 hover:text-red-500 rounded transition-colors cursor-pointer"
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -2198,14 +2203,16 @@ export default function TurtSection({
                                     </button>
                                   </>
                                 )}
-                                <button
-                                  id={`btn-delete-need-${n.id}`}
-                                  onClick={() => handleDeleteNeed(n.id)}
-                                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded transition-colors cursor-pointer"
-                                  title="Hapus"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                {isAdmin && (
+                                  <button
+                                    id={`btn-delete-need-${n.id}`}
+                                    onClick={() => handleDeleteNeed(n.id)}
+                                    className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded transition-colors cursor-pointer"
+                                    title="Hapus"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>

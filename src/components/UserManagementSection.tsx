@@ -449,15 +449,17 @@ export default function UserManagementSection({
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Edit Akses</span>
                           </button>
-                          <button
-                            id={`btn-delete-user-${user.id}`}
-                            onClick={() => handleOpenDeleteUser(user)}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                            title="Hapus Akun User"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span>Hapus</span>
-                          </button>
+                          {user.role !== 'Pegawai' && (
+                            <button
+                              id={`btn-delete-user-${user.id}`}
+                              onClick={() => handleOpenDeleteUser(user)}
+                              className="inline-flex items-center space-x-1 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                              title="Hapus Akun User"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Hapus</span>
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

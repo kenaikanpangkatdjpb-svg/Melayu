@@ -166,3 +166,47 @@ export interface UserAccount {
   status: 'Aktif' | 'Nonaktif';
 }
 
+export interface DamsTask {
+  id?: string;
+  no: number;
+  perihal: string;
+  uraian: string;
+  output: string;
+  pj: string;
+  deadline: string;
+  status: 'Selesai' | 'On Progress';
+}
+
+export interface ProcurementPlan {
+  id: number | string;
+  item: string;
+  qty: number;
+  estimatedBudget: number;
+  targetMonth: string;
+  progress: number;
+  status: string;
+}
+
+export interface CekSeribuCert {
+  id: string;
+  fileName: string;
+  fileSize: string;
+  imageUrl: string;
+  employeeName: string;
+  uploadDate: string;
+  checkInTime: string;
+  checkOutTime: string;
+  createdBy: string;
+  status: string;
+}
+
+export interface CatalogItem {
+  id: string;
+  title: string;
+  code: string;
+  category: string;
+  description: string;
+  hktManualUrl?: string;
+  skTimUrl?: string;
+}
+

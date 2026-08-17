@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { 
   Shield, Plus, Trash2, Edit3, Check, X,
   FileSpreadsheet, Upload, Download, RotateCcw, AlertCircle, FileCheck,
@@ -89,16 +89,132 @@ export function getNextDayDateStr(dateStr: string): string {
   return dateStr;
 }
 
-// Preserve items as-is with clean whitespace and valid defaults
-export function sanitizeRosterDates(roster: SecurityRosterItem[]): SecurityRosterItem[] {
+// Extract normalized YYYY-MM-DD or unique day key from any date string variations
+export function normalizeDateKey(dateStr: string): string {
+  if (!dateStr) return '';
+  const trimmed = dateStr.trim().toLowerCase();
+
+  // Regex 1: Word month e.g. "KAMIS/ 6 Agustus 2026", "Kamiw/6 Asgutsu 2026", "JUMAT/ 14 Agustus 2026", "SABTU/ 22 Agustus 2026"
+  const wordMatch = trimmed.match(/(\d{1,2})[\s\/\.\,\-]+([a-zA-Z]{3,12})[\s\/\.\,\-]?(\d{2,4})?/);
+  if (wordMatch) {
+    const day = parseInt(wordMatch[1], 10);
+    const mStr = wordMatch[2].toLowerCase();
+    let month = 8; // Default August
+    if (mStr.startsWith('jan')) month = 1;
+    else if (mStr.startsWith('feb')) month = 2;
+    else if (mStr.startsWith('mar')) month = 3;
+    else if (mStr.startsWith('apr')) month = 4;
+    else if (mStr.startsWith('mei') || mStr.startsWith('may')) month = 5;
+    else if (mStr.startsWith('jun')) month = 6;
+    else if (mStr.startsWith('jul')) month = 7;
+    else if (mStr.startsWith('agu') || mStr.startsWith('ags') || mStr.startsWith('aug') || mStr.startsWith('asg')) month = 8;
+    else if (mStr.startsWith('sep')) month = 9;
+    else if (mStr.startsWith('okt') || mStr.startsWith('oct')) month = 10;
+    else if (mStr.startsWith('nov')) month = 11;
+    else if (mStr.startsWith('des') || mStr.startsWith('dec')) month = 12;
+
+    let year = 2026;
+    if (wordMatch[3]) {
+      const y = parseInt(wordMatch[3], 10);
+      year = y < 100 ? 2000 + y : y;
+    }
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  // Regex 2: Numbers only e.g. "6/8/2026", "06-08-2026", "2026-08-06"
+  const numMatch = trimmed.match(/(\d{1,4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,4})/);
+  if (numMatch) {
+    const p1 = parseInt(numMatch[1], 10);
+    const p2 = parseInt(numMatch[2], 10);
+    const p3 = parseInt(numMatch[3], 10);
+    if (p1 > 1000) {
+      return `${p1}-${String(p2).padStart(2, '0')}-${String(p3).padStart(2, '0')}`;
+    } else {
+      const y = p3 < 100 ? 2000 + p3 : p3;
+      return `${y}-${String(p2).padStart(2, '0')}-${String(p1).padStart(2, '0')}`;
+    }
+  }
+
+  // Fallback: extract single number as August day
+  const dayOnly = trimmed.match(/\b([1-9]|[12]\d|3[01])\b/);
+  if (dayOnly) {
+    const day = parseInt(dayOnly[1], 10);
+    return `2026-08-${String(day).padStart(2, '0')}`;
+  }
+
+  return trimmed.replace(/[^a-z0-9]/g, '');
+}
+
+// Normalize guard names to canonical official satpam name
+export function normalizeGuardName(name: string): string {
+  if (!name) return '';
+  let clean = name.trim().toUpperCase().replace(/\s+/g, ' ');
+  // Remove parenthesis notes
+  clean = clean.replace(/\([^)]*\)/g, '').trim();
+
+  if (clean === 'DIAN' || clean === 'DIAN ARIF' || clean === 'DIAN A' || clean === 'DIANARI') return 'DIAN ARI';
+  if (clean === 'RATMAN' || clean === 'M. RATMANSYAH' || clean === 'M.RATMANSYAH') return 'RATMANSYAH';
+  if (clean === 'M. ARIEF' || clean === 'M.ARIEF' || clean === 'ARIF' || clean === 'M ARIEF') return 'ARIEF';
+  if (clean === 'ADIT' || clean === 'ADITYA P' || clean === 'ADITIYA') return 'ADITYA';
+  if (clean === 'ROBI' || clean === 'ROBBI') return 'ROBBY';
+  if (clean === 'ERWIN S' || clean === 'M. ERWIN') return 'ERWIN';
+  return clean;
+}
+
+export const OFFICIAL_SECURITY_GUARDS = ['ARIEF', 'ROBBY', 'ADITYA', 'ERWIN', 'RATMANSYAH', 'DIAN ARI'];
+
+// Standard display format for a date string
+export function formatStandardDateStr(dateStr: string): string {
+  if (!dateStr) return 'SABTU/ 1 Agustus 2026';
+  const trimmed = dateStr.trim();
+  const dateKey = normalizeDateKey(trimmed);
+  const match = dateKey.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    const dObj = new Date(year, month, day);
+    const dayName = ID_DAYS_UPPER[dObj.getDay()];
+    const monthName = ID_MONTHS_TITLE[month] || 'Agustus';
+    return `${dayName}/ ${day} ${monthName} ${year}`;
+  }
+  return trimmed;
+}
+
+// Deduplicate roster entries: ensures no guard is duplicated on the same date regardless of string formatting
+export function deduplicateRoster(roster: SecurityRosterItem[]): SecurityRosterItem[] {
   if (!roster || roster.length === 0) return [];
-  return roster.map((item, idx) => ({
+  const seenKeys = new Set<string>();
+  const cleanList: SecurityRosterItem[] = [];
+
+  for (const rawItem of roster) {
+    if (!rawItem) continue;
+    const rawName = (rawItem.name || '').trim();
+    const rawDate = (rawItem.dateStr || '').trim();
+    if (!rawName || !rawDate) continue;
+
+    const normName = normalizeGuardName(rawName);
+    const dateKey = normalizeDateKey(rawDate);
+    if (!normName || !dateKey) continue;
+
+    // Normalization key: dateKey + normName (e.g. "2026-08-06___RATMANSYAH")
+    const key = `${dateKey}___${normName}`;
+    if (!seenKeys.has(key)) {
+      seenKeys.add(key);
+      const stdDateStr = formatStandardDateStr(rawDate);
+      cleanList.push({
+        ...rawItem,
+        name: normName,
+        dateStr: stdDateStr,
+        location: (rawItem.location || 'KANWIL DJPB').trim().toUpperCase(),
+        hours: (rawItem.hours || (rawItem.location === 'LIBUR' ? '-' : '06.00/18.00')).trim()
+      });
+    }
+  }
+
+  return cleanList.map((item, idx) => ({
     ...item,
-    orderIndex: typeof item.orderIndex === 'number' ? item.orderIndex : idx,
-    name: (item.name || '').trim(),
-    dateStr: (item.dateStr || '').trim(),
-    location: (item.location || 'KANWIL DJPB').trim(),
-    hours: (item.hours || (item.location === 'LIBUR' ? '-' : '06.00/18.00')).trim()
+    orderIndex: typeof item.orderIndex === 'number' ? item.orderIndex : idx
   }));
 }
 
@@ -166,10 +282,64 @@ export default function SecurityGuardSection({
     shiftNight: ''
   });
 
-  // Filtered Roster Data (Preserving exact sequential array order)
+  // Count duplicate items in current raw securityRoster
+  const duplicateCount = useMemo(() => {
+    const list = securityRoster || [];
+    const seen = new Set<string>();
+    let dupes = 0;
+    for (const item of list) {
+      if (!item) continue;
+      const rawName = (item.name || '').trim();
+      const rawDate = (item.dateStr || '').trim();
+      if (!rawName || !rawDate) continue;
+      const normName = normalizeGuardName(rawName);
+      const dateKey = normalizeDateKey(rawDate);
+      if (!normName || !dateKey) continue;
+      const key = `${dateKey}___${normName}`;
+      if (seen.has(key)) {
+        dupes++;
+      } else {
+        seen.add(key);
+      }
+    }
+    return dupes;
+  }, [securityRoster]);
+
+  // Automatically cleanse duplicates if detected on load or sync
+  useEffect(() => {
+    if (securityRoster && securityRoster.length > 0 && duplicateCount > 0) {
+      const cleaned = deduplicateRoster(securityRoster);
+      if (cleaned.length !== securityRoster.length && setSecurityRoster) {
+        setSecurityRoster(cleaned);
+        safeLocalStorageSet('melayu_security_roster', JSON.stringify(cleaned));
+        saveFirestoreCollection('security_roster', cleaned);
+      }
+    }
+  }, [securityRoster, duplicateCount, setSecurityRoster]);
+
+  // Clean and deduplicate roster handler
+  const handleCleanDuplicates = () => {
+    if (!setSecurityRoster) return;
+    const originalCount = (securityRoster || []).length;
+    const cleaned = deduplicateRoster(securityRoster || []);
+    const removed = originalCount - cleaned.length;
+    setSecurityRoster(cleaned);
+    safeLocalStorageSet('melayu_security_roster', JSON.stringify(cleaned));
+    saveFirestoreCollection('security_roster', cleaned);
+    setSelectedIds([]);
+    if (removed > 0) {
+      setSuccessNotice(`BERHASIL DIBERSIHKAN! Sebanyak ${removed} data duplikasi nama petugas telah dihapus.`);
+    } else {
+      setSuccessNotice(`Data roster pengawasan penjagaan keamanan sudah bersih, tidak ada duplikasi nama.`);
+    }
+    setTimeout(() => setSuccessNotice(''), 6000);
+  };
+
+  // Filtered Roster Data (Preserving exact sequential array order, deduplicated)
   const safeRoster = useMemo(() => {
     const list = securityRoster || [];
-    return [...list].sort((a, b) => {
+    const deduplicated = deduplicateRoster(list);
+    return [...deduplicated].sort((a, b) => {
       const idxA = typeof a.orderIndex === 'number' ? a.orderIndex : 0;
       const idxB = typeof b.orderIndex === 'number' ? b.orderIndex : 0;
       return idxA - idxB;
@@ -456,8 +626,11 @@ export default function SecurityGuardSection({
             rowOrder++;
           }
 
+          // Cleanse and deduplicate any duplicate rows or double assignments on same date
+          const cleanParsedRoster = deduplicateRoster(parsedRoster);
+
           setPreviewType('roster');
-          setPreviewRosterData(parsedRoster);
+          setPreviewRosterData(cleanParsedRoster);
           setPreviewDocTitle(detectedTitle);
           setPreviewDocHeaders(['NO.', 'NAMA PETUGAS', 'HARI / TANGGAL', 'LOKASI / POS', 'JAM HADIR']);
         }
@@ -477,25 +650,26 @@ export default function SecurityGuardSection({
   const handleApplyExcel = () => {
     if (previewType === 'roster') {
       if (setSecurityRoster) {
+        const cleanData = deduplicateRoster(previewRosterData);
         // OVERWRITE previous roster array completely
-        setSecurityRoster(previewRosterData);
+        setSecurityRoster(cleanData);
         setDocTitle(previewDocTitle);
         setDynamicHeaders(previewDocHeaders);
 
         // Save title, headers and data to localStorage
         safeLocalStorageSet('melayu_security_doc_title', previewDocTitle);
         safeLocalStorageSet('melayu_security_doc_headers', JSON.stringify(previewDocHeaders));
-        safeLocalStorageSet('melayu_security_roster', JSON.stringify(previewRosterData));
+        safeLocalStorageSet('melayu_security_roster', JSON.stringify(cleanData));
 
         // Save to Firestore for permanent persistence
-        saveFirestoreCollection('security_roster', previewRosterData);
+        saveFirestoreCollection('security_roster', cleanData);
 
         // Reset filter
         setSearchQuery('');
         setSelectedLocation('ALL');
         setSelectedDate('ALL');
 
-        setSuccessNotice(`BERHASIL MEMUAT DATA EXCEL! Menampilkan ${previewRosterData.length} baris roster penjagaan dari file "${excelFileName}" secara presisi.`);
+        setSuccessNotice(`BERHASIL MEMUAT DATA EXCEL! Menampilkan ${cleanData.length} baris roster penjagaan dari file "${excelFileName}" secara presisi (bebas duplikasi).`);
       }
     } else {
       if (setSecurityShifts) {
@@ -622,21 +796,55 @@ export default function SecurityGuardSection({
     e.preventDefault();
     if (!setSecurityRoster) return;
 
+    const trimmedName = (rosterForm.name || '').trim().toUpperCase();
+    const trimmedDate = (rosterForm.dateStr || '').trim();
+    const trimmedLoc = (rosterForm.location || 'KANWIL DJPB').trim();
+    const trimmedHours = (rosterForm.hours || (trimmedLoc === 'LIBUR' ? '-' : '06.00/18.00')).trim();
+
     let updated: SecurityRosterItem[] = [];
     if (editingRosterId) {
-      updated = securityRoster.map(r => r.id === editingRosterId ? { ...r, ...rosterForm } : r);
+      updated = securityRoster.map(r => r.id === editingRosterId ? { 
+        ...r, 
+        name: trimmedName, 
+        dateStr: trimmedDate, 
+        location: trimmedLoc, 
+        hours: trimmedHours 
+      } : r);
     } else {
-      const newItem: SecurityRosterItem = {
-        id: `ros-${Date.now()}`,
-        orderIndex: securityRoster.length,
-        ...rosterForm
-      };
-      updated = [...securityRoster, newItem];
+      // Check if this guard is already assigned on the same date to prevent duplication
+      const existingIdx = securityRoster.findIndex(
+        r => r.name.trim().toUpperCase() === trimmedName && r.dateStr.trim().toLowerCase() === trimmedDate.toLowerCase()
+      );
+
+      if (existingIdx !== -1) {
+        // Update existing entry instead of creating a duplicate
+        updated = securityRoster.map((r, idx) => idx === existingIdx ? {
+          ...r,
+          name: trimmedName,
+          dateStr: trimmedDate,
+          location: trimmedLoc,
+          hours: trimmedHours
+        } : r);
+        setSuccessNotice(`Jadwal petugas ${trimmedName} pada ${trimmedDate} diperbarui (duplikasi dicegah).`);
+      } else {
+        const newItem: SecurityRosterItem = {
+          id: `ros-${Date.now()}`,
+          orderIndex: securityRoster.length,
+          name: trimmedName,
+          dateStr: trimmedDate,
+          location: trimmedLoc,
+          hours: trimmedHours
+        };
+        updated = [...securityRoster, newItem];
+      }
     }
-    setSecurityRoster(updated);
-    safeLocalStorageSet('melayu_security_roster', JSON.stringify(updated));
-    saveFirestoreCollection('security_roster', updated);
+
+    const cleanUpdated = deduplicateRoster(updated);
+    setSecurityRoster(cleanUpdated);
+    safeLocalStorageSet('melayu_security_roster', JSON.stringify(cleanUpdated));
+    saveFirestoreCollection('security_roster', cleanUpdated);
     setShowRosterModal(false);
+    setTimeout(() => setSuccessNotice(''), 5000);
   };
 
   // Delete Roster Item
@@ -817,6 +1025,20 @@ export default function SecurityGuardSection({
             {isAdmin && (
               <>
                 <button
+                  onClick={handleCleanDuplicates}
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                  title="Bersihkan Duplikasi Nama Petugas Pada Jadwal"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Bersihkan Duplikasi</span>
+                  {duplicateCount > 0 && (
+                    <span className="bg-amber-400 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-black animate-pulse">
+                      {duplicateCount}
+                    </span>
+                  )}
+                </button>
+
+                <button
                   onClick={() => setShowDeleteModal(true)}
                   className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-all shadow-xs cursor-pointer"
                   title="Menu Hapus Pengawasan Penjagaan Keamanan Kanwil DJPb Riau"
@@ -962,7 +1184,7 @@ export default function SecurityGuardSection({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-extrabold uppercase font-display tracking-wider">
-                  {setSecurityRoster && (
+                  {isAdmin && (
                     <th className="py-3 px-3 w-10 text-center border-r border-slate-200">
                       <input
                         type="checkbox"
@@ -978,7 +1200,7 @@ export default function SecurityGuardSection({
                   <th className="py-3 px-4 border-r border-slate-200 text-center">Hari / Tanggal</th>
                   <th className="py-3 px-4 border-r border-slate-200">Lokasi / Pos Penjagaan</th>
                   <th className="py-3 px-4 border-r border-slate-200">Jam Hadir / Shift</th>
-                  {setSecurityRoster && <th className="py-3 px-4 text-right w-24">Aksi</th>}
+                  {isAdmin && <th className="py-3 px-4 text-right w-24">Aksi</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800 font-mono">
@@ -987,7 +1209,7 @@ export default function SecurityGuardSection({
                   const isSelected = selectedIds.includes(item.id);
                   return (
                     <tr key={item.id} className={`transition-colors ${isSelected ? 'bg-amber-50/80' : 'hover:bg-slate-50'}`}>
-                      {setSecurityRoster && (
+                      {isAdmin && (
                         <td className="py-3 px-3 text-center border-r border-slate-200">
                           <input
                             type="checkbox"
@@ -1052,7 +1274,7 @@ export default function SecurityGuardSection({
                       </td>
 
                       {/* ADMIN ACTIONS */}
-                      {setSecurityRoster && (
+                      {isAdmin && (
                         <td className="py-3 px-4 text-right font-sans">
                           <div className="flex items-center justify-end space-x-1">
                             <button
@@ -1262,16 +1484,45 @@ export default function SecurityGuardSection({
             </div>
 
             <form onSubmit={handleSaveRoster} className="space-y-4">
+              {/* Duplicate guard notice */}
+              {(() => {
+                const searchName = (rosterForm.name || '').trim().toUpperCase();
+                const searchDate = (rosterForm.dateStr || '').trim().toLowerCase();
+                if (!searchName || !searchDate) return null;
+                const dup = safeRoster.find(
+                  r => r.id !== editingRosterId && 
+                       r.name.trim().toUpperCase() === searchName && 
+                       r.dateStr.trim().toLowerCase() === searchDate
+                );
+                if (dup) {
+                  return (
+                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-800 flex items-start space-x-2">
+                      <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                      <div>
+                        <span className="font-bold">Info Duplikasi Nama:</span> Petugas <span className="font-bold">{searchName}</span> sudah memiliki jadwal pada tanggal ini di <span className="font-bold">{dup.location} ({dup.hours})</span>. Menyimpan form ini akan memperbarui penugasannya dan mencegah entri ganda.
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">Nama Petugas</label>
                 <input
                   type="text"
                   required
+                  list="security-guards-datalist"
                   placeholder="Contoh: ARIEF"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold outline-none focus:ring-1 focus:ring-djpb-blue"
                   value={rosterForm.name}
                   onChange={(e) => setRosterForm({ ...rosterForm, name: e.target.value.toUpperCase() })}
                 />
+                <datalist id="security-guards-datalist">
+                  {Array.from(new Set([...OFFICIAL_SECURITY_GUARDS, ...uniqueNames])).map(n => (
+                    <option key={n} value={n} />
+                  ))}
+                </datalist>
               </div>
 
               <div>
@@ -1461,6 +1712,28 @@ export default function SecurityGuardSection({
               <p className="text-xs text-slate-600">
                 Pilih metode penghapusan data jadwal security pengawasan penjagaan keamanan:
               </p>
+
+              {/* Option: Clean Duplicate Guard Names */}
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  handleCleanDuplicates();
+                }}
+                className="w-full p-3.5 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-left transition-all cursor-pointer group flex items-center justify-between"
+              >
+                <div>
+                  <div className="font-extrabold text-xs text-indigo-900 flex items-center space-x-1.5">
+                    <Sparkles className="w-4 h-4 text-indigo-600" />
+                    <span>BERSIHKAN SELURUH DUPLIKASI NAMA PETUGAS</span>
+                  </div>
+                  <p className="text-[11px] text-indigo-700 mt-0.5 ml-5">
+                    Mendeteksi dan menghapus penugasan ganda untuk nama petugas yang sama pada tanggal yang sama.
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 bg-indigo-600 text-white font-bold text-[10px] rounded-lg shadow-2xs">
+                  {duplicateCount > 0 ? `${duplicateCount} Duplikasi Terdeteksi` : 'Bersih (0 Duplikasi)'}
+                </span>
+              </button>
 
               {/* Option 1: Delete Selected Rows */}
               {selectedIds.length > 0 ? (

@@ -134,7 +134,7 @@ export async function authenticateUserReal(usernameInput: string, passwordInput:
 }
 
 // Generic subscribe with onSnapshot & auto-seed if empty
-export function subscribeFirestoreCollection<T extends { id?: string }>(
+export function subscribeFirestoreCollection<T extends { id?: string | number }>(
   collectionName: string,
   initialData: T[],
   onUpdate: (data: T[]) => void
@@ -225,7 +225,7 @@ export function subscribeFirestoreCollection<T extends { id?: string }>(
 }
 
 // Generic save single item to Firestore
-export async function saveFirestoreDoc<T extends { id?: string }>(
+export async function saveFirestoreDoc<T extends { id?: string | number }>(
   collectionName: string,
   item: T
 ): Promise<void> {

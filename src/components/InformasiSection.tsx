@@ -5,9 +5,11 @@ import {
   FileSpreadsheet, Upload, Download, RotateCcw, AlertCircle, FileCheck
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { VisitorLog, SecurityShift, SecurityRosterItem, CurrentUser } from '../types';
-import { formatIDR, INITIAL_SECURITY_SHIFTS } from '../mockData';
+import { VisitorLog, SecurityShift, SecurityRosterItem, CurrentUser, ProcurementPlan } from '../types';
+import { formatIDR, INITIAL_SECURITY_SHIFTS, INITIAL_PROCUREMENTS } from '../mockData';
 import SecurityGuardSection from './SecurityGuardSection';
+import { saveFirestoreDoc, deleteFirestoreDoc, saveFirestoreCollection, subscribeFirestoreCollection } from '../lib/firebase';
+import { safeLocalStorageSet, safeLocalStorageGet } from '../lib/storage';
 
 interface InformasiSectionProps {
   subTab: string;
@@ -46,12 +48,20 @@ export default function InformasiSection({
   });
 
   // Long-term procurement plans state
-  const [procurements, setProcurements] = useState([
-    { id: 1, item: 'PC Workstation Core i7 KPPN Riau', qty: 15, estimatedBudget: 225000000, targetMonth: 'Agustus 2026', progress: 100, status: 'Selesai' },
-    { id: 2, item: 'Kursi Rapat Aula Lancang Kuning Ergonomis', qty: 120, estimatedBudget: 180000000, targetMonth: 'September 2026', progress: 40, status: 'Proses Lelang' },
-    { id: 3, item: 'Renovasi Interior Lobi Pelayanan Digital', qty: 1, estimatedBudget: 350000000, targetMonth: 'Oktober 2026', progress: 10, status: 'Persiapan Dokumen' },
-    { id: 4, item: 'Pengadaan AC Standing Floor 5 PK', qty: 4, estimatedBudget: 120000000, targetMonth: 'November 2026', progress: 0, status: 'Direncanakan' }
-  ]);
+  const [procurements, setProcurements] = useState<ProcurementPlan[]>(() => {
+    return safeLocalStorageGet<ProcurementPlan[]>('melayu_procurements', INITIAL_PROCUREMENTS);
+  });
+
+  // Sync procurements with Firestore on mount
+  React.useEffect(() => {
+    const unsub = subscribeFirestoreCollection<ProcurementPlan>('procurements', INITIAL_PROCUREMENTS, setProcurements);
+    return () => unsub();
+  }, []);
+
+  React.useEffect(() => {
+    safeLocalStorageSet('melayu_procurements', JSON.stringify(procurements));
+  }, [procurements]);
+
   const [showProcureModal, setShowProcureModal] = useState(false);
   const [procureForm, setProcureForm] = useState({
     item: '',
@@ -98,19 +108,21 @@ export default function InformasiSection({
     };
 
     setVisitorLogs([newVisitor, ...visitorLogs]);
+    saveFirestoreDoc('visitors', newVisitor);
     setShowVisitorModal(false);
     setVisitorForm({ name: '', institution: '', purpose: '', destinationDivision: 'Bidang PAPK', keyCardNumber: 'CARD-01' });
   };
 
   const handleDeleteVisitor = (id: string) => {
     setVisitorLogs(visitorLogs.filter(v => v.id !== id));
+    deleteFirestoreDoc('visitors', id);
   };
 
   // Procurement handle
   const handleAddProcure = (e: React.FormEvent) => {
     e.preventDefault();
     if (!procureForm.item) return;
-    const newProc = {
+    const newProc: ProcurementPlan = {
       id: Date.now(),
       item: procureForm.item,
       qty: procureForm.qty,
@@ -120,12 +132,14 @@ export default function InformasiSection({
       status: 'Direncanakan'
     };
     setProcurements([...procurements, newProc]);
+    saveFirestoreDoc('procurements', newProc);
     setShowProcureModal(false);
     setProcureForm({ item: '', qty: 1, estimatedBudget: 5000000, targetMonth: 'Agustus 2026' });
   };
 
-  const handleUpdateProcProgress = (id: number, direction: 'up' | 'down') => {
-    setProcurements(procurements.map(p => {
+  const handleUpdateProcProgress = (id: number | string, direction: 'up' | 'down') => {
+    let updatedItem: ProcurementPlan | null = null;
+    const updatedList = procurements.map(p => {
       if (p.id !== id) return p;
       let newProg = p.progress;
       if (direction === 'up') newProg = Math.min(100, p.progress + 20);
@@ -138,12 +152,19 @@ export default function InformasiSection({
       else if (newProg >= 10) status = 'Persiapan Dokumen';
       else status = 'Direncanakan';
 
-      return { ...p, progress: newProg, status };
-    }));
+      updatedItem = { ...p, progress: newProg, status };
+      return updatedItem;
+    });
+
+    setProcurements(updatedList);
+    if (updatedItem) {
+      saveFirestoreDoc('procurements', updatedItem);
+    }
   };
 
-  const handleDeleteProc = (id: number) => {
+  const handleDeleteProc = (id: number | string) => {
     setProcurements(procurements.filter(p => p.id !== id));
+    deleteFirestoreDoc('procurements', String(id));
   };
 
   // Handle Excel Upload for Security Guard Shifts
@@ -318,14 +339,16 @@ export default function InformasiSection({
               <h2 className="text-base md:text-lg font-display font-bold text-slate-800">Rencana Pengadaan Barang Jangka Panjang (DIPA)</h2>
               <p className="text-xs text-slate-500">Pipeline pengadaan sarpras skala besar, mebeler rapat, dan renovasi fisik gedung.</p>
             </div>
-            <button
-              id="btn-add-procure"
-              onClick={() => setShowProcureModal(true)}
-              className="flex items-center space-x-1 px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Tambah Rencana</span>
-            </button>
+            {isAdmin && (
+              <button
+                id="btn-add-procure"
+                onClick={() => setShowProcureModal(true)}
+                className="flex items-center space-x-1 px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Rencana</span>
+              </button>
+            )}
           </div>
 
           {/* Procurements Table */}
@@ -339,7 +362,7 @@ export default function InformasiSection({
                     <th className="py-3.5 px-4">Estimasi Anggaran</th>
                     <th className="py-3.5 px-4">Target Pelaksanaan</th>
                     <th className="py-3.5 px-4">Status Progres</th>
-                    <th className="py-3.5 px-4 text-right">Aksi</th>
+                    {isAdmin && <th className="py-3.5 px-4 text-right">Aksi</th>}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -364,34 +387,36 @@ export default function InformasiSection({
                           ></div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end space-x-1">
-                          <button
-                            id={`btn-proc-down-${p.id}`}
-                            onClick={() => handleUpdateProcProgress(p.id, 'down')}
-                            className="px-1.5 py-0.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded cursor-pointer"
-                            title="Kurangi Progres"
-                          >
-                            -20%
-                          </button>
-                          <button
-                            id={`btn-proc-up-${p.id}`}
-                            onClick={() => handleUpdateProcProgress(p.id, 'up')}
-                            className="px-1.5 py-0.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded cursor-pointer"
-                            title="Tambah Progres"
-                          >
-                            +20%
-                          </button>
-                          <button
-                            id={`btn-delete-proc-${p.id}`}
-                            onClick={() => handleDeleteProc(p.id)}
-                            className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded transition-colors cursor-pointer"
-                            title="Hapus"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
+                      {isAdmin && (
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end space-x-1">
+                            <button
+                              id={`btn-proc-down-${p.id}`}
+                              onClick={() => handleUpdateProcProgress(p.id, 'down')}
+                              className="px-1.5 py-0.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded cursor-pointer"
+                              title="Kurangi Progres"
+                            >
+                              -20%
+                            </button>
+                            <button
+                              id={`btn-proc-up-${p.id}`}
+                              onClick={() => handleUpdateProcProgress(p.id, 'up')}
+                              className="px-1.5 py-0.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold rounded cursor-pointer"
+                              title="Tambah Progres"
+                            >
+                              +20%
+                            </button>
+                            <button
+                              id={`btn-delete-proc-${p.id}`}
+                              onClick={() => handleDeleteProc(p.id)}
+                              className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded transition-colors cursor-pointer"
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

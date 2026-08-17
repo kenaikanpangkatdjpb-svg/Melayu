@@ -365,13 +365,13 @@ export const INITIAL_VISITOR_LOGS: VisitorLog[] = [
 ];
 
 export const INITIAL_SECURITY_SHIFTS: SecurityShift[] = [
-  { day: 'Senin', shiftMorning: 'Sertu Dani / Prasetyo', shiftEvening: 'Agus / Jaka', shiftNight: 'Rudi / Slamet' },
-  { day: 'Selasa', shiftMorning: 'Rudi / Slamet', shiftEvening: 'Sertu Dani / Prasetyo', shiftNight: 'Agus / Jaka' },
-  { day: 'Rabu', shiftMorning: 'Agus / Jaka', shiftEvening: 'Rudi / Slamet', shiftNight: 'Sertu Dani / Prasetyo' },
-  { day: 'Kamis', shiftMorning: 'Sertu Dani / Prasetyo', shiftEvening: 'Agus / Jaka', shiftNight: 'Rudi / Slamet' },
-  { day: 'Jumat', shiftMorning: 'Rudi / Slamet', shiftEvening: 'Sertu Dani / Prasetyo', shiftNight: 'Agus / Jaka' },
-  { day: 'Sabtu', shiftMorning: 'Agus / Jaka', shiftEvening: 'Rudi / Slamet', shiftNight: 'Sertu Dani / Prasetyo' },
-  { day: 'Minggu', shiftMorning: 'Sertu Dani / Prasetyo', shiftEvening: 'Agus / Jaka', shiftNight: 'Rudi / Slamet' }
+  { day: 'Senin', shiftMorning: 'ARIEF / ROBBY', shiftEvening: 'ADITYA / ERWIN', shiftNight: 'RATMANSYAH / DIAN ARI' },
+  { day: 'Selasa', shiftMorning: 'ROBBY / DIAN ARI', shiftEvening: 'ERWIN / RATMANSYAH', shiftNight: 'ARIEF / ADITYA' },
+  { day: 'Rabu', shiftMorning: 'DIAN ARI / ADITYA', shiftEvening: 'RATMANSYAH / ARIEF', shiftNight: 'ROBBY / ERWIN' },
+  { day: 'Kamis', shiftMorning: 'ADITYA / ERWIN', shiftEvening: 'ARIEF / ROBBY', shiftNight: 'DIAN ARI / RATMANSYAH' },
+  { day: 'Jumat', shiftMorning: 'ERWIN / RATMANSYAH', shiftEvening: 'ROBBY / DIAN ARI', shiftNight: 'ADITYA / ARIEF' },
+  { day: 'Sabtu', shiftMorning: 'RATMANSYAH / ARIEF', shiftEvening: 'DIAN ARI / ADITYA', shiftNight: 'ERWIN / ROBBY' },
+  { day: 'Minggu', shiftMorning: 'ARIEF / ADITYA', shiftEvening: 'ERWIN / RATMANSYAH', shiftNight: 'ROBBY / DIAN ARI' }
 ];
 
 const DAYS_OF_WEEK = ['SABTU', 'MINGGU', 'SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT'];
@@ -523,6 +523,97 @@ export const INITIAL_ACTIVITY_GALLERY: ActivityGalleryItem[] = [
   }
 ];
 
+
+export const INITIAL_DAMS_TASKS = [
+  {
+    id: 'dams-1',
+    no: 1,
+    perihal: 'Penyusunan Laporan Kinerja Bulanan Kanwil',
+    uraian: 'Pengumpulan data capaian IKU dan matriks capaian kinerja Kanwil DJPb Riau.',
+    output: 'Dokumen Laporan Kinerja',
+    pj: 'Subbagian Penilaian Kinerja',
+    deadline: 'Agustus 2026',
+    status: 'Selesai' as const
+  },
+  {
+    id: 'dams-2',
+    no: 2,
+    perihal: 'Rekonsiliasi Beban Kerja Triwulanan',
+    uraian: 'Verifikasi pemenuhan target ABK dan perhitungan formasi kebutuhan pegawai.',
+    output: 'Matriks Formasi Pegawai',
+    pj: 'Subbagian Kepegawaian',
+    deadline: 'Agustus 2026',
+    status: 'On Progress' as const
+  },
+  {
+    id: 'dams-3',
+    no: 3,
+    perihal: 'Penyusunan Bahan Rapat DAMS Pimpinan',
+    uraian: 'Penyiapan slide materi dan kompilasi kendala strategis unit eselon III.',
+    output: 'Bahan Tayang Paparan',
+    pj: 'Bidang SKKI',
+    deadline: 'Agustus 2026',
+    status: 'On Progress' as const
+  }
+];
+
+export const INITIAL_PROCUREMENTS = [
+  { id: 1, item: 'PC Workstation Core i7 KPPN Riau', qty: 15, estimatedBudget: 225000000, targetMonth: 'Agustus 2026', progress: 100, status: 'Selesai' },
+  { id: 2, item: 'Kursi Rapat Aula Lancang Kuning Ergonomis', qty: 120, estimatedBudget: 180000000, targetMonth: 'September 2026', progress: 40, status: 'Proses Lelang' },
+  { id: 3, item: 'Renovasi Interior Lobi Pelayanan Digital', qty: 1, estimatedBudget: 350000000, targetMonth: 'Oktober 2026', progress: 10, status: 'Persiapan Dokumen' },
+  { id: 4, item: 'Pengadaan AC Standing Floor 5 PK', qty: 4, estimatedBudget: 120000000, targetMonth: 'November 2026', progress: 0, status: 'Direncanakan' }
+];
+
+export const INITIAL_CEK_SERIBU_CERTS = [
+  {
+    id: 'cert-1',
+    fileName: 'Dokumen_CekSeribu_Presensi_Kanwil.jpg',
+    fileSize: '420 KB',
+    imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800',
+    employeeName: 'Andi Wijaya, S.E.',
+    uploadDate: '22-07-2026',
+    checkInTime: '07:25 WIB',
+    checkOutTime: '17:05 WIB',
+    createdBy: 'Admin Kepegawaian',
+    status: 'Cek Seribu Valid'
+  },
+  {
+    id: 'cert-2',
+    fileName: 'Dokumen_CekSeribu_Presensi_Kanwil.jpg',
+    fileSize: '420 KB',
+    imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800',
+    employeeName: 'Siti Rahma, M.Acc.',
+    uploadDate: '23-07-2026',
+    checkInTime: '07:30 WIB',
+    checkOutTime: '17:00 WIB',
+    createdBy: 'Admin Kepegawaian',
+    status: 'Cek Seribu Valid'
+  },
+  {
+    id: 'cert-3',
+    fileName: 'Dokumen_CekSeribu_Presensi_Kanwil.jpg',
+    fileSize: '420 KB',
+    imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800',
+    employeeName: 'Bambang Haryono, M.Si.',
+    uploadDate: '24-07-2026',
+    checkInTime: '07:28 WIB',
+    checkOutTime: '17:10 WIB',
+    createdBy: 'Admin Kepegawaian',
+    status: 'Cek Seribu Valid'
+  },
+  {
+    id: 'cert-4',
+    fileName: 'Dokumen_CekSeribu_Presensi_Kanwil.jpg',
+    fileSize: '420 KB',
+    imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800',
+    employeeName: 'Dewanti Putri, S.E.',
+    uploadDate: '27-07-2026',
+    checkInTime: '07:35 WIB',
+    checkOutTime: '16:55 WIB',
+    createdBy: 'Admin Kepegawaian',
+    status: 'Cek Seribu Valid'
+  }
+];
 
 // Helper to convert formatted currency
 export function formatIDR(amount: number): string {

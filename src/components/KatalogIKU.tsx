@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ExternalLink, Link2, Edit3, Check, X, Sparkles, FolderDown, ShieldCheck, FileText } from 'lucide-react';
 import { safeLocalStorageSet } from '../lib/storage';
+import { saveFirestoreDoc, subscribeFirestoreCollection } from '../lib/firebase';
 
 export interface CatalogItem {
   id: string;
@@ -149,6 +150,16 @@ export default function KatalogIKU({ isEditMode = false }: KatalogIKUProps) {
     return INITIAL_CATALOG;
   });
 
+  // Real-time Firestore sync for catalog items
+  useEffect(() => {
+    const unsub = subscribeFirestoreCollection<CatalogItem>('katalog_iku', INITIAL_CATALOG, (remoteItems) => {
+      if (remoteItems && remoteItems.length > 0) {
+        setItems(remoteItems);
+      }
+    });
+    return () => unsub();
+  }, []);
+
   const [selectedItem, setSelectedItem] = useState<CatalogItem | null>(null);
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
 
@@ -159,6 +170,7 @@ export default function KatalogIKU({ isEditMode = false }: KatalogIKUProps) {
     const updated = items.map(item => item.id === editingItem.id ? editingItem : item);
     setItems(updated);
     safeLocalStorageSet('melayu_katalog_iku', JSON.stringify(updated));
+    saveFirestoreDoc('katalog_iku', editingItem);
     setSelectedItem(editingItem);
     setEditingItem(null);
   };
