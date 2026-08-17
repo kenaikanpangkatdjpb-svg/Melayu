@@ -9,6 +9,7 @@ import {
 import { ActivityGalleryItem, CurrentUser } from '../types';
 import { INITIAL_ACTIVITY_GALLERY } from '../mockData';
 import { compressImage, safeLocalStorageSet } from '../lib/storage';
+import { saveFirestoreDoc, deleteFirestoreDoc } from '../lib/firebase';
 
 interface ActivityGallerySectionProps {
   galleryItems: ActivityGalleryItem[];
@@ -413,12 +414,13 @@ export default function ActivityGallerySection({
 
       const newItems = galleryItems.map(it => it.id === editingItem.id ? updated : it);
       updateAndPersist(newItems);
+      saveFirestoreDoc('activity_gallery', updated);
       setEditingItem(null);
       if (selectedDetailItem?.id === editingItem.id) {
         setSelectedDetailItem(updated);
       }
       setToastMessage({
-        text: `Perubahan data, album foto, dan narasi "${updated.title}" berhasil disimpan.`,
+        text: `Perubahan data, album foto, dan narasi "${updated.title}" berhasil disimpan ke database.`,
         type: 'success'
       });
       setTimeout(() => setToastMessage(null), 3000);
@@ -443,9 +445,10 @@ export default function ActivityGallerySection({
 
       const newItems = [newItem, ...galleryItems];
       updateAndPersist(newItems);
+      saveFirestoreDoc('activity_gallery', newItem);
       setIsUploadModalOpen(false);
       setToastMessage({
-        text: `Dokumentasi baru "${newItem.title}" dengan ${1 + (newItem.additionalPhotos?.length || 0)} foto berhasil dipublikasikan.`,
+        text: `Dokumentasi baru "${newItem.title}" dengan ${1 + (newItem.additionalPhotos?.length || 0)} foto berhasil dipublikasikan dan tersimpan di database.`,
         type: 'success'
       });
       setTimeout(() => setToastMessage(null), 3000);
@@ -493,6 +496,7 @@ export default function ActivityGallerySection({
     safeLocalStorageSet('melayu_activity_gallery', JSON.stringify(newItems));
 
     // 3. Remove document permanently from Firebase Firestore
+    deleteFirestoreDoc('activity_gallery', deletedId);
     if (onDeleteFromFirebase) {
       onDeleteFromFirebase(deletedId);
     }
@@ -585,6 +589,7 @@ export default function ActivityGallerySection({
 
     // 3. Delete all from Firebase
     selectedIdsForDelete.forEach(id => {
+      deleteFirestoreDoc('activity_gallery', String(id));
       if (onDeleteFromFirebase) onDeleteFromFirebase(String(id));
     });
     if (onSaveToFirebase) {

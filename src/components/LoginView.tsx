@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lock, User, AlertCircle, Eye, EyeOff, ShieldCheck, UserCheck, Database, CheckCircle, Sparkles } from 'lucide-react';
 import { CurrentUser } from '../types';
 import KemenkeuLogo from './KemenkeuLogo';
-import { authenticateUserReal } from '../lib/firebase';
+import { authenticateUserReal, getAppSettingsFromFirestore } from '../lib/firebase';
 
 interface LoginViewProps {
   onLoginSuccess: (user: CurrentUser) => void;
@@ -14,6 +14,11 @@ export default function LoginView({ onLoginSuccess }: LoginViewProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Synchronize logo and app settings from Firestore on mount so mobile and PC match instantly
+  useEffect(() => {
+    getAppSettingsFromFirestore();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

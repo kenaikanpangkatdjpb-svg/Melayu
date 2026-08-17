@@ -42,7 +42,7 @@ import {
   INITIAL_ACTIVITY_GALLERY
 } from './mockData';
 import { deduplicateRoster } from './components/SecurityGuardSection';
-import { getUsersFromFirestore, subscribeFirestoreCollection, saveFirestoreCollection, deleteFirestoreDoc } from './lib/firebase';
+import { getUsersFromFirestore, subscribeFirestoreCollection, saveFirestoreCollection, deleteFirestoreDoc, subscribeAppSettings } from './lib/firebase';
 import { safeLocalStorageSet, safeLocalStorageGet } from './lib/storage';
 
 function safeParse<T>(key: string, fallback: T): T {
@@ -191,6 +191,7 @@ export default function App() {
     const unsubUsers = subscribeFirestoreCollection<UserAccount>('users', INITIAL_USERS, setUsersList);
     const unsubScholarships = subscribeFirestoreCollection<ScholarshipInfo>('scholarships', INITIAL_SCHOLARSHIPS, setScholarships);
     const unsubGallery = subscribeFirestoreCollection<ActivityGalleryItem>('activity_gallery', INITIAL_ACTIVITY_GALLERY, setGalleryItems);
+    const unsubSettings = subscribeAppSettings();
 
     return () => {
       unsubRooms();
@@ -206,6 +207,7 @@ export default function App() {
       unsubUsers();
       unsubScholarships();
       unsubGallery();
+      unsubSettings();
     };
   }, []);
 

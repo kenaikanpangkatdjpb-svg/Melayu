@@ -2,13 +2,14 @@
 
 /**
  * Compresses an image file or DataURL to optimal web dimensions and file size.
- * Reduces raw 5-15MB phone camera/camera photos down to ~50-150KB JPEG while preserving crisp quality.
+ * Reduces raw 5-15MB phone camera/camera photos down to ~35-70KB JPEG while preserving crisp quality.
+ * Ensures data easily fits within Firestore's 1MB document limit and localStorage quotas.
  */
 export async function compressImage(
   fileOrDataUrl: File | string,
-  maxWidth = 1280,
-  maxHeight = 800,
-  quality = 0.75
+  maxWidth = 1000,
+  maxHeight = 700,
+  quality = 0.68
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -94,8 +95,6 @@ export async function compressImage(
 
 /**
  * Safely writes to localStorage with automatic QuotaExceededError protection.
- * If quota is exceeded, purges large transient items and strips heavy base64 strings from cache
- * to ensure application never crashes.
  */
 export function safeLocalStorageSet(key: string, value: string): boolean {
   try {
@@ -106,7 +105,7 @@ export function safeLocalStorageSet(key: string, value: string): boolean {
 
     // If quota exceeded, attempt smart recovery
     try {
-      // 1. Try stripping large items or cleaning temporary keys
+      // 1. Purge non-essential caches
       const keysToClean = [
         'melayu_hero_bg_image',
         'melayu_cek_seribu_jpeg',
@@ -122,28 +121,7 @@ export function safeLocalStorageSet(key: string, value: string): boolean {
       localStorage.setItem(key, value);
       return true;
     } catch (retryError) {
-      // 2. If it's a JSON array with heavy items (like activity gallery), try caching a sanitized version without huge base64 media
-      try {
-        const parsed = JSON.parse(value);
-        if (Array.isArray(parsed)) {
-          const lightweight = parsed.map((item: any) => {
-            if (item && item.mediaUrl && typeof item.mediaUrl === 'string' && item.mediaUrl.startsWith('data:') && item.mediaUrl.length > 50000) {
-              // Replace heavy dataUrl in localStorage cache with a lightweight placeholder indicator
-              return {
-                ...item,
-                mediaUrl: item.thumbnailUrl || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80'
-              };
-            }
-            return item;
-          });
-          localStorage.setItem(key, JSON.stringify(lightweight));
-          return true;
-        }
-      } catch (sanitizationError) {
-        // Ignore and safely degrade
-      }
-
-      console.error(`[safeLocalStorageSet] Unable to store '${key}' in localStorage, running in-memory only.`, retryError);
+      console.error(`[safeLocalStorageSet] Unable to store '${key}' in localStorage, keeping in-memory.`, retryError);
       return false;
     }
   }

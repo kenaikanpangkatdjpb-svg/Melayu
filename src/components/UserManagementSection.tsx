@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, Plus, UserPlus, Edit3, X, Check, ShieldAlert, UserCheck, Key, Shield, Trash2, Lock, Upload, Image as ImageIcon, RotateCcw, CheckCircle2, Building, Sparkles, FileImage, Camera, Crown } from 'lucide-react';
 import { UserAccount, CurrentUser } from '../types';
 import KemenkeuLogo from './KemenkeuLogo';
-import { saveUserToFirestore, deleteUserFromFirestore } from '../lib/firebase';
+import { saveUserToFirestore, deleteUserFromFirestore, saveAppSettingsToFirestore } from '../lib/firebase';
 import { compressImage, safeLocalStorageSet } from '../lib/storage';
 
 const DEFAULT_KANWIL_IMAGE = 'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1600&q=80';
@@ -71,17 +71,20 @@ export default function UserManagementSection({
   const handleSaveLogo = () => {
     if (previewLogo) {
       safeLocalStorageSet('app_custom_logo', previewLogo);
+      saveAppSettingsToFirestore({ logoUrl: previewLogo });
     } else {
       localStorage.removeItem('app_custom_logo');
+      saveAppSettingsToFirestore({ logoUrl: null });
     }
     window.dispatchEvent(new Event('app_logo_updated'));
-    setLogoSaveStatus('Logo instansi berhasil diperbarui dan diterapkan ke seluruh sistem!');
+    setLogoSaveStatus('Logo instansi berhasil diperbarui dan disinkronkan ke seluruh perangkat (PC & HP)!');
     setTimeout(() => setLogoSaveStatus(null), 4500);
   };
 
   const handleResetLogo = () => {
     setPreviewLogo(null);
     localStorage.removeItem('app_custom_logo');
+    saveAppSettingsToFirestore({ logoUrl: null });
     window.dispatchEvent(new Event('app_logo_updated'));
     setLogoSaveStatus('Logo berhasil dikembalikan ke standar Logo Kementerian Keuangan RI.');
     setTimeout(() => setLogoSaveStatus(null), 4500);
@@ -116,8 +119,9 @@ export default function UserManagementSection({
   const handleSaveBanner = () => {
     if (previewBanner) {
       safeLocalStorageSet('melayu_hero_bg_image', previewBanner);
+      saveAppSettingsToFirestore({ bannerUrl: previewBanner });
       window.dispatchEvent(new Event('app_banner_updated'));
-      setBannerSaveStatus('Gambar banner header berhasil disimpan & diterapkan ke seluruh sistem!');
+      setBannerSaveStatus('Gambar banner header berhasil disimpan & disinkronkan ke seluruh sistem!');
       setTimeout(() => setBannerSaveStatus(null), 4500);
     }
   };
@@ -125,6 +129,7 @@ export default function UserManagementSection({
   const handleResetBanner = () => {
     setPreviewBanner(DEFAULT_KANWIL_IMAGE);
     localStorage.removeItem('melayu_hero_bg_image');
+    saveAppSettingsToFirestore({ bannerUrl: DEFAULT_KANWIL_IMAGE });
     window.dispatchEvent(new Event('app_banner_updated'));
     setBannerSaveStatus('Gambar banner berhasil dikembalikan ke tampilan default Kanwil DJPb Riau.');
     setTimeout(() => setBannerSaveStatus(null), 4500);

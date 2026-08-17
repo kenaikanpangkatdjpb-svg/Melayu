@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { subscribeAppSettings } from '../lib/firebase';
 
 interface KemenkeuLogoProps {
   className?: string;
@@ -7,7 +8,10 @@ interface KemenkeuLogoProps {
 }
 
 export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }: KemenkeuLogoProps) {
-  const [logoUrl, setLogoUrl] = useState<string | null>(customSrc !== undefined ? customSrc : null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(() => {
+    if (customSrc !== undefined) return customSrc;
+    return localStorage.getItem('app_custom_logo') || null;
+  });
 
   useEffect(() => {
     if (customSrc !== undefined) {
@@ -15,18 +19,33 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
       return;
     }
 
+    // 1. Initial check from localStorage
     const savedLogo = localStorage.getItem('app_custom_logo');
     if (savedLogo) {
       setLogoUrl(savedLogo);
     }
 
+    // 2. Listen to local event updates
     const handleLogoChange = () => {
       const updated = localStorage.getItem('app_custom_logo');
       setLogoUrl(updated || null);
     };
 
     window.addEventListener('app_logo_updated', handleLogoChange);
-    return () => window.removeEventListener('app_logo_updated', handleLogoChange);
+
+    // 3. Listen to real-time Firestore synchronization for cross-device consistency (PC & Mobile)
+    const unsubscribe = subscribeAppSettings((settings) => {
+      if (settings.logoUrl) {
+        setLogoUrl(settings.logoUrl);
+      } else if (settings.logoUrl === null) {
+        setLogoUrl(null);
+      }
+    });
+
+    return () => {
+      window.removeEventListener('app_logo_updated', handleLogoChange);
+      unsubscribe();
+    };
   }, [customSrc]);
 
   const sizeStyle = size ? { width: `${size}px`, height: `${size}px` } : {};
@@ -38,6 +57,7 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
         alt="Logo Instansi / Kementerian Keuangan"
         className={`object-contain shrink-0 ${className}`}
         style={sizeStyle}
+        referrerPolicy="no-referrer"
       />
     );
   }

@@ -282,7 +282,7 @@ export async function deleteFirestoreDoc(
 }
 
 // Generic save entire collection (bulk sync on change)
-export async function saveFirestoreCollection<T extends { id?: string }>(
+export async function saveFirestoreCollection<T extends { id?: string | number }>(
   collectionName: string,
   items: T[]
 ): Promise<void> {
@@ -296,6 +296,88 @@ export async function saveFirestoreCollection<T extends { id?: string }>(
     }
   } catch (error) {
     checkAndSetQuotaError(error);
+  }
+}
+
+// App Settings & Branding Synchronization across PC and Mobile devices
+export interface AppSettings {
+  logoUrl?: string | null;
+  bannerUrl?: string | null;
+  updatedAt?: string;
+}
+
+export async function saveAppSettingsToFirestore(settings: Partial<AppSettings>): Promise<void> {
+  try {
+    const docRef = doc(db, 'appSettings', 'branding');
+    await setDoc(docRef, { ...settings, updatedAt: new Date().toISOString() }, { merge: true });
+    if (settings.logoUrl !== undefined) {
+      if (settings.logoUrl) {
+        localStorage.setItem('app_custom_logo', settings.logoUrl);
+      } else {
+        localStorage.removeItem('app_custom_logo');
+      }
+      window.dispatchEvent(new Event('app_logo_updated'));
+    }
+    if (settings.bannerUrl !== undefined) {
+      if (settings.bannerUrl) {
+        localStorage.setItem('melayu_hero_bg_image', settings.bannerUrl);
+      }
+      window.dispatchEvent(new Event('app_banner_updated'));
+    }
+  } catch (error) {
+    checkAndSetQuotaError(error);
+  }
+}
+
+export async function getAppSettingsFromFirestore(): Promise<AppSettings | null> {
+  try {
+    const docRef = doc(db, 'appSettings', 'branding');
+    const snap = await getDoc(docRef);
+    if (snap.exists()) {
+      const data = snap.data() as AppSettings;
+      if (data.logoUrl) {
+        localStorage.setItem('app_custom_logo', data.logoUrl);
+        window.dispatchEvent(new Event('app_logo_updated'));
+      }
+      if (data.bannerUrl) {
+        localStorage.setItem('melayu_hero_bg_image', data.bannerUrl);
+        window.dispatchEvent(new Event('app_banner_updated'));
+      }
+      return data;
+    }
+  } catch (error) {
+    checkAndSetQuotaError(error);
+  }
+  return null;
+}
+
+export function subscribeAppSettings(onUpdate?: (settings: AppSettings) => void): () => void {
+  try {
+    const docRef = doc(db, 'appSettings', 'branding');
+    const unsubscribe = onSnapshot(docRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data() as AppSettings;
+        if (data.logoUrl) {
+          localStorage.setItem('app_custom_logo', data.logoUrl);
+        } else if (data.logoUrl === null) {
+          localStorage.removeItem('app_custom_logo');
+        }
+        window.dispatchEvent(new Event('app_logo_updated'));
+
+        if (data.bannerUrl) {
+          localStorage.setItem('melayu_hero_bg_image', data.bannerUrl);
+          window.dispatchEvent(new Event('app_banner_updated'));
+        }
+
+        if (onUpdate) onUpdate(data);
+      }
+    }, (error) => {
+      checkAndSetQuotaError(error);
+    });
+    return unsubscribe;
+  } catch (error) {
+    checkAndSetQuotaError(error);
+    return () => {};
   }
 }
 
