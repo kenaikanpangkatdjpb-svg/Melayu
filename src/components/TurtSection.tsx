@@ -136,8 +136,7 @@ export default function TurtSection({
     category: 'AC' as 'AC' | 'Ruangan' | 'Kebersihan' | 'IT / Jaringan' | 'Lainnya',
     reporterName: '',
     reporterDivision: 'Bagian Umum',
-    description: '',
-    rating: 5
+    description: ''
   });
 
   // Form states - Monthly Need
@@ -470,14 +469,13 @@ export default function TurtSection({
       reporterName: feedbackForm.reporterName,
       reporterDivision: feedbackForm.reporterDivision,
       description: feedbackForm.description,
-      rating: feedbackForm.rating,
       date: new Date().toISOString().split('T')[0],
       status: 'Open'
     };
     setFeedbacks([newFeedback, ...feedbacks]);
     saveFirestoreDoc('feedbacks', newFeedback);
     setShowFeedbackModal(false);
-    setFeedbackForm({ ...feedbackForm, reporterName: '', description: '', rating: 5 });
+    setFeedbackForm({ category: 'AC', reporterName: '', reporterDivision: 'Bagian Umum', description: '' });
   };
 
   const handleUpdateFeedbackStatus = (id: string, status: 'In Progress' | 'Resolved') => {
@@ -2118,12 +2116,6 @@ export default function TurtSection({
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <div className="flex items-center text-amber-500">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-3 h-3 ${i < f.rating ? 'fill-amber-500 text-amber-500' : 'text-slate-200'}`} />
-                      ))}
-                    </div>
-
                     <div className="flex space-x-1">
                       {f.status === 'Open' && (
                         <button
@@ -2788,22 +2780,6 @@ export default function TurtSection({
                   <option>Bidang PAPK</option>
                   <option>Bidang SKKI</option>
                 </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-400 uppercase">Rating Kepuasan Fasilitas</label>
-                <div className="flex items-center space-x-1.5 mt-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setFeedbackForm({ ...feedbackForm, rating: star })}
-                      className="p-1 hover:scale-110 transition-transform text-amber-500 cursor-pointer"
-                    >
-                      <Star className={`w-6 h-6 ${star <= feedbackForm.rating ? 'fill-amber-500 text-amber-500' : 'text-slate-200'}`} />
-                    </button>
-                  ))}
-                </div>
               </div>
 
               <div>

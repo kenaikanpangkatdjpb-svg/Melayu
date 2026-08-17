@@ -43,7 +43,7 @@ export interface FacilityFeedback {
   reporterName: string;
   reporterDivision: string;
   description: string;
-  rating: number;
+  rating?: number;
   date: string;
   status: 'Open' | 'In Progress' | 'Resolved';
 }
