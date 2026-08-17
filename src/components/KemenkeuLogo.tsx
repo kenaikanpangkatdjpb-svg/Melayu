@@ -82,32 +82,26 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
         <path id="kemenkeuTextCurve" d="M 165,392 Q 250,370 335,392" />
       </defs>
 
-      {/* 1. OUTER GOLDEN PENTAGON BORDER (RIM EMAS KEMENKEU) */}
+      {/* 1. OUTER WHITE BAND WITH BLACK FRAME (BINGKAI RESMI KEMENKEU RI) */}
       <polygon
-        points="250,12 485,182 395,438 105,438 15,182"
-        fill="#E5A800"
-      />
-
-      {/* 2. INNER WHITE MARGIN */}
-      <polygon
-        points="250,20 477,186 389,430 111,430 23,186"
+        points="250,14 485,182 396,448 104,448 15,182"
         fill="#FFFFFF"
+        stroke="#18181B"
+        strokeWidth="6"
+        strokeLinejoin="miter"
       />
 
-      {/* 3. INNER GOLDEN ACCENT LINE */}
+      {/* 2. MAIN ROYAL BLUE PENTAGON SHIELD */}
       <polygon
-        points="250,24 473,188 386,426 114,426 27,188"
-        fill="#D97706"
+        points="250,28 468,188 382,434 118,434 32,188"
+        fill="#0D5CA8"
+        stroke="#18181B"
+        strokeWidth="5"
+        strokeLinejoin="miter"
       />
 
-      {/* 4. MAIN ROYAL BLUE PENTAGON SHIELD BACKGROUND */}
-      <polygon
-        points="250,28 469,190 383,422 117,422 31,190"
-        fill="#0F4C81"
-      />
-
-      {/* 5. GOLDEN WINGS (SAYAP EMAS - LEFT & RIGHT SYMMETRICAL) */}
-      <g stroke="#92400E" strokeWidth="2" strokeLinejoin="round" fill="#F4B000">
+      {/* 3. GOLDEN WINGS (SAYAP EMAS - SYMMETRICAL 9-FEATHER WINGS) */}
+      <g stroke="#18181B" strokeWidth="2.4" strokeLinejoin="round" fill="#FFC800">
         {/* Left Wing Feathers */}
         <path d="M 215,348 C 170,368 128,375 110,365 C 100,358 112,342 135,332 C 165,320 198,328 215,348 Z" />
         <path d="M 210,332 C 160,345 115,348 95,338 C 85,330 98,315 125,305 C 158,295 192,308 210,332 Z" />
@@ -137,14 +131,13 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
         <path d="M 285,350 C 300,360 315,372 325,370 C 335,368 335,355 320,345 C 305,335 290,340 285,350 Z" />
       </g>
 
-      {/* 6. PADI (RICE STALK - LEFT OF CENTER) */}
+      {/* 4. PADI (RICE STALK - LEFT OF CENTER) */}
       <g>
         {/* Main Stem */}
         <path d="M 206,340 Q 190,290 194,155 Q 195,120 188,110" fill="none" stroke="#15803D" strokeWidth="2.5" />
-        <path d="M 206,340 Q 190,290 194,155 Q 195,120 188,110" fill="none" stroke="#4ade80" strokeWidth="1.2" />
 
         {/* Golden Rice Grains */}
-        <g fill="#F4B000" stroke="#92400E" strokeWidth="1.2">
+        <g fill="#FFC800" stroke="#18181B" strokeWidth="1.4" strokeLinejoin="round">
           {/* Top Grain */}
           <path d="M 188,110 C 185,102 188,94 188,94 C 188,94 191,102 188,110 Z" />
           
@@ -190,14 +183,13 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
         </g>
       </g>
 
-      {/* 7. KAPAS (COTTON STALK - RIGHT OF CENTER) */}
+      {/* 5. KAPAS (COTTON STALK - RIGHT OF CENTER) */}
       <g>
         {/* Main Stem */}
         <path d="M 294,340 Q 310,290 306,155 Q 305,120 312,110" fill="none" stroke="#15803D" strokeWidth="2.5" />
-        <path d="M 294,340 Q 310,290 306,155 Q 305,120 312,110" fill="none" stroke="#22c55e" strokeWidth="1.2" />
 
-        {/* Cotton Blooms (Green Sepal + White Fluff) */}
-        <g stroke="#166534" strokeWidth="1.2">
+        {/* Cotton Blooms (Green Sepal + White Fluff with Black outlines) */}
+        <g stroke="#18181B" strokeWidth="1.4">
           {/* Bloom 1 (Top) */}
           <path d="M 307,105 Q 312,100 317,105 Q 312,112 307,105 Z" fill="#16a34a" />
           <circle cx="312" cy="100" r="5" fill="#FFFFFF" />
@@ -236,13 +228,13 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
         </g>
       </g>
 
-      {/* 8. CENTER GADA / MENARA PERSEDIAAN (GOLDEN SLENDER TOWER) */}
-      <g stroke="#92400E" strokeWidth="1.8" strokeLinejoin="round" fill="#F4B000">
+      {/* 6. CENTER GADA / MENARA PERSEDIAAN (GOLDEN SLENDER TOWER) */}
+      <g stroke="#18181B" strokeWidth="2" strokeLinejoin="round" fill="#FFC800">
         {/* Base Pedestal Pot */}
         <path d="M 230,342 Q 250,348 270,342 L 275,362 Q 250,370 225,362 Z" />
         <path d="M 220,360 Q 250,370 280,360 Q 285,372 278,375 Q 250,380 222,375 Z" />
 
-        {/* Gada Tower Ribbed Segments (Expanding & Tapering) */}
+        {/* Gada Tower Ribbed Segments */}
         <ellipse cx="250" cy="132" rx="17" ry="8" />
         <path d="M 233,132 Q 250,138 267,132 L 268,145 Q 250,152 232,145 Z" />
         <path d="M 232,145 Q 250,152 268,145 L 269,160 Q 250,167 231,160 Z" />
@@ -258,21 +250,21 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
 
         {/* Dome Cap at top of Gada */}
         <path d="M 233,132 C 233,110 267,110 267,132 Z" />
-        <circle cx="250" cy="115" r="4" fill="#F4B000" />
+        <circle cx="250" cy="115" r="4" fill="#FFC800" stroke="#18181B" strokeWidth="1.5" />
       </g>
 
-      {/* 9. BANNER SCROLL (PITA WHITE BANNER "NAGARA DANA RAKÇA") */}
-      <g filter="url(#ribbonShadow)">
+      {/* 7. BANNER SCROLL (PITA WHITE BANNER "NAGARA DANA RAKÇA") */}
+      <g>
         {/* Banner Tails/Ends Left & Right */}
-        <path d="M 142,390 L 165,372 L 165,410 L 142,420 Z" fill="#F1F5F9" stroke="#334155" strokeWidth="1.8" />
-        <path d="M 358,390 L 335,372 L 335,410 L 358,420 Z" fill="#F1F5F9" stroke="#334155" strokeWidth="1.8" />
+        <path d="M 142,390 L 165,372 L 165,410 L 142,420 Z" fill="#FFFFFF" stroke="#18181B" strokeWidth="2.2" strokeLinejoin="round" />
+        <path d="M 358,390 L 335,372 L 335,410 L 358,420 Z" fill="#FFFFFF" stroke="#18181B" strokeWidth="2.2" strokeLinejoin="round" />
 
         {/* Main Curved White Banner Body */}
         <path
           d="M 152,390 C 210,368 290,368 348,390 L 340,422 C 285,400 215,400 160,422 Z"
           fill="#FFFFFF"
-          stroke="#334155"
-          strokeWidth="2"
+          stroke="#18181B"
+          strokeWidth="2.5"
           strokeLinejoin="round"
         />
 
@@ -281,7 +273,7 @@ export default function KemenkeuLogo({ className = "w-8 h-8", size, customSrc }:
           fontFamily="system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"
           fontWeight="900"
           fontSize="17"
-          fill="#0F172A"
+          fill="#111827"
           letterSpacing="1.2"
         >
           <textPath href="#kemenkeuTextCurve" startOffset="50%" textAnchor="middle">

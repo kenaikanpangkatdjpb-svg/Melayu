@@ -79,6 +79,7 @@ export default function TurtSection({
   // Edit states
   const [editingRoomBooking, setEditingRoomBooking] = useState<RoomBooking | null>(null);
   const [editingItemBooking, setEditingItemBooking] = useState<ItemBooking | null>(null);
+  const [editingVehicleBooking, setEditingVehicleBooking] = useState<VehicleBooking | null>(null);
 
   // Item Approval Panel states
   const [itemFilter, setItemFilter] = useState<'semua' | 'pending' | 'dipinjam' | 'kembali' | 'ditolak'>('semua');
@@ -125,7 +126,9 @@ export default function TurtSection({
     bookerName: '',
     destination: '',
     date: new Date().toISOString().split('T')[0],
-    durationDays: 1
+    durationDays: 1,
+    status: 'Pending' as 'Disetujui' | 'Pending' | 'Ditolak' | 'Selesai',
+    statusNote: ''
   });
 
   // Form states - Feedback
@@ -269,6 +272,39 @@ export default function TurtSection({
     setShowItemModal(true);
   };
 
+  // Open Vehicle Modals
+  const handleOpenNewVehicleModal = () => {
+    setEditingVehicleBooking(null);
+    setVehicleForm({
+      vehicleName: 'Toyota Kijang Innova BM 1679 T',
+      driverOption: 'Dengan Supir',
+      driverName: 'Dengan Supir',
+      bookerName: '',
+      destination: '',
+      date: new Date().toISOString().split('T')[0],
+      durationDays: 1,
+      status: 'Pending',
+      statusNote: ''
+    });
+    setShowVehicleModal(true);
+  };
+
+  const handleOpenEditVehicleModal = (booking: VehicleBooking) => {
+    setEditingVehicleBooking(booking);
+    setVehicleForm({
+      vehicleName: booking.vehicleName,
+      driverOption: (booking.driverOption as any) || (booking.driverName?.includes('Tanpa') ? 'Tanpa Supir' : 'Dengan Supir'),
+      driverName: booking.driverName || 'Dengan Supir',
+      bookerName: booking.bookerName,
+      destination: booking.destination,
+      date: booking.date,
+      durationDays: booking.durationDays || 1,
+      status: booking.status,
+      statusNote: booking.statusNote || ''
+    });
+    setShowVehicleModal(true);
+  };
+
   // Actions Items
   const handleAddItemBooking = (e: React.FormEvent) => {
     e.preventDefault();
@@ -348,22 +384,51 @@ export default function TurtSection({
     const words = vehicleForm.vehicleName.split(' ');
     const plateNumber = words.length >= 3 ? words.slice(-3).join(' ') : 'BM 0000 XX';
 
-    const newBooking: VehicleBooking = {
-      id: `v-${Date.now()}`,
-      vehicleName: vehicleForm.vehicleName,
-      plateNumber: plateNumber,
-      driverName: driver,
-      driverOption: vehicleForm.driverOption,
-      bookerName: vehicleForm.bookerName,
-      destination: vehicleForm.destination,
-      date: vehicleForm.date,
-      durationDays: vehicleForm.durationDays,
-      status: 'Pending'
-    };
-    setVehicleBookings([newBooking, ...vehicleBookings]);
-    saveFirestoreDoc('vehicles', newBooking);
+    if (editingVehicleBooking) {
+      const updated: VehicleBooking = {
+        ...editingVehicleBooking,
+        vehicleName: vehicleForm.vehicleName,
+        plateNumber: plateNumber,
+        driverName: driver,
+        driverOption: vehicleForm.driverOption,
+        bookerName: vehicleForm.bookerName,
+        destination: vehicleForm.destination,
+        date: vehicleForm.date,
+        durationDays: vehicleForm.durationDays,
+        status: vehicleForm.status || editingVehicleBooking.status,
+        statusNote: vehicleForm.statusNote !== undefined ? vehicleForm.statusNote : editingVehicleBooking.statusNote
+      };
+      setVehicleBookings(vehicleBookings.map(v => v.id === editingVehicleBooking.id ? updated : v));
+      saveFirestoreDoc('vehicles', updated);
+    } else {
+      const newBooking: VehicleBooking = {
+        id: `v-${Date.now()}`,
+        vehicleName: vehicleForm.vehicleName,
+        plateNumber: plateNumber,
+        driverName: driver,
+        driverOption: vehicleForm.driverOption,
+        bookerName: vehicleForm.bookerName,
+        destination: vehicleForm.destination,
+        date: vehicleForm.date,
+        durationDays: vehicleForm.durationDays,
+        status: 'Pending'
+      };
+      setVehicleBookings([newBooking, ...vehicleBookings]);
+      saveFirestoreDoc('vehicles', newBooking);
+    }
     setShowVehicleModal(false);
-    setVehicleForm({ ...vehicleForm, bookerName: '', destination: '', driverOption: 'Dengan Supir' });
+    setEditingVehicleBooking(null);
+    setVehicleForm({
+      vehicleName: 'Toyota Kijang Innova BM 1679 T',
+      driverOption: 'Dengan Supir',
+      driverName: 'Dengan Supir',
+      bookerName: '',
+      destination: '',
+      date: new Date().toISOString().split('T')[0],
+      durationDays: 1,
+      status: 'Pending',
+      statusNote: ''
+    });
   };
 
   const handleApproveVehicle = (id: string, approve: boolean, customNote?: string) => {
@@ -911,7 +976,7 @@ export default function TurtSection({
             <div className="flex items-center space-x-2 shrink-0">
               <button
                 id="btn-add-vehicle-booking-persetujuan"
-                onClick={() => setShowVehicleModal(true)}
+                onClick={handleOpenNewVehicleModal}
                 className="flex items-center space-x-1 px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
@@ -1006,6 +1071,16 @@ export default function TurtSection({
                             Pending
                           </span>
                         </div>
+                        {isAdmin && (
+                          <button
+                            id={`btn-edit-vehicle-card-${pending.id}`}
+                            onClick={() => handleOpenEditVehicleModal(pending)}
+                            className="p-1 text-slate-400 hover:text-djpb-blue hover:bg-slate-100 rounded-md transition-colors cursor-pointer"
+                            title="Edit Data Peminjaman"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
 
                       <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-xs space-y-1">
@@ -1223,14 +1298,24 @@ export default function TurtSection({
                               </button>
                             )}
                             {isAdmin && (
-                              <button
-                                id={`btn-delete-vehicle-persetujuan-${booking.id}`}
-                                onClick={() => handleDeleteVehicle(booking.id)}
-                                className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
-                                title="Hapus"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              <>
+                                <button
+                                  id={`btn-edit-vehicle-persetujuan-${booking.id}`}
+                                  onClick={() => handleOpenEditVehicleModal(booking)}
+                                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-djpb-blue rounded-md transition-colors cursor-pointer"
+                                  title="Edit Peminjaman Kendaraan"
+                                >
+                                  <Pencil className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  id={`btn-delete-vehicle-persetujuan-${booking.id}`}
+                                  onClick={() => handleDeleteVehicle(booking.id)}
+                                  className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                                  title="Hapus"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </>
                             )}
                           </div>
                         </td>
@@ -1828,7 +1913,7 @@ export default function TurtSection({
             </div>
             <button
               id="btn-add-vehicle-booking"
-              onClick={() => setShowVehicleModal(true)}
+              onClick={handleOpenNewVehicleModal}
               className="flex items-center space-x-1 px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
@@ -1952,14 +2037,24 @@ export default function TurtSection({
                             </button>
                           )}
                           {isAdmin && (
-                            <button
-                              id={`btn-delete-vehicle-${vehicle.id}`}
-                              onClick={() => handleDeleteVehicle(vehicle.id)}
-                              className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
-                              title="Hapus"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            <>
+                              <button
+                                id={`btn-edit-vehicle-${vehicle.id}`}
+                                onClick={() => handleOpenEditVehicleModal(vehicle)}
+                                className="p-1 hover:bg-slate-100 text-slate-400 hover:text-djpb-blue rounded-md transition-colors cursor-pointer"
+                                title="Edit Peminjaman Kendaraan"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                id={`btn-delete-vehicle-${vehicle.id}`}
+                                onClick={() => handleDeleteVehicle(vehicle.id)}
+                                className="p-1 hover:bg-slate-100 text-slate-400 hover:text-red-500 rounded-md transition-colors cursor-pointer"
+                                title="Hapus"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </>
                           )}
                         </div>
                       </td>
@@ -2493,7 +2588,9 @@ export default function TurtSection({
       {showVehicleModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" id="vehicle-modal">
           <form onSubmit={handleAddVehicleBooking} className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
-            <h3 className="text-base font-display font-bold text-slate-800">Booking Kendaraan Dinas & Supir</h3>
+            <h3 className="text-base font-display font-bold text-slate-800">
+              {editingVehicleBooking ? 'Edit Peminjaman Kendaraan Dinas' : 'Booking Kendaraan Dinas & Supir'}
+            </h3>
             
             <div className="space-y-3">
               <div>
@@ -2591,12 +2688,44 @@ export default function TurtSection({
                   onChange={(e) => setVehicleForm({ ...vehicleForm, date: e.target.value })}
                 />
               </div>
+
+              {/* Status & Catatan Persetujuan for Admin during Edit */}
+              {isAdmin && editingVehicleBooking && (
+                <div className="pt-2 border-t border-slate-100 space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Status Permohonan</label>
+                    <select 
+                      className="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium"
+                      value={vehicleForm.status}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, status: e.target.value as any })}
+                    >
+                      <option value="Pending">Pending (Menunggu Persetujuan)</option>
+                      <option value="Disetujui">Disetujui</option>
+                      <option value="Ditolak">Ditolak</option>
+                      <option value="Selesai">Selesai (Mobil Telah Kembali)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase">Catatan / Instruksi Admin</label>
+                    <input 
+                      type="text"
+                      className="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                      value={vehicleForm.statusNote}
+                      onChange={(e) => setVehicleForm({ ...vehicleForm, statusNote: e.target.value })}
+                      placeholder="Contoh: Disetujui. Driver siap di lobi kantor."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-end space-x-2 border-t border-slate-100 pt-3">
               <button
                 type="button"
-                onClick={() => setShowVehicleModal(false)}
+                onClick={() => {
+                  setShowVehicleModal(false);
+                  setEditingVehicleBooking(null);
+                }}
                 className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
               >
                 Kembali
@@ -2605,7 +2734,7 @@ export default function TurtSection({
                 type="submit"
                 className="px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
               >
-                Ajukan Kendaraan
+                {editingVehicleBooking ? 'Simpan Perubahan' : 'Ajukan Kendaraan'}
               </button>
             </div>
           </form>
