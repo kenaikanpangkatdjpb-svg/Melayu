@@ -226,7 +226,7 @@ export default function TurtSection({
   const handleApproveRoom = (id: string, approve: boolean, customNote?: string) => {
     const enteredNote = customNote !== undefined ? customNote : roomApprovalNotes[id];
     const defaultNote = approve 
-      ? 'Disetujui oleh Admin Subbag Rumah Tangga - Kunci ruangan siap diambil' 
+      ? 'Disetujui oleh Admin Subbag Rumah Tangga' 
       : 'Permohonan peminjaman ruangan ditolak oleh Admin';
     const finalNote = enteredNote && enteredNote.trim() !== '' ? enteredNote.trim() : defaultNote;
 

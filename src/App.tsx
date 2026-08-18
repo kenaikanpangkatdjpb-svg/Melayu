@@ -100,7 +100,8 @@ export default function App() {
 
   // Core Persistent States (with LocalStorage backing)
   const [roomBookings, setRoomBookings] = useState<RoomBooking[]>(() => {
-    return safeParse<RoomBooking[]>('melayu_rooms', INITIAL_ROOM_BOOKINGS);
+    const raw = safeParse<RoomBooking[]>('melayu_rooms', INITIAL_ROOM_BOOKINGS);
+    return raw.map(b => b.statusNote === 'Disetujui oleh Admin Subbag Rumah Tangga - Kunci ruangan siap diambil' ? { ...b, statusNote: 'Disetujui oleh Admin Subbag Rumah Tangga' } : b);
   });
 
   const [itemBookings, setItemBookings] = useState<ItemBooking[]>(() => {
@@ -161,7 +162,14 @@ export default function App() {
 
   // Real-time sync with Firebase Firestore on mount across all devices (Handphone <-> PC)
   useEffect(() => {
-    const unsubRooms = subscribeFirestoreCollection<RoomBooking>('rooms', INITIAL_ROOM_BOOKINGS, setRoomBookings);
+    const unsubRooms = subscribeFirestoreCollection<RoomBooking>('rooms', INITIAL_ROOM_BOOKINGS, (data) => {
+      const normalized = (data || []).map(b => 
+        b.statusNote === 'Disetujui oleh Admin Subbag Rumah Tangga - Kunci ruangan siap diambil' 
+          ? { ...b, statusNote: 'Disetujui oleh Admin Subbag Rumah Tangga' } 
+          : b
+      );
+      setRoomBookings(normalized);
+    });
     const unsubItems = subscribeFirestoreCollection<ItemBooking>('items', INITIAL_ITEM_BOOKINGS, setItemBookings);
     const unsubVehicles = subscribeFirestoreCollection<VehicleBooking>('vehicles', INITIAL_VEHICLE_BOOKINGS, setVehicleBookings);
     const unsubFeedbacks = subscribeFirestoreCollection<FacilityFeedback>('feedbacks', INITIAL_FACILITY_FEEDBACK, setFeedbacks);
