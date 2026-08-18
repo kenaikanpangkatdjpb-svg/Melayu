@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { 
   Plus, BarChart2, Users, Clock, FolderHeart, ThumbsUp, 
   TrendingUp, Star, Trash2, Check, Sparkles, Phone, Mail, UserSearch,
-  FileSpreadsheet, ExternalLink
+  FileSpreadsheet, ExternalLink, Edit3, AlertTriangle, ShieldCheck, CheckCircle2, X
 } from 'lucide-react';
 import { 
   ResponsiveContainer, LineChart, Line, BarChart, Bar, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend 
 } from 'recharts';
-import { PerformanceMetric, WorkloadMetric, DamsTask } from '../types';
+import { PerformanceMetric, WorkloadMetric, DamsTask, CurrentUser } from '../types';
 import { INITIAL_DAMS_TASKS } from '../mockData';
 import KatalogIKU from './KatalogIKU';
 import { saveFirestoreDoc, deleteFirestoreDoc, saveFirestoreCollection, subscribeFirestoreCollection } from '../lib/firebase';
@@ -19,14 +19,18 @@ interface KinerjaSectionProps {
   performanceMetrics: PerformanceMetric[];
   workloadMetrics: WorkloadMetric[];
   isEditMode: boolean;
+  currentUser?: CurrentUser;
 }
 
 export default function KinerjaSection({
   subTab,
   performanceMetrics,
   workloadMetrics,
-  isEditMode
+  isEditMode,
+  currentUser
 }: KinerjaSectionProps) {
+  const isAdmin = isEditMode || currentUser?.role === 'admin';
+
   // DAMS (Matriks Tindak Lanjut) states
   const [damsMtlList, setDamsMtlList] = useState<DamsTask[]>(() => {
     return safeLocalStorageGet<DamsTask[]>('melayu_dams_tasks', INITIAL_DAMS_TASKS);
@@ -45,6 +49,10 @@ export default function KinerjaSection({
   const [damsSearch, setDamsSearch] = useState('');
   const [damsStatusFilter, setDamsStatusFilter] = useState<'all' | 'Selesai' | 'On Progress'>('all');
   const [showDamsModal, setShowDamsModal] = useState(false);
+  const [editingDamsTask, setEditingDamsTask] = useState<DamsTask | null>(null);
+  const [deletingDamsTask, setDeletingDamsTask] = useState<DamsTask | null>(null);
+  const [damsActionToast, setDamsActionToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
   const [damsForm, setDamsForm] = useState({
     perihal: 'Dukungan Manajemen Yang Efektif',
     uraian: '',
@@ -53,6 +61,24 @@ export default function KinerjaSection({
     deadline: 'Agustus 2026',
     status: 'On Progress'
   });
+
+  const [editDamsForm, setEditDamsForm] = useState<DamsTask>({
+    id: '',
+    no: 1,
+    perihal: '',
+    uraian: '',
+    output: 'Laporan',
+    pj: '',
+    deadline: '',
+    status: 'On Progress'
+  });
+
+  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setDamsActionToast({ message, type });
+    setTimeout(() => {
+      setDamsActionToast(null);
+    }, 4000);
+  };
 
   // Katalog HKT Search state
   const [hktSearch, setHktSearch] = useState('');
@@ -161,24 +187,26 @@ export default function KinerjaSection({
     return matchesSearch && matchesStatus;
   });
 
-  // Dams action
+  // Dams action: Perekaman (Create)
   const handleAddDamsMtl = (e: React.FormEvent) => {
     e.preventDefault();
     if (!damsForm.perihal || !damsForm.uraian || !damsForm.pj) return;
+    const nextNo = damsMtlList.length > 0 ? Math.max(...damsMtlList.map(i => i.no || 0)) + 1 : 1;
     const newItem: DamsTask = {
       id: `dams-${Date.now()}`,
-      no: damsMtlList.length + 1,
-      perihal: damsForm.perihal,
-      uraian: damsForm.uraian,
-      output: damsForm.output || 'Laporan',
-      pj: damsForm.pj,
-      deadline: damsForm.deadline || 'Agustus 2026',
+      no: nextNo,
+      perihal: damsForm.perihal.trim(),
+      uraian: damsForm.uraian.trim(),
+      output: damsForm.output.trim() || 'Laporan',
+      pj: damsForm.pj.trim(),
+      deadline: damsForm.deadline.trim() || 'Agustus 2026',
       status: (damsForm.status as 'Selesai' | 'On Progress') || 'On Progress'
     };
     const updated = [...damsMtlList, newItem];
     setDamsMtlList(updated);
     saveFirestoreDoc('dams_tasks', newItem);
     setShowDamsModal(false);
+    showToast(`Data MTL No. ${newItem.no} (${newItem.perihal}) berhasil direkam!`, 'success');
     setDamsForm({
       perihal: 'Dukungan Manajemen Yang Efektif',
       uraian: '',
@@ -189,30 +217,85 @@ export default function KinerjaSection({
     });
   };
 
-  const handleToggleDamsMtlStatus = (no: number) => {
-    let updatedItem: DamsTask | null = null;
-    const updated = damsMtlList.map(item => {
-      if (item.no === no) {
-        updatedItem = { ...item, status: item.status === 'Selesai' ? 'On Progress' : 'Selesai' };
-        return updatedItem;
-      }
-      return item;
+  // Dams action: Ubah (Edit)
+  const handleStartEditDamsMtl = (item: DamsTask) => {
+    setEditingDamsTask(item);
+    setEditDamsForm({
+      id: item.id || `dams-${item.no}`,
+      no: item.no,
+      perihal: item.perihal || '',
+      uraian: item.uraian || '',
+      output: item.output || 'Laporan',
+      pj: item.pj || '',
+      deadline: item.deadline || 'Agustus 2026',
+      status: item.status || 'On Progress'
     });
-    setDamsMtlList(updated);
-    if (updatedItem) {
-      saveFirestoreDoc('dams_tasks', updatedItem);
-    }
   };
 
-  const handleDeleteDamsMtl = (no: number) => {
-    const targetItem = damsMtlList.find(item => item.no === no);
-    const updated = damsMtlList.filter(item => item.no !== no);
+  const handleSaveEditDamsMtl = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingDamsTask) return;
+    if (!editDamsForm.perihal || !editDamsForm.uraian || !editDamsForm.pj) return;
+
+    const targetId = editingDamsTask.id || `dams-${editingDamsTask.no}`;
+    const updatedTask: DamsTask = {
+      ...editDamsForm,
+      id: targetId,
+      no: editDamsForm.no || editingDamsTask.no
+    };
+
+    const updatedList = damsMtlList.map(item => {
+      const isMatch = (item.id && item.id === targetId) || item.no === editingDamsTask.no;
+      return isMatch ? updatedTask : item;
+    });
+
+    setDamsMtlList(updatedList);
+    saveFirestoreDoc('dams_tasks', updatedTask);
+    setEditingDamsTask(null);
+    showToast(`Perubahan data MTL No. ${updatedTask.no} berhasil disimpan!`, 'success');
+  };
+
+  // Dams action: Hapus (Delete)
+  const handleStartDeleteDamsMtl = (item: DamsTask) => {
+    setDeletingDamsTask(item);
+  };
+
+  const handleConfirmDeleteDamsMtl = () => {
+    if (!deletingDamsTask) return;
+    const targetId = deletingDamsTask.id || `dams-${deletingDamsTask.no}`;
+    const targetNo = deletingDamsTask.no;
+    const updated = damsMtlList.filter(item => {
+      if (item.id && deletingDamsTask.id) {
+        return item.id !== deletingDamsTask.id;
+      }
+      return item.no !== targetNo;
+    });
+
     setDamsMtlList(updated);
-    if (targetItem?.id) {
-      deleteFirestoreDoc('dams_tasks', targetItem.id);
+    if (deletingDamsTask.id) {
+      deleteFirestoreDoc('dams_tasks', deletingDamsTask.id);
     } else {
-      saveFirestoreCollection('dams_tasks', updated);
+      deleteFirestoreDoc('dams_tasks', targetId);
     }
+    saveFirestoreCollection('dams_tasks', updated);
+    setDeletingDamsTask(null);
+    showToast(`Data MTL No. ${targetNo} berhasil dihapus.`, 'info');
+  };
+
+  // Dams action: Quick Toggle Status
+  const handleToggleDamsMtlStatus = (task: DamsTask) => {
+    const nextStatus: 'Selesai' | 'On Progress' = task.status === 'Selesai' ? 'On Progress' : 'Selesai';
+    const targetId = task.id || `dams-${task.no}`;
+    const updatedItem: DamsTask = { ...task, id: targetId, status: nextStatus };
+
+    const updated = damsMtlList.map(item => {
+      const isMatch = (item.id && item.id === targetId) || item.no === task.no;
+      return isMatch ? updatedItem : item;
+    });
+
+    setDamsMtlList(updated);
+    saveFirestoreDoc('dams_tasks', updatedItem);
+    showToast(`Status MTL No. ${task.no} diubah menjadi "${nextStatus}".`, 'success');
   };
 
   // Survey action
@@ -708,6 +791,33 @@ export default function KinerjaSection({
       {/* ----------------- SUB-TAB: MONITORING DAMS ----------------- */}
       {subTab === 'monitoring-dams' && (
         <div className="space-y-6" id="dams-subtab">
+          {/* Action Notification Toast */}
+          {damsActionToast && (
+            <div 
+              id="dams-action-toast"
+              className={`p-3.5 rounded-xl border flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-2 duration-200 ${
+                damsActionToast.type === 'success' 
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                  : damsActionToast.type === 'error'
+                  ? 'bg-red-50 border-red-200 text-red-900'
+                  : 'bg-blue-50 border-blue-200 text-blue-900'
+              }`}
+            >
+              <div className="flex items-center space-x-2 text-xs font-semibold">
+                {damsActionToast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />}
+                {damsActionToast.type === 'error' && <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />}
+                {damsActionToast.type === 'info' && <Clock className="w-4 h-4 text-blue-600 shrink-0" />}
+                <span>{damsActionToast.message}</span>
+              </div>
+              <button 
+                onClick={() => setDamsActionToast(null)} 
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-md text-xs font-bold"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
           {/* Header & Controls */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
@@ -720,7 +830,7 @@ export default function KinerjaSection({
               </p>
             </div>
 
-            {isEditMode && (
+            {isAdmin && (
               <button
                 id="btn-add-dams"
                 onClick={() => setShowDamsModal(true)}
@@ -731,6 +841,28 @@ export default function KinerjaSection({
               </button>
             )}
           </div>
+
+          {/* Admin Mode Info Banner */}
+          {isAdmin && (
+            <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs border border-blue-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="p-1.5 bg-blue-800/80 rounded-lg shrink-0">
+                  <ShieldCheck className="w-4 h-4 text-amber-300" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white block">Menu Administrator DAMS (MTL) Aktif</span>
+                  <span className="text-[11px] text-blue-200 block">Anda memiliki hak akses untuk merekam data baru, mengubah (edit), dan menghapus data Matriks Tindak Lanjut.</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDamsModal(true)}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-900 text-[11px] font-bold rounded-lg transition-colors cursor-pointer shadow-xs shrink-0"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Rekam MTL Baru</span>
+              </button>
+            </div>
+          )}
 
           {/* Stats / KPI Overview Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -829,20 +961,20 @@ export default function KinerjaSection({
                     <th className="py-3 px-4 min-w-[150px] border-b border-slate-700">Penanggung Jawab</th>
                     <th className="py-3 px-3 text-center border-b border-slate-700 whitespace-nowrap">Batas Waktu</th>
                     <th className="py-3 px-3 text-center border-b border-slate-700 whitespace-nowrap">Keterangan</th>
-                    {isEditMode && <th className="py-3 px-3 text-center border-b border-slate-700 whitespace-nowrap">Aksi</th>}
+                    {isAdmin && <th className="py-3 px-3 text-center border-b border-slate-700 whitespace-nowrap">Aksi Admin</th>}
                   </tr>
                 </thead>
 
                 <tbody className="divide-y divide-slate-200 text-slate-800 font-sans">
                   {filteredDamsMtl.length === 0 ? (
                     <tr>
-                      <td colSpan={isEditMode ? 8 : 7} className="py-8 text-center text-slate-400 italic">
+                      <td colSpan={isAdmin ? 8 : 7} className="py-8 text-center text-slate-400 italic">
                         Tidak ada data Matriks Tindak Lanjut (MTL) yang cocok dengan filter pencarian.
                       </td>
                     </tr>
                   ) : (
                     filteredDamsMtl.map((row) => (
-                      <tr key={row.no} className="hover:bg-slate-50/80 transition-colors">
+                      <tr key={row.id || row.no} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-3 px-3 text-center font-mono font-bold text-slate-500 border-r border-slate-100">
                           {row.no}
                         </td>
@@ -874,11 +1006,21 @@ export default function KinerjaSection({
                             {row.status}
                           </span>
                         </td>
-                        {isEditMode && (
-                          <td className="py-3 px-3 text-center">
-                            <div className="flex items-center justify-center space-x-1">
+                        {isAdmin && (
+                          <td className="py-3 px-3 text-center whitespace-nowrap">
+                            <div className="flex items-center justify-center space-x-1.5">
+                              {/* 1. Ubah / Edit Button */}
                               <button
-                                onClick={() => handleToggleDamsMtlStatus(row.no)}
+                                onClick={() => handleStartEditDamsMtl(row)}
+                                className="p-1.5 bg-blue-50 text-djpb-blue hover:bg-djpb-blue hover:text-white rounded border border-blue-200 transition-colors cursor-pointer"
+                                title={`Ubah Data MTL No. ${row.no}`}
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                              </button>
+
+                              {/* 2. Quick Toggle Status Button */}
+                              <button
+                                onClick={() => handleToggleDamsMtlStatus(row)}
                                 className={`p-1.5 rounded transition-colors cursor-pointer ${
                                   row.status === 'Selesai' 
                                     ? 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200' 
@@ -888,10 +1030,12 @@ export default function KinerjaSection({
                               >
                                 <Check className="w-3.5 h-3.5" />
                               </button>
+
+                              {/* 3. Hapus / Delete Button */}
                               <button
-                                onClick={() => handleDeleteDamsMtl(row.no)}
-                                className="p-1.5 bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded border border-slate-200 transition-colors cursor-pointer"
-                                title="Hapus MTL"
+                                onClick={() => handleStartDeleteDamsMtl(row)}
+                                className="p-1.5 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded border border-red-200 transition-colors cursor-pointer"
+                                title={`Hapus Data MTL No. ${row.no}`}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -1014,99 +1158,151 @@ export default function KinerjaSection({
       )}
 
 
-      {/* ----------------- MODAL FORMS ----------------- */}
+      {/* ----------------- MODAL FORMS DAMS (MTL) ----------------- */}
       
-      {/* Dams MTL Modal */}
+      {/* 1. Modal Rekam Data MTL Baru */}
       {showDamsModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" id="dams-modal">
-          <form onSubmit={handleAddDamsMtl} className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4 animate-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" id="dams-modal">
+          <form onSubmit={handleAddDamsMtl} className="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 space-y-4 animate-in zoom-in-95 duration-150 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-display font-bold text-slate-800 flex items-center space-x-2">
-                <Clock className="w-5 h-5 text-djpb-blue" />
-                <span>Tambah Data Matriks Tindak Lanjut (MTL)</span>
-              </h3>
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-blue-50 text-djpb-blue rounded-lg">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-display font-bold text-slate-800">
+                    Perekaman Data Baru MTL DAMS
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Tambahkan rencana aksi Matriks Tindak Lanjut baru ke dalam pemantauan.
+                  </p>
+                </div>
+              </div>
               <button 
                 type="button" 
                 onClick={() => setShowDamsModal(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
               >
-                ×
+                <X className="w-5 h-5" />
               </button>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-3.5">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Perihal MTL</label>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Perihal MTL</label>
                 <input 
                   type="text" 
                   required
-                  className="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-djpb-blue"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-djpb-blue focus:bg-white"
                   value={damsForm.perihal}
                   onChange={(e) => setDamsForm({ ...damsForm, perihal: e.target.value })}
                   placeholder="Contoh: Organisasi dan SDM yang Agile..."
                 />
+                {/* Suggestions */}
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  <span className="text-[10px] text-slate-400 self-center">Pilihan cepat:</span>
+                  {[
+                    'Dukungan Manajemen Yang Efektif',
+                    'Organisasi dan SDM yang Agile',
+                    'Penguatan Integritas dan Kepatuhan Internal',
+                    'Pengelolaan Perbendaharaan dan Pelaksanaan Anggaran'
+                  ].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setDamsForm({ ...damsForm, perihal: preset })}
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-djpb-blue text-slate-600 border border-slate-200 transition-colors cursor-pointer"
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase">Uraian MTL</label>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Uraian Tugas / Rencana Kegiatan MTL</label>
                 <textarea 
                   required 
                   rows={3}
-                  className="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue"
-                  placeholder="Deskripsi detail rencana kegiatan tindak lanjut..."
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue focus:bg-white leading-relaxed"
+                  placeholder="Deskripsi detail rencana tindak lanjut kegiatan..."
                   value={damsForm.uraian}
                   onChange={(e) => setDamsForm({ ...damsForm, uraian: e.target.value })}
                 ></textarea>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Output / Hasil</label>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Target Output / Hasil</label>
                   <input 
                     type="text" 
                     required
-                    className="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue"
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue focus:bg-white"
                     value={damsForm.output}
                     onChange={(e) => setDamsForm({ ...damsForm, output: e.target.value })}
-                    placeholder="Contoh: Nota Dinas, Sertifikat, Laporan"
+                    placeholder="Contoh: Nota Dinas, Laporan, Keputusan"
                   />
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {['Laporan', 'Nota Dinas', 'Keputusan Kakanwil', 'Sertifikat'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setDamsForm({ ...damsForm, output: opt })}
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Penanggung Jawab</label>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Penanggung Jawab (PJ)</label>
                   <input 
                     type="text" 
                     required
-                    className="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue"
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue focus:bg-white"
                     value={damsForm.pj}
                     onChange={(e) => setDamsForm({ ...damsForm, pj: e.target.value })}
-                    placeholder="Contoh: Bidang SKKI, Bagian Umum"
+                    placeholder="Contoh: Bagian Umum, Bidang SKKI"
                   />
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {['Bagian Umum', 'Subbag TURT', 'Subbag Kepegawaian', 'Bidang SKKI', 'Bidang PAPK'].map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setDamsForm({ ...damsForm, pj: opt })}
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer"
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Batas Waktu Penyelesaian</label>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Batas Waktu Penyelesaian</label>
                   <input 
                     type="text" 
                     required
-                    className="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue font-mono"
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue font-mono"
                     value={damsForm.deadline}
                     onChange={(e) => setDamsForm({ ...damsForm, deadline: e.target.value })}
-                    placeholder="Contoh: Agustus 2026"
+                    placeholder="Contoh: Agustus 2026 / 31-08-2026"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase">Keterangan / Status</label>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Status Penyelesaian</label>
                   <select
-                    className="w-full mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-djpb-blue"
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-djpb-blue"
                     value={damsForm.status}
                     onChange={(e) => setDamsForm({ ...damsForm, status: e.target.value })}
                   >
-                    <option value="On Progress">On Progress</option>
-                    <option value="Selesai">Selesai</option>
+                    <option value="On Progress">On Progress (Sedang Proses)</option>
+                    <option value="Selesai">Selesai (Output Terbit)</option>
                   </select>
                 </div>
               </div>
@@ -1122,12 +1318,184 @@ export default function KinerjaSection({
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
+                className="px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs flex items-center space-x-1.5"
               >
-                Simpan Data MTL
+                <Plus className="w-4 h-4" />
+                <span>Simpan Rekaman MTL</span>
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* 2. Modal Ubah (Edit) Data MTL */}
+      {editingDamsTask && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" id="dams-edit-modal">
+          <form onSubmit={handleSaveEditDamsMtl} className="bg-white rounded-xl shadow-2xl max-w-xl w-full p-6 space-y-4 animate-in zoom-in-95 duration-150 border border-slate-200 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center space-x-2">
+                <div className="p-2 bg-amber-50 text-amber-700 rounded-lg">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-display font-bold text-slate-800">
+                    Ubah Data MTL No. {editDamsForm.no}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Perbarui rincian uraian, penanggung jawab, atau status MTL.
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setEditingDamsTask(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-3.5">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Perihal MTL</label>
+                <input 
+                  type="text" 
+                  required
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-djpb-blue focus:bg-white"
+                  value={editDamsForm.perihal}
+                  onChange={(e) => setEditDamsForm({ ...editDamsForm, perihal: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Uraian Tugas / Rencana Kegiatan MTL</label>
+                <textarea 
+                  required 
+                  rows={3}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue focus:bg-white leading-relaxed"
+                  value={editDamsForm.uraian}
+                  onChange={(e) => setEditDamsForm({ ...editDamsForm, uraian: e.target.value })}
+                ></textarea>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Target Output / Hasil</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue focus:bg-white"
+                    value={editDamsForm.output}
+                    onChange={(e) => setEditDamsForm({ ...editDamsForm, output: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Penanggung Jawab (PJ)</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue focus:bg-white"
+                    value={editDamsForm.pj}
+                    onChange={(e) => setEditDamsForm({ ...editDamsForm, pj: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Batas Waktu Penyelesaian</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-djpb-blue font-mono"
+                    value={editDamsForm.deadline}
+                    onChange={(e) => setEditDamsForm({ ...editDamsForm, deadline: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Status Penyelesaian</label>
+                  <select
+                    className="w-full p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-djpb-blue"
+                    value={editDamsForm.status}
+                    onChange={(e) => setEditDamsForm({ ...editDamsForm, status: e.target.value as 'Selesai' | 'On Progress' })}
+                  >
+                    <option value="On Progress">On Progress (Sedang Proses)</option>
+                    <option value="Selesai">Selesai (Output Terbit)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 border-t border-slate-100 pt-3">
+              <button
+                type="button"
+                onClick={() => setEditingDamsTask(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-djpb-blue hover:bg-djpb-blue-light text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs flex items-center space-x-1.5"
+              >
+                <Check className="w-4 h-4" />
+                <span>Simpan Perubahan MTL</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* 3. Modal Konfirmasi Hapus Data MTL */}
+      {deletingDamsTask && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4" id="dams-delete-modal">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-4 animate-in zoom-in-95 duration-150 border border-slate-200">
+            <div className="flex items-center space-x-3 text-red-600 border-b border-slate-100 pb-3">
+              <div className="p-2.5 bg-red-50 rounded-xl">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-base font-display font-bold text-slate-800">
+                  Konfirmasi Hapus Data MTL
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Tindakan ini tidak dapat dibatalkan.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 rounded-lg p-3.5 border border-slate-200 space-y-1.5 text-xs text-slate-700">
+              <p><strong>Nomor:</strong> {deletingDamsTask.no}</p>
+              <p><strong>Perihal:</strong> {deletingDamsTask.perihal}</p>
+              <p className="text-[11px] text-slate-600 line-clamp-2"><strong>Uraian:</strong> {deletingDamsTask.uraian}</p>
+              <p><strong>Penanggung Jawab:</strong> {deletingDamsTask.pj}</p>
+              <p><strong>Status:</strong> <span className={deletingDamsTask.status === 'Selesai' ? 'text-emerald-600 font-bold' : 'text-amber-600 font-bold'}>{deletingDamsTask.status}</span></p>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Apakah Anda yakin ingin menghapus data Matriks Tindak Lanjut ini dari sistem?
+            </p>
+
+            <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeletingDamsTask(null)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeleteDamsMtl}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs flex items-center space-x-1.5"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Hapus Data MTL</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

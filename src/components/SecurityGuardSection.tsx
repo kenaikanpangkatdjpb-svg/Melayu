@@ -402,11 +402,8 @@ export default function SecurityGuardSection({
   const uniqueDates = Array.from(new Set(safeRoster.map(r => r?.dateStr || '').filter(Boolean)));
   const uniqueNames = Array.from(new Set(safeRoster.map(r => r?.name || '').filter(Boolean)));
 
-  // KPI Calculations
+  // Total Guards Calculation
   const totalGuards = uniqueNames.length || 6;
-  const kanwilCount = safeRoster.filter(r => r.location === 'KANWIL DJPB').length;
-  const rumdinCount = safeRoster.filter(r => r.location === 'RUMAH DINAS').length;
-  const liburCount = safeRoster.filter(r => r.location === 'LIBUR').length;
 
   // Handle Excel File Upload with Intelligent Column Detection
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -891,7 +888,7 @@ export default function SecurityGuardSection({
         onChange={handleFileUpload} 
       />
 
-      {/* Header Title & Mode Badge */}
+      {/* Header Title & Information */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-djpb-blue p-5 rounded-2xl text-white shadow-md">
         <div className="space-y-1">
           <div className="flex items-center space-x-2">
@@ -903,34 +900,20 @@ export default function SecurityGuardSection({
             </h2>
           </div>
           <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
-            Sistem pengawasan piket satpam 24/7, alokasi pos KANWIL DJPB, RUMAH DINAS, serta pemantauan personil libur/piket.
+            Sistem pengawasan piket satpam pada KANWIL DJPB, RUMAH DINAS, serta pemantauan personil libur/piket.
           </p>
         </div>
+      </div>
 
-        {/* View mode toggle pill */}
-        <div className="flex items-center space-x-1.5 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/80">
-          <button
-            onClick={() => setViewMode('roster')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-              viewMode === 'roster' 
-                ? 'bg-djpb-blue text-white shadow-xs' 
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5" />
-            <span>Format Roster (Tabel Excel)</span>
-          </button>
-          <button
-            onClick={() => setViewMode('matrix')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center space-x-1.5 ${
-              viewMode === 'matrix' 
-                ? 'bg-djpb-blue text-white shadow-xs' 
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>Format Shift Harian</span>
-          </button>
+      {/* KPI Total Personil Card */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">TOTAL PERSONIL</span>
+            <Users className="w-4 h-4 text-djpb-blue" />
+          </div>
+          <div className="text-xl font-display font-extrabold text-slate-800">{totalGuards} Personil</div>
+          <p className="text-[11px] text-slate-500">Anggota Satpam Aktif</p>
         </div>
       </div>
 
@@ -947,45 +930,6 @@ export default function SecurityGuardSection({
         </div>
       )}
 
-      {/* KPI Cards Bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Personil</span>
-            <Users className="w-4 h-4 text-djpb-blue" />
-          </div>
-          <div className="text-xl font-display font-extrabold text-slate-800">{totalGuards} Personil</div>
-          <p className="text-[11px] text-slate-500">Anggota Satpam Aktif</p>
-        </div>
-
-        <div className="bg-white border border-blue-100 rounded-2xl p-4 shadow-2xs space-y-1 bg-gradient-to-br from-white to-blue-50/30">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Pos Kanwil DJPb</span>
-            <Shield className="w-4 h-4 text-blue-600" />
-          </div>
-          <div className="text-xl font-display font-extrabold text-blue-900">{kanwilCount} Penjagaan</div>
-          <p className="text-[11px] text-blue-600 font-medium">Gedung Utama & Lobi</p>
-        </div>
-
-        <div className="bg-white border border-teal-100 rounded-2xl p-4 shadow-2xs space-y-1 bg-gradient-to-br from-white to-teal-50/30">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider">Rumah Dinas</span>
-            <Home className="w-4 h-4 text-teal-600" />
-          </div>
-          <div className="text-xl font-display font-extrabold text-teal-900">{rumdinCount} Penjagaan</div>
-          <p className="text-[11px] text-teal-600 font-medium">Patroli Rumah Jabatan</p>
-        </div>
-
-        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Status Libur / Off</span>
-            <span className="w-2 h-2 rounded-full bg-slate-400"></span>
-          </div>
-          <div className="text-xl font-display font-extrabold text-slate-800">{liburCount} Personil Off</div>
-          <p className="text-[11px] text-slate-500 font-medium">Batas Pergantian Hari</p>
-        </div>
-      </div>
-
       {/* Main Content Area */}
       <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
         {/* Controls Header */}
@@ -994,33 +938,27 @@ export default function SecurityGuardSection({
             <Calendar className="w-5 h-5 text-djpb-blue" />
             <div>
               <h3 className="font-display font-extrabold text-slate-800 text-sm md:text-base tracking-wide uppercase flex items-center space-x-2">
-                <span>{viewMode === 'roster' ? docTitle : 'MATRIKS SHIFT KEAMANAN MINGGUAN'}</span>
-                {viewMode === 'roster' && (
-                  <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
-                    Dokumen Excel Aktif
-                  </span>
-                )}
+                <span>{docTitle}</span>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+                  Dokumen Excel Aktif
+                </span>
               </h3>
               <p className="text-[11px] text-slate-400">
-                {viewMode === 'roster' 
-                  ? `Menampilkan ${filteredRoster.length} entri roster penjagaan (Dapat ditimpa via Upload Excel)` 
-                  : `Menampilkan ${securityShifts.length} baris pembagian shift`}
+                Menampilkan {filteredRoster.length} entri roster penjagaan (Dapat ditimpa via Upload Excel)
               </p>
             </div>
           </div>
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2">
-            {viewMode === 'roster' && (
-              <button
-                onClick={handleExportRoster}
-                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer border border-slate-200"
-                title="Download Excel Roster"
-              >
-                <Download className="w-3.5 h-3.5 text-slate-600" />
-                <span>Export Excel</span>
-              </button>
-            )}
+            <button
+              onClick={handleExportRoster}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer border border-slate-200"
+              title="Download Excel Roster"
+            >
+              <Download className="w-3.5 h-3.5 text-slate-600" />
+              <span>Export Excel</span>
+            </button>
 
             {isAdmin && (
               <>
@@ -1065,93 +1003,77 @@ export default function SecurityGuardSection({
                   <span>Template Excel</span>
                 </button>
 
-                {viewMode === 'roster' ? (
-                  <button
-                    onClick={() => {
-                      setEditingRosterId(null);
-                      let defaultDate = 'SABTU/ 1 Agustus 2026';
-                      if (safeRoster.length > 0) {
-                        const last = safeRoster[safeRoster.length - 1];
-                        if (last.location === 'LIBUR') {
-                          defaultDate = getNextDayDateStr(last.dateStr);
-                        } else {
-                          defaultDate = last.dateStr || defaultDate;
-                        }
+                <button
+                  onClick={() => {
+                    setEditingRosterId(null);
+                    let defaultDate = 'SABTU/ 1 Agustus 2026';
+                    if (safeRoster.length > 0) {
+                      const last = safeRoster[safeRoster.length - 1];
+                      if (last.location === 'LIBUR') {
+                        defaultDate = getNextDayDateStr(last.dateStr);
+                      } else {
+                        defaultDate = last.dateStr || defaultDate;
                       }
-                      setRosterForm({ name: 'ARIEF', dateStr: defaultDate, location: 'KANWIL DJPB', hours: '06.00/18.00' });
-                      setShowRosterModal(true);
-                    }}
-                    className="px-3 py-1.5 bg-djpb-blue hover:bg-djpb-blue-light text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer shadow-2xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Tambah Baris</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      setEditingShiftIndex(null);
-                      setShiftForm({ day: 'Senin', shiftMorning: '', shiftEvening: '', shiftNight: '' });
-                      setShowShiftModal(true);
-                    }}
-                    className="px-3 py-1.5 bg-djpb-blue hover:bg-djpb-blue-light text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer shadow-2xs"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>Tambah Shift</span>
-                  </button>
-                )}
+                    }
+                    setRosterForm({ name: 'ARIEF', dateStr: defaultDate, location: 'KANWIL DJPB', hours: '06.00/18.00' });
+                    setShowRosterModal(true);
+                  }}
+                  className="px-3 py-1.5 bg-djpb-blue hover:bg-djpb-blue-light text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 transition-colors cursor-pointer shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Tambah Baris</span>
+                </button>
               </>
             )}
           </div>
         </div>
 
         {/* Filters */}
-        {viewMode === 'roster' && (
-          <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <div className="relative w-full md:w-72">
-              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Cari nama petugas / tanggal..."
-                className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-djpb-blue outline-none"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-              <select
-                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
-                value={selectedLocation}
-                onChange={(e) => setSelectedLocation(e.target.value)}
-              >
-                <option value="ALL">Semua Lokasi</option>
-                <option value="KANWIL DJPB">KANWIL DJPB</option>
-                <option value="RUMAH DINAS">RUMAH DINAS</option>
-                <option value="LIBUR">LIBUR (OFF)</option>
-              </select>
-
-              <select
-                className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-              >
-                <option value="ALL">Semua Tanggal</option>
-                {uniqueDates.map((d, idx) => (
-                  <option key={idx} value={d}>{d}</option>
-                ))}
-              </select>
-
-              {(searchQuery || selectedLocation !== 'ALL' || selectedDate !== 'ALL') && (
-                <button
-                  onClick={() => { setSearchQuery(''); setSelectedLocation('ALL'); setSelectedDate('ALL'); }}
-                  className="text-[11px] text-djpb-blue font-bold hover:underline px-2 cursor-pointer"
-                >
-                  Reset Filter
-                </button>
-              )}
-            </div>
+        <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+          <div className="relative w-full md:w-72">
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari nama petugas / tanggal..."
+              className="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-djpb-blue outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-        )}
+
+          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <select
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+            >
+              <option value="ALL">Semua Lokasi</option>
+              <option value="KANWIL DJPB">KANWIL DJPB</option>
+              <option value="RUMAH DINAS">RUMAH DINAS</option>
+              <option value="LIBUR">LIBUR (OFF)</option>
+            </select>
+
+            <select
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-700"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            >
+              <option value="ALL">Semua Tanggal</option>
+              {uniqueDates.map((d, idx) => (
+                <option key={idx} value={d}>{d}</option>
+              ))}
+            </select>
+
+            {(searchQuery || selectedLocation !== 'ALL' || selectedDate !== 'ALL') && (
+              <button
+                onClick={() => { setSearchQuery(''); setSelectedLocation('ALL'); setSelectedDate('ALL'); }}
+                className="text-[11px] text-djpb-blue font-bold hover:underline px-2 cursor-pointer"
+              >
+                Reset Filter
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Bulk Action Bar (When rows selected) */}
         {selectedIds.length > 0 && (
@@ -1178,189 +1100,144 @@ export default function SecurityGuardSection({
           </div>
         )}
 
-        {/* ---------------- VIEW MODE 1: INDIVIDUAL ROSTER TABLE ---------------- */}
-        {viewMode === 'roster' && (
-          <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-extrabold uppercase font-display tracking-wider">
-                  {isAdmin && (
-                    <th className="py-3 px-3 w-10 text-center border-r border-slate-200">
-                      <input
-                        type="checkbox"
-                        className="rounded text-djpb-blue focus:ring-djpb-blue cursor-pointer"
-                        checked={selectedIds.length === filteredRoster.length && filteredRoster.length > 0}
-                        onChange={toggleSelectAll}
-                        title="Pilih / Centang Semua Baris"
-                      />
-                    </th>
-                  )}
-                  <th className="py-3 px-3 w-12 text-center border-r border-slate-200">No.</th>
-                  <th className="py-3 px-4 border-r border-slate-200">Nama Petugas</th>
-                  <th className="py-3 px-4 border-r border-slate-200 text-center">Hari / Tanggal</th>
-                  <th className="py-3 px-4 border-r border-slate-200">Lokasi / Pos Penjagaan</th>
-                  <th className="py-3 px-4 border-r border-slate-200">Jam Hadir / Shift</th>
-                  {isAdmin && <th className="py-3 px-4 text-right w-24">Aksi</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200 text-slate-800 font-mono">
-                {filteredRoster.map((item, idx) => {
-                  const isLibur = item.location === 'LIBUR';
-                  const isSelected = selectedIds.includes(item.id);
-                  return (
-                    <tr key={item.id} className={`transition-colors ${isSelected ? 'bg-amber-50/80' : 'hover:bg-slate-50'}`}>
-                      {isAdmin && (
-                        <td className="py-3 px-3 text-center border-r border-slate-200">
-                          <input
-                            type="checkbox"
-                            className="rounded text-djpb-blue focus:ring-djpb-blue cursor-pointer"
-                            checked={isSelected}
-                            onChange={() => toggleSelectRow(item.id)}
-                          />
-                        </td>
-                      )}
-                      {/* NO CELL */}
-                      <td className="py-3 px-3 text-center font-bold text-slate-500 font-mono border-r border-slate-200">
-                        {idx + 1}
-                      </td>
-
-                      {/* NAMA CELL */}
-                      <td className="py-3 px-4 border-r border-slate-200 font-sans font-extrabold text-slate-900">
-                        {item.name}
-                      </td>
-
-                      {/* HARI / TANGGAL CELL */}
-                      {rowSpanMap[idx] !== undefined ? (
-                        <td 
-                          rowSpan={rowSpanMap[idx]} 
-                          className="py-3 px-4 border-r border-slate-200 font-sans font-extrabold text-slate-800 bg-slate-50/70 text-center align-middle border-b-2 border-b-slate-200"
-                        >
-                          <div className="font-display font-extrabold text-djpb-blue tracking-wide py-1 text-xs">
-                            {item.dateStr}
-                          </div>
-                        </td>
-                      ) : null}
-
-                      {/* LOKASI CELL */}
-                      <td className="py-3 px-4 border-r border-slate-200 font-sans font-bold">
-                        {item.location === 'KANWIL DJPB' && (
-                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-blue-100 text-blue-900 border border-blue-200 text-[11px]">
-                            <Shield className="w-3 h-3 text-blue-600" />
-                            <span>KANWIL DJPB</span>
-                          </span>
-                        )}
-                        {item.location === 'RUMAH DINAS' && (
-                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-teal-100 text-teal-900 border border-teal-200 text-[11px]">
-                            <Home className="w-3 h-3 text-teal-600" />
-                            <span>RUMAH DINAS</span>
-                          </span>
-                        )}
-                        {isLibur && (
-                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
-                            <span>LIBUR</span>
-                          </span>
-                        )}
-                        {!['KANWIL DJPB', 'RUMAH DINAS', 'LIBUR'].includes(item.location) && (
-                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-200 text-[11px] font-bold">
-                            <span>{item.location}</span>
-                          </span>
-                        )}
-                      </td>
-
-                      {/* JAM HADIR CELL */}
-                      <td className="py-3 px-4 border-r border-slate-200 font-mono font-bold text-slate-800">
-                        {item.hours}
-                      </td>
-
-                      {/* ADMIN ACTIONS */}
-                      {isAdmin && (
-                        <td className="py-3 px-4 text-right font-sans">
-                          <div className="flex items-center justify-end space-x-1">
-                            <button
-                              onClick={() => {
-                                setEditingRosterId(item.id);
-                                setRosterForm({
-                                  name: item.name,
-                                  dateStr: item.dateStr,
-                                  location: item.location,
-                                  hours: item.hours
-                                });
-                                setShowRosterModal(true);
-                              }}
-                              className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors cursor-pointer"
-                              title="Edit Roster"
-                            >
-                              <Edit3 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteRoster(item.id)}
-                              className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer"
-                              title="Hapus Roster"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-
-                {filteredRoster.length === 0 && (
-                  <tr>
-                    <td colSpan={isAdmin ? 7 : 5} className="py-8 text-center text-slate-400 text-xs">
-                      Tidak ada entri roster yang sesuai dengan filter.
-                    </td>
-                  </tr>
+        {/* ---------------- ROSTER TABLE ---------------- */}
+        <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-800 font-extrabold uppercase font-display tracking-wider">
+                {isAdmin && (
+                  <th className="py-3 px-3 w-10 text-center border-r border-slate-200">
+                    <input
+                      type="checkbox"
+                      className="rounded text-djpb-blue focus:ring-djpb-blue cursor-pointer"
+                      checked={selectedIds.length === filteredRoster.length && filteredRoster.length > 0}
+                      onChange={toggleSelectAll}
+                      title="Pilih / Centang Semua Baris"
+                    />
+                  </th>
                 )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* ---------------- VIEW MODE 2: MATRIX SHIFT TABLE ---------------- */}
-        {viewMode === 'matrix' && (
-          <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-2xs">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold uppercase font-display">
-                  <th className="py-3.5 px-4">Hari</th>
-                  <th className="py-3.5 px-4">Shift Pagi (07:00 - 15:00)</th>
-                  <th className="py-3.5 px-4">Shift Sore (15:00 - 23:00)</th>
-                  <th className="py-3.5 px-4">Shift Malam (23:00 - 07:00)</th>
-                  {isAdmin && <th className="py-3.5 px-4 text-right">Aksi Admin</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700 font-mono">
-                {securityShifts.map((shift, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3.5 px-4 font-sans font-bold text-slate-800">{shift.day}</td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800">{shift.shiftMorning}</td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800">{shift.shiftEvening}</td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800">{shift.shiftNight}</td>
+                <th className="py-3 px-3 w-12 text-center border-r border-slate-200">No.</th>
+                <th className="py-3 px-4 border-r border-slate-200">Nama Petugas</th>
+                <th className="py-3 px-4 border-r border-slate-200 text-center">Hari / Tanggal</th>
+                <th className="py-3 px-4 border-r border-slate-200">Lokasi / Pos Penjagaan</th>
+                <th className="py-3 px-4 border-r border-slate-200">Jam Hadir / Shift</th>
+                {isAdmin && <th className="py-3 px-4 text-right w-24">Aksi</th>}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 text-slate-800 font-mono">
+              {filteredRoster.map((item, idx) => {
+                const isLibur = item.location === 'LIBUR';
+                const isSelected = selectedIds.includes(item.id);
+                return (
+                  <tr key={item.id} className={`transition-colors ${isSelected ? 'bg-amber-50/80' : 'hover:bg-slate-50'}`}>
                     {isAdmin && (
-                      <td className="py-3.5 px-4 text-right font-sans">
+                      <td className="py-3 px-3 text-center border-r border-slate-200">
+                        <input
+                          type="checkbox"
+                          className="rounded text-djpb-blue focus:ring-djpb-blue cursor-pointer"
+                          checked={isSelected}
+                          onChange={() => toggleSelectRow(item.id)}
+                        />
+                      </td>
+                    )}
+                    {/* NO CELL */}
+                    <td className="py-3 px-3 text-center font-bold text-slate-500 font-mono border-r border-slate-200">
+                      {idx + 1}
+                    </td>
+
+                    {/* NAMA CELL */}
+                    <td className="py-3 px-4 border-r border-slate-200 font-sans font-extrabold text-slate-900">
+                      {item.name}
+                    </td>
+
+                    {/* HARI / TANGGAL CELL */}
+                    {rowSpanMap[idx] !== undefined ? (
+                      <td 
+                        rowSpan={rowSpanMap[idx]} 
+                        className="py-3 px-4 border-r border-slate-200 font-sans font-extrabold text-slate-800 bg-slate-50/70 text-center align-middle border-b-2 border-b-slate-200"
+                      >
+                        <div className="font-display font-extrabold text-djpb-blue tracking-wide py-1 text-xs">
+                          {item.dateStr}
+                        </div>
+                      </td>
+                    ) : null}
+
+                    {/* LOKASI CELL */}
+                    <td className="py-3 px-4 border-r border-slate-200 font-sans font-bold">
+                      {item.location === 'KANWIL DJPB' && (
+                        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-blue-100 text-blue-900 border border-blue-200 text-[11px]">
+                          <Shield className="w-3 h-3 text-blue-600" />
+                          <span>KANWIL DJPB</span>
+                        </span>
+                      )}
+                      {item.location === 'RUMAH DINAS' && (
+                        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-teal-100 text-teal-900 border border-teal-200 text-[11px]">
+                          <Home className="w-3 h-3 text-teal-600" />
+                          <span>RUMAH DINAS</span>
+                        </span>
+                      )}
+                      {isLibur && (
+                        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-300 text-[11px] font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                          <span>LIBUR</span>
+                        </span>
+                      )}
+                      {!['KANWIL DJPB', 'RUMAH DINAS', 'LIBUR'].includes(item.location) && (
+                        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-200 text-[11px] font-bold">
+                          <span>{item.location}</span>
+                        </span>
+                      )}
+                    </td>
+
+                    {/* JAM HADIR CELL */}
+                    <td className="py-3 px-4 border-r border-slate-200 font-mono font-bold text-slate-800">
+                      {item.hours}
+                    </td>
+
+                    {/* ADMIN ACTIONS */}
+                    {isAdmin && (
+                      <td className="py-3 px-4 text-right font-sans">
                         <div className="flex items-center justify-end space-x-1">
                           <button
                             onClick={() => {
-                              setEditingShiftIndex(i);
-                              setShiftForm({ ...shift });
-                              setShowShiftModal(true);
+                              setEditingRosterId(item.id);
+                              setRosterForm({
+                                name: item.name,
+                                dateStr: item.dateStr,
+                                location: item.location,
+                                hours: item.hours
+                              });
+                              setShowRosterModal(true);
                             }}
                             className="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition-colors cursor-pointer"
+                            title="Edit Roster"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRoster(item.id)}
+                            className="p-1.5 hover:bg-red-100 text-red-600 rounded-lg transition-colors cursor-pointer"
+                            title="Hapus Roster"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </td>
                     )}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                );
+              })}
+
+              {filteredRoster.length === 0 && (
+                <tr>
+                  <td colSpan={isAdmin ? 7 : 5} className="py-8 text-center text-slate-400 text-xs">
+                    Tidak ada entri roster yang sesuai dengan filter.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* ---------------- MODALS ---------------- */}

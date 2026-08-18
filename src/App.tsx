@@ -382,6 +382,7 @@ export default function App() {
             performanceMetrics={performanceMetrics}
             workloadMetrics={workloadMetrics}
             isEditMode={isEditMode}
+            currentUser={currentUser}
           />
         );
 
