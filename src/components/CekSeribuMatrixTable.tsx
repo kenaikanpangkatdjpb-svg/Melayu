@@ -393,19 +393,23 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
   selectedMonth,
   selectedYear,
 }) => {
-  const [matrixData, setMatrixData] = useState<MatrixRowData[]>(data || []);
+  const [matrixData, setMatrixData] = useState<MatrixRowData[]>(() =>
+    [...(data || [])].sort((a, b) => a.nama.localeCompare(b.nama, 'id', { sensitivity: 'base' }))
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'ALL' | 'ANOMALI' | 'TIDAK_HADIR'>('ALL');
 
-  // Sync external props if updated
+  // Sync external props if updated and sort alphabetically
   React.useEffect(() => {
-    setMatrixData(data || []);
+    const sorted = [...(data || [])].sort((a, b) => a.nama.localeCompare(b.nama, 'id', { sensitivity: 'base' }));
+    setMatrixData(sorted);
   }, [data]);
 
   const updateMatrix = (updated: MatrixRowData[]) => {
-    setMatrixData(updated);
+    const sorted = [...updated].sort((a, b) => a.nama.localeCompare(b.nama, 'id', { sensitivity: 'base' }));
+    setMatrixData(sorted);
     if (onDataChange) {
-      onDataChange(updated);
+      onDataChange(sorted);
     }
   };
 
@@ -624,7 +628,7 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
   };
 
   const filteredData = useMemo(() => {
-    return matrixData.filter((row) => {
+    const list = matrixData.filter((row) => {
       const matchSearch = row.nama.toLowerCase().includes(searchQuery.toLowerCase());
       if (!matchSearch) return false;
 
@@ -636,6 +640,8 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
       }
       return true;
     });
+
+    return [...list].sort((a, b) => a.nama.localeCompare(b.nama, 'id', { sensitivity: 'base' }));
   }, [matrixData, searchQuery, filterMode]);
 
   // Toggle yellow highlight on employee name click
@@ -660,7 +666,8 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
 
     const aoaData: any[][] = [row1, row2];
 
-    matrixData.forEach((row) => {
+    const sortedRows = [...matrixData].sort((a, b) => a.nama.localeCompare(b.nama, 'id', { sensitivity: 'base' }));
+    sortedRows.forEach((row) => {
       const rowVals: any[] = [row.nama];
       dates.forEach((d) => {
         const rec = row.records[d] || { hadir: 'Tidak', pulang: 'Tidak' };
@@ -883,6 +890,9 @@ export const CekSeribuMatrixTable: React.FC<Props> = ({
           alert('Tidak dapat mengekstraksi data presensi pegawai dari file Excel. Harap pastikan format file sesuai template.');
           return;
         }
+
+        // Sort parsed Excel rows alphabetically by employee name
+        parsedResult.sort((a, b) => a.nama.localeCompare(b.nama, 'id', { sensitivity: 'base' }));
 
         setExcelFileName(file.name);
         setPreviewDocTitle(detectedTitle);

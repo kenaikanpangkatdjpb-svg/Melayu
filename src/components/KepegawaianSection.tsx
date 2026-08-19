@@ -69,7 +69,19 @@ export default function KepegawaianSection({
     status: string;
   }>>(() => {
     const saved = localStorage.getItem('melayu_cek_seribu_jpeg');
-    return saved ? JSON.parse(saved) : [
+    const initialList = saved ? JSON.parse(saved) : [
+      {
+        id: 'cert-5',
+        fileName: 'Dokumen_CekSeribu_Siti.jpg',
+        fileSize: '380 KB',
+        imageUrl: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&q=80&w=800',
+        employeeName: 'Ahmad Fauzi, S.T.',
+        uploadDate: '22-07-2026',
+        checkInTime: '07:45 WIB',
+        checkOutTime: '16:45 WIB',
+        createdBy: 'Operator Cek Seribu',
+        status: 'Cek Seribu Valid'
+      },
       {
         id: 'cert-1',
         fileName: 'Dokumen_CekSeribu_Presensi_Kanwil.jpg',
@@ -79,18 +91,6 @@ export default function KepegawaianSection({
         uploadDate: '22-07-2026',
         checkInTime: '07:25 WIB',
         checkOutTime: '17:05 WIB',
-        createdBy: 'Admin Kepegawaian',
-        status: 'Cek Seribu Valid'
-      },
-      {
-        id: 'cert-2',
-        fileName: 'Dokumen_CekSeribu_Presensi_Kanwil.jpg',
-        fileSize: '420 KB',
-        imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800',
-        employeeName: 'Siti Rahma, M.Acc.',
-        uploadDate: '23-07-2026',
-        checkInTime: '07:30 WIB',
-        checkOutTime: '17:00 WIB',
         createdBy: 'Admin Kepegawaian',
         status: 'Cek Seribu Valid'
       },
@@ -119,18 +119,21 @@ export default function KepegawaianSection({
         status: 'Cek Seribu Valid'
       },
       {
-        id: 'cert-5',
-        fileName: 'Dokumen_CekSeribu_Siti.jpg',
-        fileSize: '380 KB',
-        imageUrl: 'https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&q=80&w=800',
-        employeeName: 'Ahmad Fauzi, S.T.',
-        uploadDate: '22-07-2026',
-        checkInTime: '07:45 WIB',
-        checkOutTime: '16:45 WIB',
-        createdBy: 'Operator Cek Seribu',
+        id: 'cert-2',
+        fileName: 'Dokumen_CekSeribu_Presensi_Kanwil.jpg',
+        fileSize: '420 KB',
+        imageUrl: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=800',
+        employeeName: 'Siti Rahma, M.Acc.',
+        uploadDate: '23-07-2026',
+        checkInTime: '07:30 WIB',
+        checkOutTime: '17:00 WIB',
+        createdBy: 'Admin Kepegawaian',
         status: 'Cek Seribu Valid'
       }
     ];
+    return Array.isArray(initialList)
+      ? [...initialList].sort((a, b) => (a.employeeName || '').localeCompare(b.employeeName || '', 'id', { sensitivity: 'base' }))
+      : [];
   });
 
   // Real-time Firestore sync for Cek Seribu certificates across PC and Mobile
@@ -454,7 +457,9 @@ export default function KepegawaianSection({
       };
     });
 
-    return Array.from(employeeMap.values());
+    return Array.from(employeeMap.values()).sort((a, b) =>
+      a.nama.localeCompare(b.nama, 'id', { sensitivity: 'base' })
+    );
   }, [uploadedCertificates]);
 
   const handleDownloadExcelTemplate = () => {
@@ -1043,27 +1048,29 @@ export default function KepegawaianSection({
     if (selectedImageModal) setSelectedImageModal(null);
   };
 
-  const filteredCertificates = (uploadedCertificates || []).filter((cert) => {
-    if (!cert) return false;
-    const employeeName = cert.employeeName || '';
-    const fileName = cert.fileName || '';
-    const createdBy = cert.createdBy || '';
-    const matchesSearch =
-      !searchCekSeribu ||
-      employeeName.toLowerCase().includes(searchCekSeribu.toLowerCase()) ||
-      fileName.toLowerCase().includes(searchCekSeribu.toLowerCase()) ||
-      createdBy.toLowerCase().includes(searchCekSeribu.toLowerCase());
+  const filteredCertificates = (uploadedCertificates || [])
+    .filter((cert) => {
+      if (!cert) return false;
+      const employeeName = cert.employeeName || '';
+      const fileName = cert.fileName || '';
+      const createdBy = cert.createdBy || '';
+      const matchesSearch =
+        !searchCekSeribu ||
+        employeeName.toLowerCase().includes(searchCekSeribu.toLowerCase()) ||
+        fileName.toLowerCase().includes(searchCekSeribu.toLowerCase()) ||
+        createdBy.toLowerCase().includes(searchCekSeribu.toLowerCase());
 
-    const formattedCertDate = formatDateDisplay(cert.uploadDate);
-    const formattedFilterDate = formatDateDisplay(dateFilterCekSeribu);
+      const formattedCertDate = formatDateDisplay(cert.uploadDate);
+      const formattedFilterDate = formatDateDisplay(dateFilterCekSeribu);
 
-    const matchesDate = !dateFilterCekSeribu ||
-      cert.uploadDate === dateFilterCekSeribu ||
-      formattedCertDate === formattedFilterDate ||
-      cert.uploadDate === formattedFilterDate;
+      const matchesDate = !dateFilterCekSeribu ||
+        cert.uploadDate === dateFilterCekSeribu ||
+        formattedCertDate === formattedFilterDate ||
+        cert.uploadDate === formattedFilterDate;
 
-    return matchesSearch && matchesDate;
-  });
+      return matchesSearch && matchesDate;
+    })
+    .sort((a, b) => (a.employeeName || '').localeCompare(b.employeeName || '', 'id', { sensitivity: 'base' }));
 
   // Scholarship management states
   const [showScholarshipModal, setShowScholarshipModal] = useState(false);
